@@ -2542,7 +2542,7 @@ function showUpdatePill(version, force) {
 function updateToLatest() {
   const finish = function (text) {
     downloadHtml(text, APP_FILE_NAME);
-    showToast('新版本已下载，请用它替换当前文件', 6000);
+    showToast('新版本已下载，替换当前文件即可；词汇本数据不会丢失', 6000);
     updatePillMute = true;
     clearUpdatePill();
   };
