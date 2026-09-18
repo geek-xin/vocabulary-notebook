@@ -97,6 +97,22 @@
 
 结论：不设 `min-height`，让内容决定高度。这样单行、两行标题都既不裁切也不留白。
 
+### 卡片整行重叠的坑（必须保留 `grid-auto-rows: max-content`）
+
+不设 `min-height` 后暴露出一个更严重的问题：**首页网格里的卡片会整行重叠**。
+根因是首页网格（`body.home-mode #homeView .book-grid`）是 `flex: 1 1 auto; min-height: 0`
+的**定高滚动容器**。网格行高为默认的 `auto` 时，带 `overflow: hidden` 的卡片其自动最小尺寸为 0，
+浏览器于是把行压缩到只剩 padding 来塞进容器高度。实测：
+
+| | 行高 | 卡片高 | 行间距 |
+| --- | --- | --- | --- |
+| 不加 `grid-auto-rows` | 34px | 119.8px | **−71.8px（重叠）** |
+| `grid-auto-rows: max-content` | content | 119.8px | 14px（正常） |
+
+`gridScrollH` 也从 222 恢复到 397（正确内容高度）。所以 `.book-grid` 必须保留
+`grid-auto-rows: max-content`，让行始终按内容撑开，超出部分交给网格自身滚动。
+（等价的替代方案是去掉卡片的 `overflow: hidden`，但会失去裁切兜底，故未采用。）
+
 - `.book-actions` 去掉 `margin-left: auto`，改为独立一行并**靠左**对齐。
 - 按钮尺寸（28px / 移动端 26px）与图标大小不变。
 - 删除 `≤640px` 断点中的 `.book-tag { display: none }`，手机上第二行同样显示数量与时间；
