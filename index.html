@@ -2161,6 +2161,40 @@ function askConfirm(message, okText) {
   });
 }
 
+/* 导入报告文案：把统计数据拼成给人看的几行。
+   纯函数，不碰 DOM，便于单独验证；文案刻意精简——
+   计数合成一行，小节只留短标题，不暴露「整篇扫描 / 逐段解析」这类内部细节。 */
+function formatImportReport(stats) {
+  const rep = [];
+  const summary = ['解析成功 ' + stats.parsedTotal];
+  if (stats.dupTotal) summary.push('合并重复 ' + stats.dupTotal);
+  if (stats.skipped) summary.push('未识别 ' + stats.skipped);
+  if (stats.errors && stats.errors.length) summary.push('失败 ' + stats.errors.length);
+  rep.push(summary.join(' · '));
+
+  if (stats.dupNames && stats.dupNames.length) {
+    rep.push('');
+    rep.push('重复单词');
+    rep.push(stats.dupNames.join('、'));
+  }
+  if (stats.unusedLines && stats.unusedLines.length) {
+    rep.push('');
+    rep.push('未识别（最多 40 行）');
+    stats.unusedLines.forEach(function (line, n) { rep.push((n + 1) + '. ' + line); });
+  }
+  if (stats.rejNames && stats.rejNames.length) {
+    rep.push('');
+    rep.push('无法识别');
+    stats.rejNames.forEach(function (line, n) { rep.push((n + 1) + '. ' + line); });
+  }
+  if (stats.errors && stats.errors.length) {
+    rep.push('');
+    rep.push('失败文件');
+    stats.errors.forEach(function (line, n) { rep.push((n + 1) + '. ' + line); });
+  }
+  return rep.join('\n');
+}
+
 /* 导入报告：把「哪几行没被识别」直接显示出来，而不是静默少词 */
 function showReport(text) {
   console.log('[导入报告]\n' + text);
@@ -2874,8 +2908,6 @@ async function importFiles(fileList) {
   const rejNames = [];
   const unusedLines = [];
   let parsedTotal = 0;
-  let inlineTotal = 0;
-  let blockTotal = 0;
   let dupTotal = 0;
   let rejTotal = 0;
   let unusedTotal = 0;
@@ -2905,8 +2937,6 @@ async function importFiles(fileList) {
 
       const st = parseWordList.lastStats;
       if (st) {
-        inlineTotal += st.inlineCount;
-        blockTotal += st.blockCount;
         dupTotal += st.duplicates.length;
         rejTotal += st.rejected.length;
         unusedTotal += st.unused.length;
@@ -2935,7 +2965,7 @@ async function importFiles(fileList) {
   if (!added.length) {
     const why = errors.length ? errors.slice(0, 2).join('；') : '没有解析到有效单词';
     showToast('导入失败：' + why, 8000);
-    if (errors.length) showReport('导入失败\n\n' + errors.join('\n'));
+    if (errors.length) showReport('导入失败\n' + errors.join('\n'));
     return;
   }
   if (!await saveBooks(pending)) return;
@@ -2943,39 +2973,22 @@ async function importFiles(fileList) {
   renderHome();
 
   const skipped = rejTotal + unusedTotal;
-  let msg = '已导入 ' + added.length + ' 个词汇本（' + parsedTotal + ' 词）';
-  if (failed) msg += '，' + failed + ' 个文件失败';
-  if (dupTotal) msg += '，重复合并 ' + dupTotal + ' 条';
-  if (skipped) msg += '，未识别 ' + skipped + ' 条';
-  showToast(msg + (skipped ? '（见导入报告）' : ''), skipped ? 6000 : 2400);
+  let msg = '已导入 ' + added.length + ' 个词汇本 · ' + parsedTotal + ' 词';
+  if (failed) msg += ' · ' + failed + ' 个文件失败';
+  if (dupTotal) msg += ' · 合并重复 ' + dupTotal;
+  if (skipped) msg += ' · 未识别 ' + skipped + ' 行';
+  showToast(msg + (skipped ? '（见报告）' : ''), skipped ? 6000 : 2400);
 
   if (dupTotal || skipped || errors.length) {
-    const rep = [];
-    rep.push('解析成功：' + parsedTotal + ' 条');
-    rep.push('（整篇扫描 ' + inlineTotal + ' 条 / 逐段解析 ' + blockTotal + ' 条，取较多者）');
-    rep.push('重复合并：' + dupTotal + ' 条');
-    rep.push('未识别：' + skipped + ' 条');
-    if (dupNames.length) {
-      rep.push('');
-      rep.push('重复的单词：');
-      rep.push(dupNames.join('、'));
-    }
-    if (unusedLines.length) {
-      rep.push('');
-      rep.push('未识别的行（最多 40 条）：');
-      unusedLines.forEach(function (line, n) { rep.push((n + 1) + '. ' + line); });
-    }
-    if (rejNames.length) {
-      rep.push('');
-      rep.push('识别失败的内容：');
-      rejNames.forEach(function (line, n) { rep.push((n + 1) + '. ' + line); });
-    }
-    if (errors.length) {
-      rep.push('');
-      rep.push('失败的文件：');
-      errors.forEach(function (line, n) { rep.push((n + 1) + '. ' + line); });
-    }
-    showReport(rep.join('\n'));
+    showReport(formatImportReport({
+      parsedTotal: parsedTotal,
+      dupTotal: dupTotal,
+      skipped: skipped,
+      dupNames: dupNames,
+      unusedLines: unusedLines,
+      rejNames: rejNames,
+      errors: errors
+    }));
   }
 }
 
