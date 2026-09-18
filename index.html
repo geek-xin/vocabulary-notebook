@@ -1,0 +1,2746 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<meta name="format-detection" content="telephone=no">
+<meta name="theme-color" content="#0f1724">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>词汇本 · 多词库学习</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  height: 100%;
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  background: #0f1724;
+}
+
+body {
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  padding-top: max(16px, env(safe-area-inset-top));
+  padding-right: max(16px, env(safe-area-inset-right));
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+  padding-left: max(16px, env(safe-area-inset-left));
+  background: linear-gradient(160deg, #1e2b3c 0%, #16202e 45%, #0f1724 100%);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+               "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+  color: #ffffff;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior-y: none;
+}
+
+button { font-family: inherit; }
+
+.app-container {
+  width: 100%;
+  max-width: 1080px;
+  margin: auto;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: clamp(20px, 4vw, 34px);
+  padding: clamp(16px, 3.2vw, 30px);
+  box-shadow: 0 26px 50px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.07);
+}
+
+.app-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+h1 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: clamp(1.05rem, 4.4vw, 1.7rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-align: center;
+  color: #ffffff;
+  text-shadow: 0 4px 14px rgba(0, 0, 0, 0.55);
+  line-height: 1.3;
+}
+
+h1 .logo {
+  display: inline-flex;
+  flex: none;
+  width: 1.25em;
+  height: 1.25em;
+  color: #ffd966;
+  filter: drop-shadow(0 0 8px rgba(255, 179, 71, 0.75));
+}
+h1 .logo svg { width: 100%; height: 100%; display: block; }
+
+.counter-badge {
+  display: inline-block;
+  padding: 5px 16px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #a0b8d0;
+  font-size: 13px;
+  letter-spacing: 0.3px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 页码可点击，输入数字跳转 */
+#counter { cursor: pointer; -webkit-user-select: none; user-select: none; }
+#counter:active { background: rgba(0, 0, 0, 0.5); }
+.counter-input {
+  width: 3.2em;
+  padding: 2px 4px;
+  border: 1px solid rgba(143, 208, 255, 0.6);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.4);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 13px;
+  text-align: center;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.counter-input::-webkit-outer-spin-button,
+.counter-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.counter-input:focus { outline: none; border-color: #8fd0ff; }
+
+.scene {
+  width: 100%;
+  max-width: 700px;
+  margin: 12px auto 18px;
+  perspective: 1800px;
+  -webkit-perspective: 1800px;
+}
+
+.card {
+  position: relative;
+  width: 100%;
+  height: 460px;
+  height: clamp(400px, 62dvh, 480px);
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.card.flipped { transform: rotateY(180deg); }
+
+.card-face {
+  position: absolute;
+  top: 0; right: 0; bottom: 0; left: 0;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(18px, 3.4vw, 30px);
+  border-radius: clamp(20px, 3.4vw, 28px);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  background: linear-gradient(150deg, #ffffff 0%, #f3f9ff 100%);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.65), inset 0 2px 10px rgba(255, 255, 255, 0.85);
+}
+
+.card-back {
+  transform: rotateY(180deg);
+  background: linear-gradient(150deg, #f2f8ff 0%, #e3effa 100%);
+}
+
+.card-face::-webkit-scrollbar { width: 5px; }
+.card-face::-webkit-scrollbar-track { background: transparent; }
+.card-face::-webkit-scrollbar-thumb {
+  background: #c3d7e8;
+  border-radius: 20px;
+}
+
+.word-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.word-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: clamp(1.85rem, 8vw, 3rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: #112b44;
+  word-break: break-word;
+}
+
+.pos-tag {
+  flex: none;
+  margin-top: 6px;
+  padding: 5px 14px;
+  border-radius: 999px;
+  background: #ffcf6e;
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  color: #1b2b3e;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(255, 180, 40, 0.35);
+}
+
+.phonetic-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.phonetic {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: rgba(47, 85, 119, 0.1);
+  color: #2f5577;
+  font-size: clamp(0.95rem, 3.6vw, 1.2rem);
+  font-weight: 500;
+  word-break: break-word;
+}
+
+.audio-btn {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 50%;
+  background: #1e6f9f;
+  color: #ffffff;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  box-shadow: 0 6px 14px rgba(0, 80, 130, 0.32);
+  transition: transform 0.14s ease, background 0.14s ease, box-shadow 0.14s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.audio-btn svg { width: 20px; height: 20px; display: block; }
+.audio-btn:active {
+  transform: scale(0.93);
+  background: #0f5b86;
+  box-shadow: 0 3px 8px rgba(0, 80, 130, 0.4);
+}
+.audio-btn.speaking { animation: pulse 0.9s ease infinite; }
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 6px 14px rgba(0, 80, 130, 0.32); }
+  50% { box-shadow: 0 0 0 8px rgba(30, 111, 159, 0.18); }
+}
+
+.meaning-block { margin-bottom: 16px; }
+
+.meaning-label {
+  margin-bottom: 4px;
+  color: #5d7f9c;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+
+.meaning-en {
+  margin-bottom: 12px;
+  color: #0a1e2f;
+  font-size: clamp(1.02rem, 3.8vw, 1.28rem);
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.meaning-cn {
+  display: inline-block;
+  padding: 8px 16px;
+  border-left: 5px solid #1e6f9f;
+  border-radius: 14px;
+  background: rgba(30, 111, 159, 0.08);
+  color: #1a3a55;
+  font-size: clamp(1.02rem, 3.9vw, 1.3rem);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.example-box {
+  margin-top: auto;
+  padding: 14px 16px;
+  border-radius: 20px;
+  background: #e5f0fa;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow: inset 0 1px 4px rgba(255, 255, 255, 0.9), 0 6px 14px rgba(0, 0, 0, 0.04);
+}
+
+.example-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  color: #1e6f9f;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.example-text {
+  color: #15364e;
+  font-size: clamp(0.93rem, 3.5vw, 1.05rem);
+  font-style: italic;
+  line-height: 1.55;
+  word-break: break-word;
+}
+
+.flip-hint {
+  margin-top: 14px;
+  text-align: right;
+  color: #8aa4b8;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+.flip-hint svg {
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  margin-left: 4px;
+  vertical-align: -2px;
+}
+
+.back-word {
+  color: #112b44;
+  font-size: clamp(1.4rem, 6vw, 2rem);
+  font-weight: 700;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+.back-phonetic {
+  margin: 4px 0 18px;
+  color: #2f5577;
+  font-size: clamp(0.9rem, 3.4vw, 1.05rem);
+  font-weight: 500;
+}
+
+.syn-ant-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.syn-block, .ant-block {
+  padding: 12px 15px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+}
+
+.syn-label, .ant-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 9px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
+}
+.syn-label { color: #2e7d32; }
+.ant-label { color: #b23b3b; }
+.syn-label svg, .ant-label svg { width: 14px; height: 14px; flex: none; }
+
+.syn-list, .ant-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.syn-item, .ant-item {
+  padding: 5px 14px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid #d7e5f0;
+  color: #1e3b4f;
+  font-size: clamp(0.88rem, 3.3vw, 1rem);
+  font-weight: 500;
+  line-height: 1.4;
+}
+.syn-item.empty, .ant-item.empty { color: #9fb4c6; }
+
+.back-example {
+  margin-top: auto;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border-left: 5px solid #1e6f9f;
+  background: rgba(255, 255, 255, 0.72);
+  color: #1b364d;
+  font-size: clamp(0.9rem, 3.4vw, 1rem);
+  font-style: italic;
+  line-height: 1.55;
+  word-break: break-word;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 160px;
+  padding: 13px 24px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 999px;
+  background: #ffffff;
+  color: #1b2e42;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+  transition: transform 0.14s ease, box-shadow 0.14s ease, background 0.14s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.btn svg { width: 17px; height: 17px; flex: none; color: #1e6f9f; }
+
+.btn:active {
+  transform: translateY(1px) scale(0.985);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+.btn.random {
+  background: #ffd966;
+  color: #1b2b3e;
+  border-color: rgba(255, 255, 255, 0.75);
+  box-shadow: 0 8px 18px rgba(255, 200, 50, 0.28);
+}
+.btn.random svg { color: #1b2b3e; }
+
+@media (hover: hover) and (pointer: fine) {
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 14px 24px rgba(0, 0, 0, 0.45); }
+  .btn.random:hover { background: #ffcd4d; }
+  .audio-btn:hover { background: #0f5b86; transform: scale(1.05); }
+}
+
+.btn-io {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #c3d7e8;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: background 0.18s, color 0.18s;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
+}
+.btn-io svg { width: 15px; height: 15px; flex: none; }
+.btn-io:active { background: rgba(255, 255, 255, 0.16); }
+
+/* =========================================================
+   首页：词汇本书架
+   ========================================================= */
+[hidden] { display: none !important; }
+
+.home-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 4px 0 18px;
+}
+.home-actions .btn { min-width: 220px; }
+
+/* 导入按钮：文件框透明铺满按钮，点击直接命中原生控件（安卓/WebView 更可靠） */
+.import-btn { position: relative; overflow: hidden; }
+.import-btn .file-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  font-size: 100px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.book-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  align-items: start;
+  gap: 14px;
+  margin-top: 6px;
+}
+
+.book-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  height: 118px;
+  overflow: hidden;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.045));
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.32), inset 0 1px 1px rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  text-align: left;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.book-card:active { transform: scale(0.985); }
+
+.book-title {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.book-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+  color: #9fb6cc;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.book-count { white-space: nowrap; }
+
+.book-tag {
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 217, 102, 0.3);
+  background: rgba(255, 217, 102, 0.14);
+  color: #ffd966;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.book-actions {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.book-share,
+.book-del {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.28);
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: background 0.15s, color 0.15s;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.book-share { color: #8fd0ff; }
+.book-del { color: #e0836f; }
+.book-share svg,
+.book-del svg { width: 14px; height: 14px; pointer-events: none; }
+.book-share:active { background: rgba(80, 160, 220, 0.35); color: #ffffff; }
+.book-del:active { background: rgba(224, 90, 70, 0.32); color: #ffffff; }
+
+.book-empty {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+  padding: 42px 20px;
+  text-align: center;
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.03);
+  color: #93a9bf;
+}
+.book-empty strong { color: #dbe8f3; font-size: 14.5px; font-weight: 600; }
+.book-empty span { max-width: 380px; font-size: 12.5px; line-height: 1.75; }
+
+.home-tip {
+  margin: 18px 0 2px;
+  text-align: center;
+  color: #7f96ab;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+/* 首页：铺满视口，标题与按钮固定，仅卡片区滚动 */
+body.home-mode {
+  height: 100%;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+}
+body.home-mode .app-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0 auto;
+}
+body.home-mode #homeView {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+body.home-mode #homeView .app-header,
+body.home-mode #homeView .home-actions,
+body.home-mode #homeView .home-tip { flex: 0 0 auto; }
+body.home-mode #homeView .book-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  align-content: start;
+  padding: 2px 6px 4px 2px;
+}
+body.home-mode #homeView .book-grid::-webkit-scrollbar { width: 5px; }
+body.home-mode #homeView .book-grid::-webkit-scrollbar-track { background: transparent; }
+body.home-mode #homeView .book-grid::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 20px;
+}
+
+.back-btn {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #c3d7e8;
+  font-size: 13px;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: background 0.18s, color 0.18s;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.back-btn:active { background: rgba(255, 255, 255, 0.18); }
+
+@media (hover: hover) and (pointer: fine) {
+  .book-card:hover { transform: translateY(-3px); border-color: rgba(255, 217, 102, 0.42); }
+  .book-del:hover { background: rgba(224, 90, 70, 0.3); color: #ffffff; }
+  .book-share:hover { background: rgba(80, 160, 220, 0.32); color: #ffffff; }
+  .back-btn:hover { background: rgba(255, 255, 255, 0.16); color: #ffffff; }
+}
+
+@media (max-width: 640px) {
+  /* 手机固定每行两张，等高 + 标题两行截断，按钮收进底部一行，避免错乱 */
+  .book-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .book-card { height: 106px; padding: 12px; border-radius: 14px; }
+  .book-title { font-size: 0.92rem; }
+  .book-meta { gap: 6px; font-size: 11px; }
+  .book-tag { display: none; }
+  .book-actions { gap: 5px; }
+  .book-share, .book-del { width: 26px; height: 26px; }
+  .book-share svg, .book-del svg { width: 13px; height: 13px; }
+  .home-actions .btn { flex: 1 1 auto; min-width: 0; }
+}
+
+/* 应用内确认弹窗（不依赖 window.confirm，沙箱 iframe / WebView 也能用） */
+.modal-backdrop {
+  position: fixed;
+  top: 0; right: 0; bottom: 0; left: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(6, 12, 20, 0.66);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+}
+.modal {
+  width: 100%;
+  max-width: 360px;
+  padding: 22px 22px 18px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(160deg, #243447 0%, #1a2636 100%);
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.6);
+  color: #eaf2fa;
+}
+.modal-title { margin-bottom: 8px; font-size: 1rem; font-weight: 600; }
+.modal-text {
+  max-height: 48vh;
+  overflow-y: auto;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: #a9bfd4;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+.modal-actions .btn-io { padding: 10px 20px; font-size: 13.5px; }
+.btn-danger {
+  padding: 10px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background: #e0654f;
+  color: #ffffff;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-danger:active { background: #c9523e; }
+
+@media (hover: hover) and (pointer: fine) {
+  .btn-danger:hover { background: #cf5943; }
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: max(24px, env(safe-area-inset-bottom));
+  transform: translate(-50%, 20px);
+  max-width: min(88vw, 420px);
+  padding: 11px 20px;
+  border-radius: 999px;
+  background: rgba(12, 20, 30, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #dbe8f3;
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  z-index: 999;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55);
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+@media (max-width: 640px) {
+  .app-container { border-radius: 22px; }
+  .card { height: clamp(390px, 66dvh, 520px); }
+  .card-face { border-radius: 20px; }
+  .btn {
+    flex: 1 1 130px;
+    min-width: 0;
+    padding: 12px 14px;
+    font-size: 14px;
+  }
+  .controls { gap: 10px; }
+  .btn-io { padding: 8px 14px; font-size: 12px; }
+}
+
+@media (max-width: 360px) {
+  h1 { font-size: 0.98rem; }
+  .word-title { font-size: 1.6rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card { transition-duration: 0.01ms; }
+  .audio-btn.speaking { animation: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="app-container">
+
+  <!-- ================= 首页：词汇本书架 ================= -->
+  <section id="homeView">
+    <div class="app-header">
+      <h1>
+        <span class="logo" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+            <polyline points="2 17 12 22 22 17"></polyline>
+            <polyline points="2 12 12 17 22 12"></polyline>
+          </svg>
+        </span>
+        <span>我的词汇本</span>
+      </h1>
+      <div class="counter-badge" id="bookCount">共 0 个词汇本</div>
+    </div>
+
+    <div class="home-actions">
+      <label class="btn random import-btn" id="importBtn" role="button" tabindex="0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>
+        导入词汇本（.docx / .pdf）
+        <input type="file" id="importFile" class="file-input" multiple tabindex="-1" aria-label="选择文件">
+      </label>
+    </div>
+
+    <div class="book-grid" id="bookGrid"></div>
+
+    <p class="home-tip" id="homeTip">点击词汇本开始学习 · 数据保存在本机浏览器，重新打开依然可见</p>
+  </section>
+
+  <!-- ================= 学习页：单词卡片 ================= -->
+  <section id="studyView" hidden>
+  <div class="app-header">
+    <button class="back-btn" id="backBtn" type="button">‹ 词汇本</button>
+    <h1>
+      <span class="logo" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+          <polyline points="2 17 12 22 22 17"></polyline>
+          <polyline points="2 12 12 17 22 12"></polyline>
+        </svg>
+      </span>
+      <span id="appTitle">词汇本</span>
+    </h1>
+    <div class="counter-badge" id="counter" role="button" tabindex="0" title="点击输入页码跳转">1 / 300</div>
+  </div>
+
+  <div class="scene">
+    <div class="card" id="flashcard" role="button" tabindex="0" aria-label="单词卡片，点击翻转">
+
+      <div class="card-face card-front">
+        <div class="word-header">
+          <div class="word-title" id="frontWord">price</div>
+          <div class="pos-tag" id="frontPos">n.</div>
+        </div>
+
+        <div class="phonetic-row">
+          <div class="phonetic" id="frontPhonetic">/praɪs/</div>
+          <button class="audio-btn" id="audioBtnFront" type="button" aria-label="播放发音">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+              <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+            </svg>
+          </button>
+        </div>
+
+        <div class="meaning-block">
+          <div class="meaning-label">英文释义</div>
+          <div class="meaning-en" id="frontMeaningEn">the amount of money for which something is sold</div>
+          <div class="meaning-label" style="margin-top:12px;">中文释义</div>
+          <div class="meaning-cn" id="frontMeaningCn">价格；价钱</div>
+        </div>
+
+        <div class="example-box">
+          <div class="example-label">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" aria-hidden="true">
+              <path d="M9.5 5C6.5 5 4 7.5 4 10.5V19h8v-8H7.5c0-1.5 1-3 3-3V5h-1zm10 0c-3 0-5.5 2.5-5.5 5.5V19h8v-8h-4.5c0-1.5 1-3 3-3V5h-1z"/>
+            </svg>
+            例句
+          </div>
+          <div class="example-text" id="frontExample">The price of the house is too high for us.</div>
+        </div>
+
+        <div class="flip-hint">
+          点击卡片翻转
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12a9 9 0 1 1-2.64-6.36"></path>
+            <polyline points="21 3 21 9 15 9"></polyline>
+          </svg>
+        </div>
+      </div>
+
+      <div class="card-face card-back">
+        <div class="back-word" id="backWord">price</div>
+        <div class="back-phonetic" id="backPhonetic">/praɪs/ · n.</div>
+
+        <div class="syn-ant-section">
+          <div class="syn-block">
+            <div class="syn-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              近义词 (PET)
+            </div>
+            <div class="syn-list" id="synList">
+              <span class="syn-item">cost</span>
+              <span class="syn-item">charge</span>
+              <span class="syn-item">fee</span>
+            </div>
+          </div>
+
+          <div class="ant-block">
+            <div class="ant-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="15" y1="9" x2="9" y2="15"></line>
+                <line x1="9" y1="9" x2="15" y2="15"></line>
+              </svg>
+              反义词 (PET)
+            </div>
+            <div class="ant-list" id="antList">
+              <span class="ant-item empty">—</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="back-example" id="backExample">
+          The price of the house is too high for us.
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="btn random" id="randomBtn" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <polyline points="16 3 21 3 21 8"></polyline>
+        <line x1="4" y1="20" x2="21" y2="3"></line>
+        <polyline points="21 16 21 21 16 21"></polyline>
+        <line x1="15" y1="15" x2="21" y2="21"></line>
+        <line x1="4" y1="4" x2="9" y2="9"></line>
+      </svg>
+      随机切换
+    </button>
+
+    <button class="btn" id="nextBtn" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+        <polyline points="12 5 19 12 12 19"></polyline>
+      </svg>
+      顺序切换
+    </button>
+  </div>
+
+  </section>
+
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<div class="modal-backdrop" id="confirmModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <div class="modal-title" id="confirmTitle">删除词汇本</div>
+    <div class="modal-text" id="confirmText"></div>
+    <div class="modal-actions">
+      <button class="btn-io" id="confirmCancel" type="button">取消</button>
+      <button class="btn-danger" id="confirmOk" type="button">删除</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="reportModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="reportTitle">
+    <div class="modal-title" id="reportTitle">导入报告</div>
+    <div class="modal-text" id="reportText"></div>
+    <div class="modal-actions">
+      <button class="btn-io" id="reportClose" type="button">知道了</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* =========================================================
+   1. 内置匹配词典（298 词，含完整信息；导入时用于补全释义）
+   ========================================================= */
+const defaultWordsData = [
+  { word: "price", pos: "n.", phonetic: "/praɪs/", meaningEn: "the amount of money for which something is sold", meaningCn: "价格；价钱", synonyms: ["cost","charge","fee"], antonyms: [], example: "The price of the house is too high for us." },
+  { word: "successful", pos: "adj.", phonetic: "/səkˈsesfl/", meaningEn: "achieving the results wanted or hoped for", meaningCn: "成功的", synonyms: ["prosperous","thriving","victorious"], antonyms: ["unsuccessful","failed"], example: "She is a successful businesswoman." },
+  { word: "reduce", pos: "v.", phonetic: "/rɪˈdjuːs/", meaningEn: "to make something smaller in size, amount, or degree", meaningCn: "减少；降低", synonyms: ["decrease","lower","diminish"], antonyms: ["increase","raise"], example: "We must reduce our expenses this month." },
+  { word: "career", pos: "n.", phonetic: "/kəˈrɪə(r)/", meaningEn: "the job or profession that someone does for a long period", meaningCn: "职业；生涯", synonyms: ["profession","occupation","vocation"], antonyms: [], example: "She has had a successful career in law." },
+  { word: "special offer", pos: "n.", phonetic: "/ˌspeʃl ˈɒfə(r)/", meaningEn: "a product sold at a lower price than usual", meaningCn: "特价；特别优惠", synonyms: ["discount","deal","bargain"], antonyms: [], example: "The store has a special offer on shoes this week." },
+  { word: "train", pos: "n./v.", phonetic: "/treɪn/", meaningEn: "a railway engine connected to carriages; to teach or learn", meaningCn: "火车；训练", synonyms: ["teach","coach","instruct"], antonyms: [], example: "We took a train to London. / She trains new employees." },
+  { word: "break", pos: "v./n.", phonetic: "/breɪk/", meaningEn: "to separate into pieces; a short rest", meaningCn: "打破；休息", synonyms: ["smash","crack","pause"], antonyms: ["fix","repair","mend"], example: "Be careful not to break the glass. / Let's take a break." },
+  { word: "prepare", pos: "v.", phonetic: "/prɪˈpeə(r)/", meaningEn: "to make something ready for use", meaningCn: "准备", synonyms: ["ready","arrange","organize"], antonyms: ["neglect"], example: "I need to prepare for the meeting." },
+  { word: "at the moment", pos: "adv.", phonetic: "/ət ðə ˈməʊmənt/", meaningEn: "at the present time", meaningCn: "此刻；目前", synonyms: ["currently","now","presently"], antonyms: ["later","then"], example: "I'm busy at the moment." },
+  { word: "competition", pos: "n.", phonetic: "/ˌkɒmpəˈtɪʃn/", meaningEn: "an event or contest in which people try to win", meaningCn: "竞争；比赛", synonyms: ["contest","match","tournament"], antonyms: ["cooperation"], example: "She won the singing competition." },
+  { word: "apart from", pos: "prep.", phonetic: "/əˈpɑːt frəm/", meaningEn: "except for; besides", meaningCn: "除…之外；此外", synonyms: ["except","besides","other than"], antonyms: [], example: "Apart from the price, the car is perfect." },
+  { word: "describe", pos: "v.", phonetic: "/dɪˈskraɪb/", meaningEn: "to say what something or someone is like", meaningCn: "描述；形容", synonyms: ["portray","depict","characterize"], antonyms: [], example: "Can you describe the man you saw?" },
+  { word: "except", pos: "prep.", phonetic: "/ɪkˈsept/", meaningEn: "not including; apart from", meaningCn: "除…之外", synonyms: ["apart from","besides","but"], antonyms: ["including"], example: "Everyone came except John." },
+  { word: "countryside", pos: "n.", phonetic: "/ˈkʌntrisaɪd/", meaningEn: "land outside towns and cities", meaningCn: "乡村；农村", synonyms: ["rural area","country","landscape"], antonyms: ["city","town","urban area"], example: "We spent the weekend in the countryside." },
+  { word: "certain", pos: "adj.", phonetic: "/ˈsɜːtn/", meaningEn: "sure; particular but not named", meaningCn: "确定的；某些", synonyms: ["sure","positive","specific"], antonyms: ["uncertain","unsure"], example: "I'm certain that she will come." },
+  { word: "author", pos: "n.", phonetic: "/ˈɔːθə(r)/", meaningEn: "the writer of a book, article, etc.", meaningCn: "作者；作家", synonyms: ["writer","novelist","creator"], antonyms: [], example: "He is the author of three books." },
+  { word: "no longer", pos: "adv.", phonetic: "/nəʊ ˈlɒŋɡə(r)/", meaningEn: "not anymore", meaningCn: "不再", synonyms: ["not anymore","no more"], antonyms: ["still","yet"], example: "She no longer lives here." },
+  { word: "improve", pos: "v.", phonetic: "/ɪmˈpruːv/", meaningEn: "to make or become better", meaningCn: "改进；提高", synonyms: ["enhance","better","upgrade"], antonyms: ["worsen","decline"], example: "I want to improve my English." },
+  { word: "cancel", pos: "v.", phonetic: "/ˈkænsl/", meaningEn: "to decide that an arranged event will not happen", meaningCn: "取消", synonyms: ["call off","abandon","revoke"], antonyms: ["confirm","arrange"], example: "They had to cancel the concert." },
+  { word: "publish", pos: "v.", phonetic: "/ˈpʌblɪʃ/", meaningEn: "to produce a book, magazine, etc. for sale", meaningCn: "出版；发表", synonyms: ["print","issue","release"], antonyms: [], example: "The novel was published last year." },
+  { word: "relative", pos: "n.", phonetic: "/ˈrelətɪv/", meaningEn: "a member of your family", meaningCn: "亲戚", synonyms: ["relation","family member","kin"], antonyms: [], example: "Many of my relatives came to the wedding." },
+  { word: "blind", pos: "adj.", phonetic: "/blaɪnd/", meaningEn: "unable to see", meaningCn: "失明的", synonyms: ["sightless","visionless"], antonyms: ["sighted"], example: "He has been blind since birth." },
+  { word: "arrange", pos: "v.", phonetic: "/əˈreɪndʒ/", meaningEn: "to plan or organize something", meaningCn: "安排；整理", synonyms: ["organize","plan","schedule"], antonyms: ["disorganize"], example: "I'll arrange a meeting for next week." },
+  { word: "challenge", pos: "n./v.", phonetic: "/ˈtʃælɪndʒ/", meaningEn: "something difficult that tests ability", meaningCn: "挑战", synonyms: ["test","trial","difficulty"], antonyms: [], example: "Learning a language is a challenge." },
+  { word: "arrangement", pos: "n.", phonetic: "/əˈreɪndʒmənt/", meaningEn: "a plan or preparation", meaningCn: "安排；布置", synonyms: ["plan","organization","preparation"], antonyms: [], example: "We made arrangements for the trip." },
+  { word: "top", pos: "n./adj.", phonetic: "/tɒp/", meaningEn: "the highest part; best", meaningCn: "顶部；最好的", synonyms: ["peak","summit","best"], antonyms: ["bottom","worst"], example: "She is at the top of her class." },
+  { word: "order", pos: "v./n.", phonetic: "/ˈɔːdə(r)/", meaningEn: "to ask for something to be brought or done; a command", meaningCn: "命令；订购；顺序", synonyms: ["command","request","sequence"], antonyms: [], example: "I ordered a coffee. / The order of events." },
+  { word: "world-class", pos: "adj.", phonetic: "/ˌwɜːld ˈklɑːs/", meaningEn: "of the highest quality in the world", meaningCn: "世界级的", synonyms: ["excellent","superb","top-quality"], antonyms: ["poor","inferior"], example: "The hotel offers world-class service." },
+  { word: "include", pos: "v.", phonetic: "/ɪnˈkluːd/", meaningEn: "to have something as a part", meaningCn: "包括；包含", synonyms: ["contain","comprise","involve"], antonyms: ["exclude","omit"], example: "The price includes breakfast." },
+  { word: "entertaining", pos: "adj.", phonetic: "/ˌentəˈteɪnɪŋ/", meaningEn: "amusing and interesting", meaningCn: "有趣的；娱乐的", synonyms: ["amusing","fun","enjoyable"], antonyms: ["boring","dull"], example: "The film was very entertaining." },
+  { word: "customer", pos: "n.", phonetic: "/ˈkʌstəmə(r)/", meaningEn: "a person who buys goods or services", meaningCn: "顾客；客户", synonyms: ["client","buyer","consumer"], antonyms: ["seller"], example: "The customer is always right." },
+  { word: "amusing", pos: "adj.", phonetic: "/əˈmjuːzɪŋ/", meaningEn: "funny and entertaining", meaningCn: "有趣的；好笑的", synonyms: ["funny","entertaining","humorous"], antonyms: ["boring","serious"], example: "He told an amusing story." },
+  { word: "recycle", pos: "v.", phonetic: "/ˌriːˈsaɪkl/", meaningEn: "to treat used materials so they can be used again", meaningCn: "回收利用", synonyms: ["reuse","reprocess","recover"], antonyms: ["waste","discard"], example: "We should recycle paper and plastic." },
+  { word: "novel", pos: "n.", phonetic: "/ˈnɒvl/", meaningEn: "a long written story", meaningCn: "小说", synonyms: ["fiction","story","book"], antonyms: [], example: "She is reading a novel by Jane Austen." },
+  { word: "waste", pos: "v./n.", phonetic: "/weɪst/", meaningEn: "to use something carelessly; unwanted material", meaningCn: "浪费；废物", synonyms: ["squander","misuse","rubbish"], antonyms: ["save","conserve"], example: "Don't waste water. / It's a waste of time." },
+  { word: "novelist", pos: "n.", phonetic: "/ˈnɒvəlɪst/", meaningEn: "a person who writes novels", meaningCn: "小说家", synonyms: ["writer","author","fiction writer"], antonyms: [], example: "Charles Dickens was a famous novelist." },
+  { word: "plastic", pos: "n./adj.", phonetic: "/ˈplæstɪk/", meaningEn: "a light artificial material; made of plastic", meaningCn: "塑料；塑料的", synonyms: ["synthetic","man-made"], antonyms: ["natural"], example: "The bottle is made of plastic." },
+  { word: "fiction", pos: "n.", phonetic: "/ˈfɪkʃn/", meaningEn: "books and stories about imaginary people and events", meaningCn: "小说；虚构", synonyms: ["novel","story","fable"], antonyms: ["non-fiction","fact"], example: "She prefers fiction to non-fiction." },
+  { word: "material", pos: "n.", phonetic: "/məˈtɪəriəl/", meaningEn: "a substance used to make things", meaningCn: "材料；物质", synonyms: ["substance","matter","fabric"], antonyms: [], example: "This material is very soft." },
+  { word: "be famous for", pos: "phrase", phonetic: "/biː ˈfeɪməs fɔː(r)/", meaningEn: "to be well-known for something", meaningCn: "因…而闻名", synonyms: ["be known for","be renowned for"], antonyms: [], example: "France is famous for its wine." },
+  { word: "comedy", pos: "n.", phonetic: "/ˈkɒmədi/", meaningEn: "a funny film, play, or TV programme", meaningCn: "喜剧", synonyms: ["humour","farce","sitcom"], antonyms: ["tragedy","drama"], example: "We watched a comedy last night." },
+  { word: "unusual", pos: "adj.", phonetic: "/ʌnˈjuːʒuəl/", meaningEn: "not common; strange", meaningCn: "不寻常的；独特的", synonyms: ["strange","rare","odd"], antonyms: ["usual","common","normal"], example: "It's unusual to see snow in April." },
+  { word: "accept", pos: "v.", phonetic: "/əkˈsept/", meaningEn: "to agree to take something", meaningCn: "接受", synonyms: ["receive","take","agree to"], antonyms: ["refuse","reject","decline"], example: "She accepted the job offer." },
+  { word: "style", pos: "n.", phonetic: "/staɪl/", meaningEn: "a particular way of doing something", meaningCn: "风格；样式", synonyms: ["fashion","manner","way"], antonyms: [], example: "I like her style of writing." },
+  { word: "admit", pos: "v.", phonetic: "/ədˈmɪt/", meaningEn: "to agree that something is true, especially unwillingly", meaningCn: "承认；准许进入", synonyms: ["confess","acknowledge","concede"], antonyms: ["deny","conceal"], example: "He admitted that he had made a mistake." },
+  { word: "as well as", pos: "phrase", phonetic: "/əz wel əz/", meaningEn: "in addition to", meaningCn: "也；和", synonyms: ["in addition to","besides","along with"], antonyms: [], example: "She sings as well as dances." },
+  { word: "scary", pos: "adj.", phonetic: "/ˈskeəri/", meaningEn: "frightening", meaningCn: "可怕的；吓人的", synonyms: ["frightening","terrifying","creepy"], antonyms: ["calming","soothing"], example: "That was a scary movie." },
+  { word: "difficulty", pos: "n.", phonetic: "/ˈdɪfɪkəlti/", meaningEn: "the state of being hard to do or understand", meaningCn: "困难", synonyms: ["trouble","problem","hardship"], antonyms: ["ease","simplicity"], example: "I had difficulty finding the address." },
+  { word: "frightened", pos: "adj.", phonetic: "/ˈfraɪtnd/", meaningEn: "afraid; feeling fear", meaningCn: "害怕的", synonyms: ["afraid","scared","terrified"], antonyms: ["brave","fearless"], example: "She was frightened of the dark." },
+  { word: "true", pos: "adj.", phonetic: "/truː/", meaningEn: "agreeing with facts; real", meaningCn: "真实的；正确的", synonyms: ["correct","accurate","real"], antonyms: ["false","untrue"], example: "Is it true that you are moving?" },
+  { word: "possible", pos: "adj.", phonetic: "/ˈpɒsəbl/", meaningEn: "able to be done or achieved", meaningCn: "可能的", synonyms: ["feasible","achievable","likely"], antonyms: ["impossible","unlikely"], example: "It's possible that she will come." },
+  { word: "part", pos: "n.", phonetic: "/pɑːt/", meaningEn: "a piece or section of something", meaningCn: "部分；角色", synonyms: ["piece","portion","section"], antonyms: ["whole","entirety"], example: "This is the best part of the book." },
+  { word: "as..as possible", pos: "phrase", phonetic: "/əz ... əz ˈpɒsəbl/", meaningEn: "as much as you can", meaningCn: "尽可能…", synonyms: ["as much as possible"], antonyms: [], example: "Please come as soon as possible." },
+  { word: "traditional", pos: "adj.", phonetic: "/trəˈdɪʃənl/", meaningEn: "following old customs or methods", meaningCn: "传统的", synonyms: ["conventional","customary","old-fashioned"], antonyms: ["modern","new"], example: "They wore traditional clothes." },
+  { word: "manage to do sth.", pos: "phrase", phonetic: "/ˈmænɪdʒ tə duː/", meaningEn: "to succeed in doing something difficult", meaningCn: "设法做成某事", synonyms: ["succeed in","accomplish"], antonyms: ["fail to"], example: "I managed to finish the report on time." },
+  { word: "wildlife", pos: "n.", phonetic: "/ˈwaɪldlaɪf/", meaningEn: "animals and plants living in nature", meaningCn: "野生动物", synonyms: ["nature","flora and fauna"], antonyms: [], example: "We must protect the wildlife." },
+  { word: "adventure", pos: "n.", phonetic: "/ədˈventʃə(r)/", meaningEn: "an exciting experience", meaningCn: "冒险；奇遇", synonyms: ["exploit","quest","journey"], antonyms: [], example: "They went on an adventure in the jungle." },
+  { word: "courage", pos: "n.", phonetic: "/ˈkʌrɪdʒ/", meaningEn: "bravery", meaningCn: "勇气", synonyms: ["bravery","boldness","fearlessness"], antonyms: ["fear","cowardice"], example: "He showed great courage in the face of danger." },
+  { word: "influence", pos: "n./v.", phonetic: "/ˈɪnfluəns/", meaningEn: "the power to affect someone or something", meaningCn: "影响", synonyms: ["effect","impact","sway"], antonyms: [], example: "Her parents had a big influence on her." },
+  { word: "positive", pos: "adj.", phonetic: "/ˈpɒzətɪv/", meaningEn: "hopeful and confident; good", meaningCn: "积极的；肯定的", synonyms: ["optimistic","hopeful","affirmative"], antonyms: ["negative","pessimistic"], example: "Try to stay positive." },
+  { word: "be keen to", pos: "phrase", phonetic: "/biː kiːn tə/", meaningEn: "to be very interested in doing something", meaningCn: "渴望做某事", synonyms: ["be eager to","be enthusiastic about"], antonyms: ["be reluctant to"], example: "She is keen to learn new skills." },
+  { word: "prevent", pos: "v.", phonetic: "/prɪˈvent/", meaningEn: "to stop something from happening", meaningCn: "阻止；预防", synonyms: ["stop","avoid","avert"], antonyms: ["allow","cause"], example: "We must prevent pollution." },
+  { word: "culture", pos: "n.", phonetic: "/ˈkʌltʃə(r)/", meaningEn: "the customs, beliefs, and art of a society", meaningCn: "文化", synonyms: ["civilization","tradition","heritage"], antonyms: [], example: "I love learning about different cultures." },
+  { word: "real", pos: "adj.", phonetic: "/rɪəl/", meaningEn: "existing in fact; genuine", meaningCn: "真实的；真正的", synonyms: ["genuine","actual","true"], antonyms: ["fake","imaginary"], example: "Is that a real diamond?" },
+  { word: "dish", pos: "n.", phonetic: "/dɪʃ/", meaningEn: "a container for food; a type of prepared food", meaningCn: "盘子；菜肴", synonyms: ["plate","course","recipe"], antonyms: [], example: "This is a traditional Italian dish." },
+  { word: "charity", pos: "n.", phonetic: "/ˈtʃærəti/", meaningEn: "an organization that helps people in need", meaningCn: "慈善机构", synonyms: ["aid","foundation","donation"], antonyms: [], example: "She gives money to charity every month." },
+  { word: "typical", pos: "adj.", phonetic: "/ˈtɪpɪkl/", meaningEn: "usual or characteristic", meaningCn: "典型的；特有的", synonyms: ["characteristic","usual","representative"], antonyms: ["unusual","atypical"], example: "This is a typical English breakfast." },
+  { word: "bored", pos: "adj.", phonetic: "/bɔːd/", meaningEn: "feeling tired and impatient because you have nothing to do", meaningCn: "无聊的；厌倦的", synonyms: ["tired","weary","uninterested"], antonyms: ["interested","excited"], example: "I was bored during the long lecture." },
+  { word: "a variety of", pos: "phrase", phonetic: "/ə vəˈraɪəti ɒv/", meaningEn: "many different types of something", meaningCn: "各种各样的", synonyms: ["a range of","various","diverse"], antonyms: [], example: "The shop sells a variety of teas." },
+  { word: "offer", pos: "v./n.", phonetic: "/ˈɒfə(r)/", meaningEn: "to say you will give something; a proposal", meaningCn: "提供；提议", synonyms: ["provide","give","propose"], antonyms: ["refuse","withhold"], example: "She offered me a cup of tea." },
+  { word: "practice", pos: "n.", phonetic: "/ˈpræktɪs/", meaningEn: "the act of doing something repeatedly to improve", meaningCn: "练习；实践", synonyms: ["training","rehearsal","exercise"], antonyms: ["theory"], example: "Practice makes perfect." },
+  { word: "attention", pos: "n.", phonetic: "/əˈtenʃn/", meaningEn: "the act of watching or listening carefully", meaningCn: "注意力", synonyms: ["focus","concentration","notice"], antonyms: ["inattention","neglect"], example: "Please pay attention to the teacher." },
+  { word: "practical", pos: "adj.", phonetic: "/ˈpræktɪkl/", meaningEn: "useful; suitable for a situation", meaningCn: "实用的；实际的", synonyms: ["useful","pragmatic","functional"], antonyms: ["impractical","theoretical"], example: "This is a practical solution." },
+  { word: "take...away", pos: "phrase", phonetic: "/teɪk əˈweɪ/", meaningEn: "to remove something", meaningCn: "拿走；带走", synonyms: ["remove","carry away"], antonyms: ["bring"], example: "Please take the trash away." },
+  { word: "advice", pos: "n.", phonetic: "/ədˈvaɪs/", meaningEn: "an opinion about what someone should do", meaningCn: "建议；忠告", synonyms: ["suggestion","recommendation","counsel"], antonyms: [], example: "Can you give me some advice?" },
+  { word: "involve", pos: "v.", phonetic: "/ɪnˈvɒlv/", meaningEn: "to include or affect someone or something", meaningCn: "涉及；包含", synonyms: ["include","entail","engage"], antonyms: ["exclude"], example: "The job involves a lot of travel." },
+  { word: "recipe", pos: "n.", phonetic: "/ˈresəpi/", meaningEn: "a set of instructions for cooking a dish", meaningCn: "食谱；秘诀", synonyms: ["instructions","method","formula"], antonyms: [], example: "I followed the recipe carefully." },
+  { word: "regret", pos: "v./n.", phonetic: "/rɪˈɡret/", meaningEn: "to feel sorry about something", meaningCn: "后悔；遗憾", synonyms: ["remorse","repent","rue"], antonyms: ["satisfaction"], example: "I regret not studying harder." },
+  { word: "instruction", pos: "n.", phonetic: "/ɪnˈstrʌkʃn/", meaningEn: "information about how to do something", meaningCn: "指示；说明", synonyms: ["direction","order","guidance"], antonyms: [], example: "Read the instructions carefully." },
+  { word: "expect", pos: "v.", phonetic: "/ɪkˈspekt/", meaningEn: "to think that something will happen", meaningCn: "期待；预料", synonyms: ["anticipate","await","predict"], antonyms: ["doubt"], example: "I expect she will arrive soon." },
+  { word: "athletes", pos: "n.", phonetic: "/ˈæθliːts/", meaningEn: "people who are good at sports", meaningCn: "运动员", synonyms: ["sportspeople","players","runners"], antonyms: [], example: "The athletes trained for the Olympics." },
+  { word: "look after", pos: "phrasal v.", phonetic: "/lʊk ˈɑːftə(r)/", meaningEn: "to take care of someone or something", meaningCn: "照顾；照料", synonyms: ["take care of","care for","mind"], antonyms: ["neglect","ignore"], example: "She looks after her younger brother." },
+  { word: "succeed", pos: "v.", phonetic: "/səkˈsiːd/", meaningEn: "to achieve what you want", meaningCn: "成功；继承", synonyms: ["achieve","accomplish","prosper"], antonyms: ["fail"], example: "He succeeded in passing the exam." },
+  { word: "stair", pos: "n.", phonetic: "/steə(r)/", meaningEn: "a set of steps leading from one floor to another", meaningCn: "楼梯", synonyms: ["step","staircase"], antonyms: [], example: "She ran up the stairs." },
+  { word: "scenery", pos: "n.", phonetic: "/ˈsiːnəri/", meaningEn: "the natural features of a landscape", meaningCn: "风景；景色", synonyms: ["view","landscape","vista"], antonyms: [], example: "The scenery in the mountains is beautiful." },
+  { word: "rent", pos: "v./n.", phonetic: "/rent/", meaningEn: "to pay to use something; money paid for use", meaningCn: "租用；租金", synonyms: ["hire","lease","let"], antonyms: [], example: "We rent a flat near the station." },
+  { word: "local", pos: "adj.", phonetic: "/ˈləʊkl/", meaningEn: "relating to a particular area", meaningCn: "当地的；本地的", synonyms: ["regional","nearby","community"], antonyms: ["national","global"], example: "We went to the local market." },
+  { word: "hear about", pos: "phrasal v.", phonetic: "/hɪə(r) əˈbaʊt/", meaningEn: "to receive news about something", meaningCn: "听说", synonyms: ["learn about","hear of"], antonyms: [], example: "I heard about the accident." },
+  { word: "decide", pos: "v.", phonetic: "/dɪˈsaɪd/", meaningEn: "to choose after thinking", meaningCn: "决定", synonyms: ["determine","choose","resolve"], antonyms: ["hesitate"], example: "I decided to stay home." },
+  { word: "imagine", pos: "v.", phonetic: "/ɪˈmædʒɪn/", meaningEn: "to form a picture in your mind", meaningCn: "想象", synonyms: ["envision","picture","visualize"], antonyms: [], example: "Imagine you are on a beach." },
+  { word: "decision", pos: "n.", phonetic: "/dɪˈsɪʒn/", meaningEn: "a choice that you make", meaningCn: "决定", synonyms: ["choice","resolution","verdict"], antonyms: ["indecision"], example: "She made a difficult decision." },
+  { word: "have in common with", pos: "phrase", phonetic: "/hæv ɪn ˈkɒmən wɪð/", meaningEn: "to share the same interests or features", meaningCn: "与…有共同之处", synonyms: ["share with","resemble"], antonyms: ["differ from"], example: "We have a lot in common with each other." },
+  { word: "coach", pos: "n./v.", phonetic: "/kəʊtʃ/", meaningEn: "a person who trains athletes; to train", meaningCn: "教练；指导", synonyms: ["trainer","instructor","tutor"], antonyms: [], example: "Our coach is very strict." },
+  { word: "neighbour", pos: "n.", phonetic: "/ˈneɪbə(r)/", meaningEn: "a person living next to you", meaningCn: "邻居", synonyms: ["resident","local"], antonyms: [], example: "Our neighbours are very friendly." },
+  { word: "champion", pos: "n.", phonetic: "/ˈtʃæmpiən/", meaningEn: "a winner of a competition", meaningCn: "冠军", synonyms: ["winner","victor","conqueror"], antonyms: ["loser"], example: "She is the world champion." },
+  { word: "reply", pos: "v./n.", phonetic: "/rɪˈplaɪ/", meaningEn: "to answer", meaningCn: "回答；回复", synonyms: ["answer","respond","react"], antonyms: ["ask","question"], example: "He replied to my email." },
+  { word: "take part in", pos: "phrasal v.", phonetic: "/teɪk pɑːt ɪn/", meaningEn: "to participate in", meaningCn: "参加", synonyms: ["participate in","join in","engage in"], antonyms: ["withdraw from"], example: "She took part in the race." },
+  { word: "immediately", pos: "adv.", phonetic: "/ɪˈmiːdiətli/", meaningEn: "at once; without delay", meaningCn: "立即；马上", synonyms: ["instantly","right away","promptly"], antonyms: ["later","eventually"], example: "He left immediately after the meeting." },
+  { word: "spare time", pos: "n.", phonetic: "/speə(r) taɪm/", meaningEn: "free time", meaningCn: "空闲时间", synonyms: ["free time","leisure"], antonyms: ["work time"], example: "I read books in my spare time." },
+  { word: "curious", pos: "adj.", phonetic: "/ˈkjʊəriəs/", meaningEn: "wanting to know or learn about something", meaningCn: "好奇的", synonyms: ["inquisitive","interested","nosy"], antonyms: ["indifferent","uninterested"], example: "She was curious about the new student." },
+  { word: "retire", pos: "v.", phonetic: "/rɪˈtaɪə(r)/", meaningEn: "to stop working because of age", meaningCn: "退休", synonyms: ["withdraw","step down"], antonyms: ["work","continue"], example: "He retired at 65." },
+  { word: "announce", pos: "v.", phonetic: "/əˈnaʊns/", meaningEn: "to tell people something officially", meaningCn: "宣布；通知", synonyms: ["declare","proclaim","broadcast"], antonyms: ["conceal","suppress"], example: "They announced the winner." },
+  { word: "believe", pos: "v.", phonetic: "/bɪˈliːv/", meaningEn: "to think that something is true", meaningCn: "相信", synonyms: ["trust","accept","credit"], antonyms: ["doubt","disbelieve"], example: "I believe what you say." },
+  { word: "interview", pos: "n./v.", phonetic: "/ˈɪntəvjuː/", meaningEn: "a meeting to ask questions; to ask questions", meaningCn: "面试；采访", synonyms: ["meeting","audience","questioning"], antonyms: [], example: "She had a job interview yesterday." },
+  { word: "celebrity", pos: "n.", phonetic: "/səˈlebrəti/", meaningEn: "a famous person", meaningCn: "名人；明星", synonyms: ["star","famous person","personality"], antonyms: ["nobody"], example: "Many celebrities attended the event." },
+  { word: "instead", pos: "adv.", phonetic: "/ɪnˈsted/", meaningEn: "in place of something else", meaningCn: "代替；反而", synonyms: ["rather","alternatively"], antonyms: [], example: "I didn't go; I stayed home instead." },
+  { word: "advertise", pos: "v.", phonetic: "/ˈædvətaɪz/", meaningEn: "to tell the public about a product", meaningCn: "做广告", synonyms: ["promote","publicize","announce"], antonyms: ["hide"], example: "They advertise their cars on TV." },
+  { word: "instead of", pos: "prep.", phonetic: "/ɪnˈsted ɒv/", meaningEn: "in place of", meaningCn: "代替；而不是", synonyms: ["rather than","in place of"], antonyms: [], example: "Use butter instead of oil." },
+  { word: "support", pos: "v./n.", phonetic: "/səˈpɔːt/", meaningEn: "to help or encourage; help", meaningCn: "支持；支撑", synonyms: ["help","assist","back"], antonyms: ["oppose","discourage"], example: "Thank you for your support." },
+  { word: "invention", pos: "n.", phonetic: "/ɪnˈvenʃn/", meaningEn: "something new that someone has made", meaningCn: "发明", synonyms: ["creation","innovation","discovery"], antonyms: [], example: "The telephone was a great invention." },
+  { word: "encourage", pos: "v.", phonetic: "/ɪnˈkʌrɪdʒ/", meaningEn: "to give someone confidence to do something", meaningCn: "鼓励", synonyms: ["motivate","inspire","support"], antonyms: ["discourage","dishearten"], example: "Teachers encourage students to ask questions." },
+  { word: "accident", pos: "n.", phonetic: "/ˈæksɪdənt/", meaningEn: "an unexpected event causing damage or injury", meaningCn: "事故；意外", synonyms: ["crash","mishap","incident"], antonyms: [], example: "He was injured in a car accident." },
+  { word: "by accident", pos: "phrase", phonetic: "/baɪ ˈæksɪdənt/", meaningEn: "without intending to", meaningCn: "偶然地", synonyms: ["by chance","accidentally"], antonyms: ["on purpose","deliberately"], example: "I found it by accident." },
+  { word: "book", pos: "v./n.", phonetic: "/bʊk/", meaningEn: "to arrange to have or do something; a written work", meaningCn: "预订；书", synonyms: ["reserve","arrange","volume"], antonyms: ["cancel"], example: "I booked a table for two." },
+  { word: "attract", pos: "v.", phonetic: "/əˈtrækt/", meaningEn: "to make someone interested or come closer", meaningCn: "吸引", synonyms: ["draw","entice","appeal to"], antonyms: ["repel","deter"], example: "The exhibition attracted many visitors." },
+  { word: "expert", pos: "n./adj.", phonetic: "/ˈekspɜːt/", meaningEn: "a person with special knowledge", meaningCn: "专家；熟练的", synonyms: ["specialist","authority","professional"], antonyms: ["amateur","novice"], example: "She is an expert in biology." },
+  { word: "guest", pos: "n.", phonetic: "/ɡest/", meaningEn: "a person invited to visit", meaningCn: "客人；嘉宾", synonyms: ["visitor","caller","company"], antonyms: ["host"], example: "We have guests for dinner." },
+  { word: "discuss", pos: "v.", phonetic: "/dɪˈskʌs/", meaningEn: "to talk about something with others", meaningCn: "讨论", synonyms: ["talk about","debate","converse"], antonyms: [], example: "We discussed the plan." },
+  { word: "complain", pos: "v.", phonetic: "/kəmˈpleɪn/", meaningEn: "to say you are not satisfied", meaningCn: "抱怨；投诉", synonyms: ["grumble","protest","object"], antonyms: ["praise","compliment"], example: "He complained about the noise." },
+  { word: "lecture", pos: "n./v.", phonetic: "/ˈlektʃə(r)/", meaningEn: "a talk to teach people; to give a talk", meaningCn: "讲座；演讲", synonyms: ["speech","talk","presentation"], antonyms: [], example: "I attended a lecture on history." },
+  { word: "thick", pos: "adj.", phonetic: "/θɪk/", meaningEn: "wide; not thin; dense", meaningCn: "厚的；浓的", synonyms: ["dense","broad","heavy"], antonyms: ["thin","light"], example: "The ice is very thick." },
+  { word: "fact", pos: "n.", phonetic: "/fækt/", meaningEn: "something that is true", meaningCn: "事实", synonyms: ["truth","reality","certainty"], antonyms: ["fiction","lie"], example: "It's a fact that the earth is round." },
+  { word: "replace", pos: "v.", phonetic: "/rɪˈpleɪs/", meaningEn: "to take the place of something", meaningCn: "代替；替换", synonyms: ["substitute","swap","supersede"], antonyms: ["keep"], example: "We need to replace the old computer." },
+  { word: "borrow", pos: "v.", phonetic: "/ˈbɒrəʊ/", meaningEn: "to take something from someone and return it later", meaningCn: "借入", synonyms: ["take on loan","use temporarily"], antonyms: ["lend","return"], example: "Can I borrow your pen?" },
+  { word: "negative", pos: "adj.", phonetic: "/ˈneɡətɪv/", meaningEn: "bad or harmful; saying no", meaningCn: "负面的；消极的", synonyms: ["pessimistic","adverse","contrary"], antonyms: ["positive","optimistic"], example: "He has a negative attitude." },
+  { word: "lend", pos: "v.", phonetic: "/lend/", meaningEn: "to give something to someone for a short time", meaningCn: "借出", synonyms: ["loan","advance"], antonyms: ["borrow"], example: "Can you lend me your bike?" },
+  { word: "hate", pos: "v./n.", phonetic: "/heɪt/", meaningEn: "to dislike very much", meaningCn: "憎恨；讨厌", synonyms: ["detest","loathe","despise"], antonyms: ["love","like"], example: "I hate waiting in line." },
+  { word: "return", pos: "v./n.", phonetic: "/rɪˈtɜːn/", meaningEn: "to come or go back; to give back", meaningCn: "返回；归还", synonyms: ["come back","give back","restore"], antonyms: ["leave","depart"], example: "She returned the book to the library." },
+  { word: "project", pos: "n.", phonetic: "/ˈprɒdʒekt/", meaningEn: "a planned piece of work", meaningCn: "项目；工程", synonyms: ["plan","scheme","undertaking"], antonyms: [], example: "We are working on a new project." },
+  { word: "proud", pos: "adj.", phonetic: "/praʊd/", meaningEn: "feeling pleased about something you or others did", meaningCn: "自豪的；骄傲的", synonyms: ["pleased","satisfied","honoured"], antonyms: ["ashamed","humble"], example: "I'm proud of you." },
+  { word: "opinion", pos: "n.", phonetic: "/əˈpɪnjən/", meaningEn: "what you think about something", meaningCn: "意见；看法", synonyms: ["view","belief","judgment"], antonyms: ["fact"], example: "In my opinion, it's wrong." },
+  { word: "satisfied", pos: "adj.", phonetic: "/ˈsætɪsfaɪd/", meaningEn: "pleased because you got what you wanted", meaningCn: "满意的", synonyms: ["content","pleased","fulfilled"], antonyms: ["dissatisfied","unhappy"], example: "She was satisfied with the result." },
+  { word: "suitable", pos: "adj.", phonetic: "/ˈsuːtəbl/", meaningEn: "right or appropriate for a situation", meaningCn: "合适的", synonyms: ["appropriate","fitting","proper"], antonyms: ["unsuitable","inappropriate"], example: "This film is not suitable for children." },
+  { word: "impressed", pos: "adj.", phonetic: "/ɪmˈprest/", meaningEn: "admiring something because it is good", meaningCn: "印象深刻的", synonyms: ["admiring","awed","struck"], antonyms: ["unimpressed"], example: "I was impressed by her performance." },
+  { word: "available", pos: "adj.", phonetic: "/əˈveɪləbl/", meaningEn: "able to be used or obtained", meaningCn: "可用的；可获得的", synonyms: ["accessible","obtainable","free"], antonyms: ["unavailable","occupied"], example: "Tickets are still available." },
+  { word: "familiar", pos: "adj.", phonetic: "/fəˈmɪliə(r)/", meaningEn: "known to you; easy to recognize", meaningCn: "熟悉的", synonyms: ["known","recognizable","common"], antonyms: ["unfamiliar","strange"], example: "Her face looks familiar." },
+  { word: "recommend", pos: "v.", phonetic: "/ˌrekəˈmend/", meaningEn: "to say that something is good", meaningCn: "推荐；建议", synonyms: ["suggest","advise","endorse"], antonyms: ["disparage"], example: "Can you recommend a good restaurant?" },
+  { word: "demand", pos: "v./n.", phonetic: "/dɪˈmɑːnd/", meaningEn: "to ask for something strongly; a strong request", meaningCn: "要求；需求", synonyms: ["require","claim","insist"], antonyms: ["supply","offer"], example: "The workers demanded higher pay." },
+  { word: "store", pos: "n./v.", phonetic: "/stɔː(r)/", meaningEn: "a shop; to keep something for later", meaningCn: "商店；储存", synonyms: ["shop","save","stock"], antonyms: [], example: "I bought milk at the store." },
+  { word: "comment", pos: "n./v.", phonetic: "/ˈkɒment/", meaningEn: "something you say about something; to say something", meaningCn: "评论", synonyms: ["remark","observation","statement"], antonyms: [], example: "He made a comment about the weather." },
+  { word: "fridge", pos: "n.", phonetic: "/frɪdʒ/", meaningEn: "a refrigerator", meaningCn: "冰箱", synonyms: ["refrigerator","cooler"], antonyms: [], example: "Put the milk in the fridge." },
+  { word: "explain", pos: "v.", phonetic: "/ɪkˈspleɪn/", meaningEn: "to make something clear", meaningCn: "解释", synonyms: ["clarify","describe","illustrate"], antonyms: ["confuse"], example: "Can you explain this rule?" },
+  { word: "maximum", pos: "adj./n.", phonetic: "/ˈmæksɪməm/", meaningEn: "the largest possible amount", meaningCn: "最大的；最大值", synonyms: ["greatest","highest","utmost"], antonyms: ["minimum"], example: "The maximum speed is 120 km/h." },
+  { word: "intend", pos: "v.", phonetic: "/ɪnˈtend/", meaningEn: "to plan to do something", meaningCn: "打算；意图", synonyms: ["plan","mean","aim"], antonyms: [], example: "I intend to leave tomorrow." },
+  { word: "minimum", pos: "adj./n.", phonetic: "/ˈmɪnɪməm/", meaningEn: "the smallest possible amount", meaningCn: "最小的；最小值", synonyms: ["least","lowest","smallest"], antonyms: ["maximum"], example: "The minimum age is 18." },
+  { word: "realize", pos: "v.", phonetic: "/ˈriːəlaɪz/", meaningEn: "to become aware of something", meaningCn: "意识到；实现", synonyms: ["understand","recognize","appreciate"], antonyms: ["ignore"], example: "I realized I had made a mistake." },
+  { word: "as soon as", pos: "conj.", phonetic: "/əz suːn əz/", meaningEn: "immediately after", meaningCn: "一…就", synonyms: ["immediately after","once"], antonyms: [], example: "Call me as soon as you arrive." },
+  { word: "stuff", pos: "n./v.", phonetic: "/stʌf/", meaningEn: "things; to fill something tightly", meaningCn: "东西；填塞", synonyms: ["things","belongings","fill"], antonyms: [], example: "Put your stuff in the bag." },
+  { word: "adult", pos: "n./adj.", phonetic: "/ˈædʌlt/", meaningEn: "a fully grown person", meaningCn: "成年人", synonyms: ["grown-up","mature person"], antonyms: ["child","minor"], example: "The ticket is for adults only." },
+  { word: "stressful", pos: "adj.", phonetic: "/ˈstresfl/", meaningEn: "making you worried or nervous", meaningCn: "压力大的", synonyms: ["demanding","tense","trying"], antonyms: ["relaxing","calm"], example: "It was a stressful day at work." },
+  { word: "teenager", pos: "n.", phonetic: "/ˈtiːneɪdʒə(r)/", meaningEn: "a person between 13 and 19", meaningCn: "青少年", synonyms: ["adolescent","youth","juvenile"], antonyms: ["adult"], example: "Most teenagers love music." },
+  { word: "after all", pos: "phrase", phonetic: "/ˈɑːftə(r) ɔːl/", meaningEn: "in the end; despite what was thought", meaningCn: "毕竟；终究", synonyms: ["in the end","ultimately"], antonyms: [], example: "I knew him after all." },
+  { word: "over", pos: "prep./adv.", phonetic: "/ˈəʊvə(r)/", meaningEn: "above; more than; finished", meaningCn: "在…上方；超过；结束", synonyms: ["above","more than","finished"], antonyms: ["under","below"], example: "The plane flew over the city." },
+  { word: "memory", pos: "n.", phonetic: "/ˈmeməri/", meaningEn: "the ability to remember; something remembered", meaningCn: "记忆", synonyms: ["recollection","remembrance","mind"], antonyms: ["forgetfulness"], example: "I have a good memory for names." },
+  { word: "cost", pos: "v./n.", phonetic: "/kɒst/", meaningEn: "to have a price; the amount paid", meaningCn: "花费；成本", synonyms: ["price","expense","charge"], antonyms: ["profit","gain"], example: "How much does it cost?" },
+  { word: "look forward to", pos: "phrasal v.", phonetic: "/lʊk ˈfɔːwəd tə/", meaningEn: "to feel excited about something that will happen", meaningCn: "期待；盼望", synonyms: ["anticipate","await","expect"], antonyms: ["dread"], example: "I look forward to seeing you." },
+  { word: "sign up", pos: "phrasal v.", phonetic: "/saɪn ʌp/", meaningEn: "to join a course or organization", meaningCn: "报名；注册", synonyms: ["enrol","register","join"], antonyms: ["withdraw"], example: "I signed up for a yoga class." },
+  { word: "as+adj.+as", pos: "phrase", phonetic: "/əz ... əz/", meaningEn: "used to compare things", meaningCn: "和…一样", synonyms: ["equally"], antonyms: [], example: "She is as tall as her brother." },
+  { word: "attend", pos: "v.", phonetic: "/əˈtend/", meaningEn: "to go to an event or place", meaningCn: "参加；出席", synonyms: ["go to","be present at","visit"], antonyms: ["miss","skip"], example: "I attended the meeting." },
+  { word: "at least", pos: "phrase", phonetic: "/ət liːst/", meaningEn: "not less than", meaningCn: "至少", synonyms: ["no less than","minimum"], antonyms: ["at most"], example: "It costs at least $50." },
+  { word: "protect", pos: "v.", phonetic: "/prəˈtekt/", meaningEn: "to keep someone or something safe", meaningCn: "保护", synonyms: ["guard","defend","shield"], antonyms: ["harm","endanger"], example: "We must protect the environment." },
+  { word: "discount", pos: "n.", phonetic: "/ˈdɪskaʊnt/", meaningEn: "a reduction in price", meaningCn: "折扣", synonyms: ["reduction","deduction","sale"], antonyms: ["premium","surcharge"], example: "They offer a 10% discount." },
+  { word: "environment", pos: "n.", phonetic: "/ɪnˈvaɪrənmənt/", meaningEn: "the natural world; surroundings", meaningCn: "环境", synonyms: ["surroundings","nature","habitat"], antonyms: [], example: "We need to protect the environment." },
+  { word: "suggest", pos: "v.", phonetic: "/səˈdʒest/", meaningEn: "to give an idea or plan", meaningCn: "建议；暗示", synonyms: ["propose","recommend","advise"], antonyms: [], example: "I suggest we leave early." },
+  { word: "organization", pos: "n.", phonetic: "/ˌɔːɡənaɪˈzeɪʃn/", meaningEn: "a group of people working together", meaningCn: "组织；机构", synonyms: ["institution","association","body"], antonyms: [], example: "She works for a charity organization." },
+  { word: "remind", pos: "v.", phonetic: "/rɪˈmaɪnd/", meaningEn: "to make someone remember something", meaningCn: "提醒", synonyms: ["prompt","jog memory","alert"], antonyms: ["forget"], example: "Remind me to call her." },
+  { word: "energy", pos: "n.", phonetic: "/ˈenədʒi/", meaningEn: "power from electricity, etc.; strength", meaningCn: "能量；精力", synonyms: ["power","vitality","strength"], antonyms: ["lethargy","weakness"], example: "Solar energy is renewable." },
+  { word: "recommendation", pos: "n.", phonetic: "/ˌrekəmenˈdeɪʃn/", meaningEn: "a suggestion that something is good", meaningCn: "推荐；建议", synonyms: ["suggestion","advice","endorsement"], antonyms: [], example: "I bought it on her recommendation." },
+  { word: "experiment", pos: "n./v.", phonetic: "/ɪkˈsperɪmənt/", meaningEn: "a scientific test; to try something", meaningCn: "实验；尝试", synonyms: ["test","trial","try"], antonyms: [], example: "We did an experiment in chemistry." },
+  { word: "produce", pos: "v.", phonetic: "/prəˈdjuːs/", meaningEn: "to make or grow something", meaningCn: "生产；制造", synonyms: ["make","create","manufacture"], antonyms: ["consume","destroy"], example: "The factory produces cars." },
+  { word: "power", pos: "n.", phonetic: "/ˈpaʊə(r)/", meaningEn: "strength; control; electricity", meaningCn: "力量；权力；电力", synonyms: ["strength","force","authority"], antonyms: ["weakness"], example: "The power went out." },
+  { word: "production", pos: "n.", phonetic: "/prəˈdʌkʃn/", meaningEn: "the process of making something", meaningCn: "生产；制作", synonyms: ["manufacture","creation","output"], antonyms: ["consumption"], example: "The production of steel is important." },
+  { word: "explore", pos: "v.", phonetic: "/ɪkˈsplɔː(r)/", meaningEn: "to travel to learn about a place", meaningCn: "探索；考察", synonyms: ["investigate","discover","survey"], antonyms: ["ignore"], example: "We explored the old town." },
+  { word: "product", pos: "n.", phonetic: "/ˈprɒdʌkt/", meaningEn: "something that is made or grown", meaningCn: "产品", synonyms: ["goods","item","commodity"], antonyms: [], example: "This product is very popular." },
+  { word: "oil", pos: "n.", phonetic: "/ɔɪl/", meaningEn: "a thick liquid from plants or under the ground", meaningCn: "油；石油", synonyms: ["petroleum","lubricant","fuel"], antonyms: [], example: "The machine needs oil." },
+  { word: "research", pos: "n./v.", phonetic: "/rɪˈsɜːtʃ/", meaningEn: "careful study to find new facts", meaningCn: "研究；调查", synonyms: ["study","investigation","inquiry"], antonyms: [], example: "She is doing research on cancer." },
+  { word: "gas", pos: "n.", phonetic: "/ɡæs/", meaningEn: "a substance like air; petrol", meaningCn: "气体；汽油", synonyms: ["vapour","petrol","fuel"], antonyms: ["solid","liquid"], example: "The car runs on gas." },
+  { word: "affect", pos: "v.", phonetic: "/əˈfekt/", meaningEn: "to have an influence on", meaningCn: "影响", synonyms: ["influence","impact","change"], antonyms: ["leave unchanged"], example: "Smoking affects your health." },
+  { word: "renewable", pos: "adj.", phonetic: "/rɪˈnjuːəbl/", meaningEn: "able to be replaced naturally", meaningCn: "可再生的", synonyms: ["sustainable","replaceable"], antonyms: ["non-renewable"], example: "Solar power is renewable." },
+  { word: "rather than", pos: "phrase", phonetic: "/ˈrɑːðə(r) ðæn/", meaningEn: "instead of", meaningCn: "而不是", synonyms: ["instead of","in place of"], antonyms: [], example: "I'll have tea rather than coffee." },
+  { word: "subject", pos: "n.", phonetic: "/ˈsʌbdʒɪkt/", meaningEn: "a thing you study; a topic", meaningCn: "科目；主题", synonyms: ["topic","theme","course"], antonyms: [], example: "My favourite subject is history." },
+  { word: "threw away", pos: "phrasal v.", phonetic: "/θruː əˈweɪ/", meaningEn: "past of throw away: to discard", meaningCn: "扔掉", synonyms: ["discarded","disposed of"], antonyms: ["kept"], example: "He threw away the old newspapers." },
+  { word: "guide", pos: "n./v.", phonetic: "/ɡaɪd/", meaningEn: "a person who shows the way; to lead", meaningCn: "向导；指导", synonyms: ["leader","direct","steer"], antonyms: ["follow","mislead"], example: "The guide showed us the museum." },
+  { word: "opportunity", pos: "n.", phonetic: "/ˌɒpəˈtjuːnəti/", meaningEn: "a chance to do something", meaningCn: "机会", synonyms: ["chance","opening","possibility"], antonyms: [], example: "This is a great opportunity." },
+  { word: "electricity", pos: "n.", phonetic: "/ɪˌlekˈtrɪsəti/", meaningEn: "power that comes through wires", meaningCn: "电", synonyms: ["power","current","energy"], antonyms: [], example: "The electricity was cut off." },
+  { word: "damage", pos: "v./n.", phonetic: "/ˈdæmɪdʒ/", meaningEn: "to harm something; harm", meaningCn: "损害；破坏", synonyms: ["harm","hurt","destroy"], antonyms: ["repair","fix"], example: "The storm damaged the house." },
+  { word: "professional", pos: "adj./n.", phonetic: "/prəˈfeʃənl/", meaningEn: "relating to a job; a person with special training", meaningCn: "专业的；职业的", synonyms: ["expert","skilled","qualified"], antonyms: ["amateur","unprofessional"], example: "She is a professional dancer." },
+  { word: "international", pos: "adj.", phonetic: "/ˌɪntəˈnæʃnəl/", meaningEn: "involving different countries", meaningCn: "国际的", synonyms: ["global","worldwide","multinational"], antonyms: ["national","local"], example: "It's an international company." },
+  { word: "opposite", pos: "adj./n.", phonetic: "/ˈɒpəzɪt/", meaningEn: "completely different; facing", meaningCn: "相反的；对面", synonyms: ["contrary","reverse","facing"], antonyms: ["same","similar"], example: "The opposite of 'hot' is 'cold'." },
+  { word: "save", pos: "v.", phonetic: "/seɪv/", meaningEn: "to keep for later; to rescue", meaningCn: "拯救；节省", synonyms: ["rescue","keep","conserve"], antonyms: ["waste","spend"], example: "She saved money for a trip." },
+  { word: "confident", pos: "adj.", phonetic: "/ˈkɒnfɪdənt/", meaningEn: "sure of yourself", meaningCn: "自信的", synonyms: ["assured","self-assured","positive"], antonyms: ["insecure","shy"], example: "He is confident about the exam." },
+  { word: "introduction", pos: "n.", phonetic: "/ˌɪntrəˈdʌkʃn/", meaningEn: "the act of bringing something in for the first time", meaningCn: "介绍；引进", synonyms: ["presentation","initiation","launch"], antonyms: ["conclusion"], example: "The introduction of new technology." },
+  { word: "confidence", pos: "n.", phonetic: "/ˈkɒnfɪdəns/", meaningEn: "feeling sure about yourself", meaningCn: "信心", synonyms: ["assurance","self-belief","certainty"], antonyms: ["doubt","insecurity"], example: "She has confidence in her abilities." },
+  { word: "college", pos: "n.", phonetic: "/ˈkɒlɪdʒ/", meaningEn: "a place to study after school", meaningCn: "学院；大学", synonyms: ["university","academy","institute"], antonyms: [], example: "He goes to a community college." },
+  { word: "nervous", pos: "adj.", phonetic: "/ˈnɜːvəs/", meaningEn: "worried and anxious", meaningCn: "紧张的", synonyms: ["anxious","worried","tense"], antonyms: ["calm","relaxed"], example: "I'm nervous about the interview." },
+  { word: "compare", pos: "v.", phonetic: "/kəmˈpeə(r)/", meaningEn: "to look at how things are different or similar", meaningCn: "比较", synonyms: ["contrast","liken","match"], antonyms: [], example: "Compare the two pictures." },
+  { word: "abroad", pos: "adv.", phonetic: "/əˈbrɔːd/", meaningEn: "in or to a foreign country", meaningCn: "在国外", synonyms: ["overseas","foreign"], antonyms: ["at home"], example: "She studied abroad." },
+  { word: "transport", pos: "n./v.", phonetic: "/ˈtrænspɔːt/", meaningEn: "a way of carrying people or goods", meaningCn: "运输；交通", synonyms: ["carry","convey","transit"], antonyms: [], example: "Public transport is cheap." },
+  { word: "childhood", pos: "n.", phonetic: "/ˈtʃaɪldhʊd/", meaningEn: "the time when you are a child", meaningCn: "童年", synonyms: ["youth","infancy"], antonyms: ["adulthood"], example: "I had a happy childhood." },
+  { word: "discover", pos: "v.", phonetic: "/dɪˈskʌvə(r)/", meaningEn: "to find something for the first time", meaningCn: "发现", synonyms: ["find","uncover","detect"], antonyms: ["miss","overlook"], example: "Scientists discovered a new planet." },
+  { word: "attitude", pos: "n.", phonetic: "/ˈætɪtjuːd/", meaningEn: "the way you think or feel about something", meaningCn: "态度", synonyms: ["view","outlook","stance"], antonyms: [], example: "He has a positive attitude." },
+  { word: "metal", pos: "n.", phonetic: "/ˈmetl/", meaningEn: "a hard material like iron or gold", meaningCn: "金属", synonyms: ["alloy","ore"], antonyms: [], example: "The box is made of metal." },
+  { word: "delighted", pos: "adj.", phonetic: "/dɪˈlaɪtɪd/", meaningEn: "very pleased", meaningCn: "高兴的", synonyms: ["pleased","thrilled","joyful"], antonyms: ["disappointed","sad"], example: "I'm delighted to meet you." },
+  { word: "turn into", pos: "phrasal v.", phonetic: "/tɜːn ˈɪntuː/", meaningEn: "to become or change into", meaningCn: "变成", synonyms: ["become","transform into","convert"], antonyms: [], example: "The caterpillar turned into a butterfly." },
+  { word: "complete", pos: "v./adj.", phonetic: "/kəmˈpliːt/", meaningEn: "to finish; whole", meaningCn: "完成；完整的", synonyms: ["finish","whole","entire"], antonyms: ["incomplete","start"], example: "Please complete the form." },
+  { word: "clip", pos: "n./v.", phonetic: "/klɪp/", meaningEn: "a small object for holding things; to cut", meaningCn: "夹子；剪辑", synonyms: ["fastener","cut","trim"], antonyms: [], example: "Use a clip to hold the papers." },
+  { word: "weight", pos: "n.", phonetic: "/weɪt/", meaningEn: "how heavy something is", meaningCn: "重量", synonyms: ["heaviness","mass","burden"], antonyms: ["lightness"], example: "What is your weight?" },
+  { word: "method", pos: "n.", phonetic: "/ˈmeθəd/", meaningEn: "a way of doing something", meaningCn: "方法", synonyms: ["way","approach","technique"], antonyms: [], example: "This is a new method of teaching." },
+  { word: "put on weight", pos: "phrase", phonetic: "/pʊt ɒn weɪt/", meaningEn: "to become heavier", meaningCn: "增加体重", synonyms: ["gain weight"], antonyms: ["lose weight"], example: "He put on weight during the holidays." },
+  { word: "fashion", pos: "n.", phonetic: "/ˈfæʃn/", meaningEn: "a popular style of clothes, etc.", meaningCn: "时尚", synonyms: ["style","trend","vogue"], antonyms: [], example: "She works in fashion." },
+  { word: "lucky", pos: "adj.", phonetic: "/ˈlʌki/", meaningEn: "having good things happen by chance", meaningCn: "幸运的", synonyms: ["fortunate","blessed","charmed"], antonyms: ["unlucky","unfortunate"], example: "You are lucky to have such friends." },
+  { word: "company", pos: "n.", phonetic: "/ˈkʌmpəni/", meaningEn: "a business organization", meaningCn: "公司", synonyms: ["firm","business","corporation"], antonyms: [], example: "He works for a big company." },
+  { word: "hard", pos: "adj./adv.", phonetic: "/hɑːd/", meaningEn: "difficult; solid; with effort", meaningCn: "困难的；硬的；努力地", synonyms: ["difficult","tough","solid"], antonyms: ["easy","soft"], example: "The exam was hard. / She works hard." },
+  { word: "contact", pos: "v./n.", phonetic: "/ˈkɒntækt/", meaningEn: "to communicate with; communication", meaningCn: "联系", synonyms: ["communicate","reach","touch"], antonyms: [], example: "Please contact me by email." },
+  { word: "passenger", pos: "n.", phonetic: "/ˈpæsɪndʒə(r)/", meaningEn: "a person travelling in a vehicle", meaningCn: "乘客", synonyms: ["traveller","commuter","rider"], antonyms: ["driver"], example: "The bus had many passengers." },
+  { word: "area", pos: "n.", phonetic: "/ˈeəriə/", meaningEn: "a part of a place; a subject", meaningCn: "地区；领域", synonyms: ["region","zone","field"], antonyms: [], example: "This area is very quiet." },
+  { word: "horrible", pos: "adj.", phonetic: "/ˈhɒrəbl/", meaningEn: "very bad or unpleasant", meaningCn: "可怕的；糟糕的", synonyms: ["terrible","awful","dreadful"], antonyms: ["pleasant","wonderful"], example: "The weather was horrible." },
+  { word: "result", pos: "n./v.", phonetic: "/rɪˈzʌlt/", meaningEn: "what happens because of something", meaningCn: "结果", synonyms: ["outcome","consequence","effect"], antonyms: ["cause"], example: "The result was surprising." },
+  { word: "communicate", pos: "v.", phonetic: "/kəˈmjuːnɪkeɪt/", meaningEn: "to share information", meaningCn: "交流；沟通", synonyms: ["talk","convey","interact"], antonyms: [], example: "We communicate by email." },
+  { word: "study", pos: "v./n.", phonetic: "/ˈstʌdi/", meaningEn: "to learn about a subject; research", meaningCn: "学习；研究", synonyms: ["learn","research","examine"], antonyms: ["ignore"], example: "She studies medicine." },
+  { word: "record", pos: "n./v.", phonetic: "/ˈrekɔːd/", meaningEn: "a written account; to store sounds or images", meaningCn: "记录；录制", synonyms: ["document","register","note"], antonyms: [], example: "Keep a record of your spending." },
+  { word: "intelligent", pos: "adj.", phonetic: "/ɪnˈtelɪdʒənt/", meaningEn: "able to learn and understand well", meaningCn: "聪明的", synonyms: ["clever","smart","bright"], antonyms: ["stupid","foolish"], example: "She is an intelligent student." },
+  { word: "brain", pos: "n.", phonetic: "/breɪn/", meaningEn: "the organ inside your head", meaningCn: "大脑", synonyms: ["mind","intellect","head"], antonyms: [], example: "The brain controls the body." },
+  { word: "popular", pos: "adj.", phonetic: "/ˈpɒpjələ(r)/", meaningEn: "liked by many people", meaningCn: "受欢迎的", synonyms: ["well-liked","favourite","fashionable"], antonyms: ["unpopular"], example: "This song is very popular." },
+  { word: "battle", pos: "n./v.", phonetic: "/ˈbætl/", meaningEn: "a fight between armies; to struggle", meaningCn: "战斗；斗争", synonyms: ["fight","combat","struggle"], antonyms: ["peace"], example: "They won the battle." },
+  { word: "appear", pos: "v.", phonetic: "/əˈpɪə(r)/", meaningEn: "to come into sight; to seem", meaningCn: "出现；似乎", synonyms: ["emerge","show up","seem"], antonyms: ["disappear","vanish"], example: "A man appeared at the door." },
+  { word: "design", pos: "v./n.", phonetic: "/dɪˈzaɪn/", meaningEn: "to draw plans; a plan or drawing", meaningCn: "设计", synonyms: ["plan","create","pattern"], antonyms: [], example: "She designs clothes." },
+  { word: "previous", pos: "adj.", phonetic: "/ˈpriːviəs/", meaningEn: "before the present one", meaningCn: "以前的", synonyms: ["earlier","former","prior"], antonyms: ["next","following"], example: "He had a previous job in sales." },
+  { word: "musician", pos: "n.", phonetic: "/mjuˈzɪʃn/", meaningEn: "a person who plays music", meaningCn: "音乐家", synonyms: ["performer","artist","player"], antonyms: [], example: "He is a talented musician." },
+  { word: "ancient", pos: "adj.", phonetic: "/ˈeɪnʃənt/", meaningEn: "very old; from long ago", meaningCn: "古代的", synonyms: ["old","antique","historic"], antonyms: ["modern","new"], example: "We visited ancient ruins." },
+  { word: "audience", pos: "n.", phonetic: "/ˈɔːdiəns/", meaningEn: "people who watch or listen to a performance", meaningCn: "观众；听众", synonyms: ["spectators","listeners","viewers"], antonyms: [], example: "The audience clapped loudly." },
+  { word: "send", pos: "v.", phonetic: "/send/", meaningEn: "to make something go somewhere", meaningCn: "发送；邮寄", synonyms: ["dispatch","post","transmit"], antonyms: ["receive","keep"], example: "I sent a letter to my friend." },
+  { word: "in front of", pos: "prep.", phonetic: "/ɪn frʌnt ɒv/", meaningEn: "ahead of; facing", meaningCn: "在…前面", synonyms: ["ahead of","before"], antonyms: ["behind"], example: "The car stopped in front of the house." },
+  { word: "to be honest", pos: "phrase", phonetic: "/tə biː ˈɒnɪst/", meaningEn: "used to say what you really think", meaningCn: "老实说", synonyms: ["frankly","truthfully"], antonyms: [], example: "To be honest, I don't like it." },
+  { word: "theatre", pos: "n.", phonetic: "/ˈθɪətə(r)/", meaningEn: "a building where plays are performed", meaningCn: "剧院", synonyms: ["playhouse","auditorium"], antonyms: [], example: "We went to the theatre last night." },
+  { word: "loads of", pos: "phrase", phonetic: "/ləʊdz ɒv/", meaningEn: "a lot of", meaningCn: "大量", synonyms: ["lots of","plenty of","many"], antonyms: ["few"], example: "There are loads of books here." },
+  { word: "concert", pos: "n.", phonetic: "/ˈkɒnsət/", meaningEn: "a public performance of music", meaningCn: "音乐会", synonyms: ["performance","show","recital"], antonyms: [], example: "The concert was amazing." },
+  { word: "furniture", pos: "n.", phonetic: "/ˈfɜːnɪtʃə(r)/", meaningEn: "things like tables and chairs", meaningCn: "家具", synonyms: ["furnishings","equipment"], antonyms: [], example: "We bought new furniture." },
+  { word: "scare", pos: "v./n.", phonetic: "/skeə(r)/", meaningEn: "to frighten; a fright", meaningCn: "惊吓", synonyms: ["frighten","terrify","startle"], antonyms: ["calm","soothe"], example: "The loud noise scared me." },
+  { word: "equipment", pos: "n.", phonetic: "/ɪˈkwɪpmənt/", meaningEn: "tools or machines for a purpose", meaningCn: "设备", synonyms: ["apparatus","gear","tools"], antonyms: [], example: "The lab has modern equipment." },
+  { word: "empty", pos: "adj./v.", phonetic: "/ˈempti/", meaningEn: "with nothing inside; to remove contents", meaningCn: "空的；倒空", synonyms: ["vacant","bare","clear"], antonyms: ["full","filled"], example: "The bottle is empty." },
+  { word: "hire", pos: "v.", phonetic: "/ˈhaɪə(r)/", meaningEn: "to pay to use something", meaningCn: "租用；雇用", synonyms: ["rent","employ","engage"], antonyms: ["fire","dismiss"], example: "We hired a car for the weekend." },
+  { word: "set off", pos: "phrasal v.", phonetic: "/set ɒf/", meaningEn: "to start a journey", meaningCn: "出发", synonyms: ["depart","start out","leave"], antonyms: ["arrive"], example: "We set off early in the morning." },
+  { word: "court", pos: "n.", phonetic: "/kɔːt/", meaningEn: "a place where legal cases are heard; a sports area", meaningCn: "法庭；球场", synonyms: ["tribunal","playing field"], antonyms: [], example: "The case went to court." },
+  { word: "disappointed", pos: "adj.", phonetic: "/ˌdɪsəˈpɔɪntɪd/", meaningEn: "sad because something was not as good as hoped", meaningCn: "失望的", synonyms: ["let down","saddened","disheartened"], antonyms: ["pleased","satisfied"], example: "I was disappointed with the result." },
+  { word: "reception", pos: "n.", phonetic: "/rɪˈsepʃn/", meaningEn: "a desk where visitors arrive; a formal party", meaningCn: "接待处；招待会", synonyms: ["front desk","welcome","party"], antonyms: [], example: "Please leave your key at reception." },
+  { word: "be proud of", pos: "phrase", phonetic: "/biː praʊd ɒv/", meaningEn: "to feel pleased about", meaningCn: "为…感到骄傲", synonyms: ["take pride in"], antonyms: ["be ashamed of"], example: "I am proud of my son." },
+  { word: "permit", pos: "v./n.", phonetic: "/pəˈmɪt/", meaningEn: "to allow; an official document", meaningCn: "允许；许可证", synonyms: ["allow","authorize","licence"], antonyms: ["forbid","prohibit"], example: "Smoking is not permitted here." },
+  { word: "progress", pos: "n./v.", phonetic: "/ˈprəʊɡres/", meaningEn: "movement forward; to improve", meaningCn: "进步；前进", synonyms: ["advance","development","improvement"], antonyms: ["regress","decline"], example: "She made great progress." },
+  { word: "unless", pos: "conj.", phonetic: "/ənˈles/", meaningEn: "except if", meaningCn: "除非", synonyms: ["except if","if not"], antonyms: [], example: "I won't go unless you come." },
+  { word: "rare", pos: "adj.", phonetic: "/reə(r)/", meaningEn: "not common; uncommon", meaningCn: "稀有的", synonyms: ["uncommon","scarce","unusual"], antonyms: ["common","frequent"], example: "It's rare to see snow here." },
+  { word: "even though", pos: "conj.", phonetic: "/ˈiːvn ðəʊ/", meaningEn: "despite the fact that", meaningCn: "尽管", synonyms: ["although","though","despite"], antonyms: [], example: "Even though it rained, we went out." },
+  { word: "cure", pos: "v./n.", phonetic: "/kjʊə(r)/", meaningEn: "to make an illness go away; a remedy", meaningCn: "治愈；疗法", synonyms: ["heal","remedy","treat"], antonyms: ["worsen"], example: "The doctor cured her illness." },
+  { word: "traffic", pos: "n.", phonetic: "/ˈtræfɪk/", meaningEn: "vehicles moving on roads", meaningCn: "交通", synonyms: ["vehicles","transport","congestion"], antonyms: [], example: "There was heavy traffic." },
+  { word: "landscape", pos: "n.", phonetic: "/ˈlændskeɪp/", meaningEn: "the appearance of an area of land", meaningCn: "风景；地形", synonyms: ["scenery","view","terrain"], antonyms: [], example: "The landscape is beautiful." },
+  { word: "awful", pos: "adj.", phonetic: "/ˈɔːfl/", meaningEn: "very bad; terrible", meaningCn: "糟糕的", synonyms: ["terrible","dreadful","horrible"], antonyms: ["wonderful","great"], example: "The weather was awful." },
+  { word: "software", pos: "n.", phonetic: "/ˈsɒftweə(r)/", meaningEn: "programs used by a computer", meaningCn: "软件", synonyms: ["program","application"], antonyms: ["hardware"], example: "He writes software." },
+  { word: "do sb. a favour", pos: "phrase", phonetic: "/duː ˈfəʊvə/", meaningEn: "to help someone", meaningCn: "帮某人一个忙", synonyms: ["help out","assist"], antonyms: [], example: "Could you do me a favour?" },
+  { word: "castle", pos: "n.", phonetic: "/ˈkɑːsl/", meaningEn: "a large old building with thick walls", meaningCn: "城堡", synonyms: ["fortress","palace","stronghold"], antonyms: [], example: "We visited a medieval castle." },
+  { word: "update", pos: "v./n.", phonetic: "/ˌʌpˈdeɪt/", meaningEn: "to make something more modern; a new version", meaningCn: "更新", synonyms: ["modernize","renew","revise"], antonyms: [], example: "Please update your address." },
+  { word: "event", pos: "n.", phonetic: "/ɪˈvent/", meaningEn: "something that happens", meaningCn: "事件；活动", synonyms: ["occurrence","occasion","happening"], antonyms: [], example: "The party was a great event." },
+  { word: "be able to", pos: "phrase", phonetic: "/biː ˈeɪbl tə/", meaningEn: "to have the ability to", meaningCn: "能够", synonyms: ["can","be capable of"], antonyms: ["be unable to"], example: "She is able to speak three languages." },
+  { word: "antique", pos: "n./adj.", phonetic: "/ænˈtiːk/", meaningEn: "an old valuable object", meaningCn: "古董；古老的", synonyms: ["vintage","old","collectible"], antonyms: ["modern","new"], example: "He collects antique clocks." },
+  { word: "register", pos: "v./n.", phonetic: "/ˈredʒɪstə(r)/", meaningEn: "to put a name on an official list", meaningCn: "登记；注册", synonyms: ["enrol","record","sign up"], antonyms: ["withdraw"], example: "You must register to vote." },
+  { word: "display", pos: "v./n.", phonetic: "/dɪˈspleɪ/", meaningEn: "to show something; an exhibition", meaningCn: "展示；陈列", synonyms: ["show","exhibit","present"], antonyms: ["hide","conceal"], example: "The museum displays ancient art." },
+  { word: "limited", pos: "adj.", phonetic: "/ˈlɪmɪtɪd/", meaningEn: "restricted in amount", meaningCn: "有限的", synonyms: ["restricted","finite","controlled"], antonyms: ["unlimited","infinite"], example: "The offer is for a limited time." },
+  { word: "costume", pos: "n.", phonetic: "/ˈkɒstjuːm/", meaningEn: "clothes worn for a play or party", meaningCn: "戏服；服装", synonyms: ["outfit","dress","garment"], antonyms: [], example: "She wore a beautiful costume." },
+  { word: "bin", pos: "n.", phonetic: "/bɪn/", meaningEn: "a container for rubbish", meaningCn: "垃圾桶", synonyms: ["rubbish bin","trash can","container"], antonyms: [], example: "Throw it in the bin." },
+  { word: "ruin", pos: "v./n.", phonetic: "/ˈruːɪn/", meaningEn: "to destroy; a destroyed building", meaningCn: "毁灭；废墟", synonyms: ["destroy","wreck","spoil"], antonyms: ["build","restore"], example: "The rain ruined our picnic." },
+  { word: "silent", pos: "adj.", phonetic: "/ˈsaɪlənt/", meaningEn: "with no sound", meaningCn: "沉默的；安静的", synonyms: ["quiet","soundless","mute"], antonyms: ["noisy","loud"], example: "The room was silent." },
+  { word: "surround", pos: "v.", phonetic: "/səˈraʊnd/", meaningEn: "to be all around something", meaningCn: "包围；环绕", synonyms: ["encircle","enclose","ring"], antonyms: [], example: "Trees surround the house." },
+  { word: "ingredient", pos: "n.", phonetic: "/ɪnˈɡriːdiənt/", meaningEn: "a food item used in cooking", meaningCn: "原料；成分", synonyms: ["component","element","part"], antonyms: [], example: "Flour is a main ingredient." },
+  { word: "view", pos: "n./v.", phonetic: "/vjuː/", meaningEn: "what you can see; an opinion", meaningCn: "景色；看法", synonyms: ["scenery","opinion","sight"], antonyms: [], example: "The view from the window is lovely." },
+  { word: "avoid", pos: "v.", phonetic: "/əˈvɔɪd/", meaningEn: "to stay away from", meaningCn: "避免", synonyms: ["evade","prevent","escape"], antonyms: ["face","confront"], example: "Avoid junk food." },
+  { word: "staff", pos: "n.", phonetic: "/stɑːf/", meaningEn: "the people who work for an organization", meaningCn: "员工", synonyms: ["employees","workers","personnel"], antonyms: ["employers"], example: "The hotel staff are friendly." },
+  { word: "base", pos: "n./v.", phonetic: "/beɪs/", meaningEn: "the bottom part; to use as a foundation", meaningCn: "基础；基地", synonyms: ["foundation","bottom","ground"], antonyms: ["top"], example: "The base of the statue is stone." },
+  { word: "original", pos: "adj./n.", phonetic: "/əˈrɪdʒənl/", meaningEn: "first; new and different", meaningCn: "原始的；原创的", synonyms: ["first","initial","novel"], antonyms: ["copy","imitation"], example: "This is the original painting." },
+  { word: "basic", pos: "adj.", phonetic: "/ˈbeɪsɪk/", meaningEn: "simple and fundamental", meaningCn: "基本的", synonyms: ["fundamental","essential","elementary"], antonyms: ["advanced","complex"], example: "We learned basic grammar." },
+  { word: "look for", pos: "phrasal v.", phonetic: "/lʊk fɔː(r)/", meaningEn: "to try to find", meaningCn: "寻找", synonyms: ["search for","seek","hunt for"], antonyms: ["find"], example: "I'm looking for my keys." },
+  { word: "journalist", pos: "n.", phonetic: "/ˈdʒɜːnəlɪst/", meaningEn: "a person who writes for newspapers", meaningCn: "记者", synonyms: ["reporter","correspondent","writer"], antonyms: [], example: "She works as a journalist." },
+  { word: "special effect", pos: "n.", phonetic: "/ˌspeʃl ɪˈfekt/", meaningEn: "an illusion created for films", meaningCn: "特效", synonyms: ["visual effect","CGI"], antonyms: [], example: "The film had amazing special effects." },
+  { word: "storm", pos: "n.", phonetic: "/stɔːm/", meaningEn: "very bad weather with wind and rain", meaningCn: "暴风雨", synonyms: ["tempest","gale","hurricane"], antonyms: ["calm"], example: "The storm damaged the roof." },
+  { word: "a range of", pos: "phrase", phonetic: "/ə reɪndʒ ɒv/", meaningEn: "a variety of", meaningCn: "一系列", synonyms: ["a variety of","assortment"], antonyms: [], example: "The shop sells a range of products." },
+  { word: "calm", pos: "adj./v.", phonetic: "/kɑːm/", meaningEn: "not excited or worried; to make quiet", meaningCn: "平静的；使镇静", synonyms: ["peaceful","tranquil","soothe"], antonyms: ["agitated","nervous"], example: "Stay calm and carry on." },
+  { word: "ballet", pos: "n.", phonetic: "/ˈbæleɪ/", meaningEn: "a type of dance", meaningCn: "芭蕾舞", synonyms: ["dance","performance"], antonyms: [], example: "She loves watching ballet." },
+  { word: "deal with", pos: "phrasal v.", phonetic: "/diːl wɪð/", meaningEn: "to handle or manage", meaningCn: "处理；对付", synonyms: ["handle","manage","tackle"], antonyms: ["neglect"], example: "I can deal with this problem." },
+  { word: "technology", pos: "n.", phonetic: "/tekˈnɒlədʒi/", meaningEn: "scientific knowledge and tools", meaningCn: "技术", synonyms: ["science","engineering","innovation"], antonyms: [], example: "Modern technology is amazing." },
+  { word: "necessary", pos: "adj.", phonetic: "/ˈnesəsəri/", meaningEn: "needed", meaningCn: "必要的", synonyms: ["essential","vital","required"], antonyms: ["unnecessary","optional"], example: "Sleep is necessary for health." },
+  { word: "advanced", pos: "adj.", phonetic: "/ədˈvɑːnst/", meaningEn: "at a high level", meaningCn: "高级的；先进的", synonyms: ["sophisticated","modern","developed"], antonyms: ["basic","elementary"], example: "This is an advanced course." },
+  { word: "happen", pos: "v.", phonetic: "/ˈhæpən/", meaningEn: "to take place", meaningCn: "发生", synonyms: ["occur","take place","arise"], antonyms: [], example: "What happened yesterday?" },
+  { word: "character", pos: "n.", phonetic: "/ˈkærəktə(r)/", meaningEn: "a person in a story; personality", meaningCn: "角色；性格", synonyms: ["personality","role","figure"], antonyms: [], example: "He is a strange character." },
+  { word: "shock", pos: "v./n.", phonetic: "/ʃɒk/", meaningEn: "to surprise and upset; a sudden impact", meaningCn: "震惊", synonyms: ["surprise","astonish","startle"], antonyms: ["comfort"], example: "The news shocked everyone." },
+  { word: "deaf", pos: "adj.", phonetic: "/def/", meaningEn: "unable to hear", meaningCn: "聋的", synonyms: ["hard of hearing"], antonyms: ["hearing"], example: "He is deaf in one ear." },
+  { word: "assistant", pos: "n.", phonetic: "/əˈsɪstənt/", meaningEn: "a person who helps someone", meaningCn: "助手", synonyms: ["helper","aide","deputy"], antonyms: ["boss"], example: "She is a shop assistant." },
+  { word: "develop", pos: "v.", phonetic: "/dɪˈveləp/", meaningEn: "to grow or improve", meaningCn: "发展；开发", synonyms: ["grow","evolve","expand"], antonyms: ["decline","shrink"], example: "The company is developing new products." },
+  { word: "solve", pos: "v.", phonetic: "/sɒlv/", meaningEn: "to find an answer to a problem", meaningCn: "解决", synonyms: ["resolve","settle","fix"], antonyms: ["create"], example: "Can you solve this puzzle?" },
+  { word: "patient", pos: "n./adj.", phonetic: "/ˈpeɪʃnt/", meaningEn: "a sick person; able to wait calmly", meaningCn: "病人；有耐心的", synonyms: ["sick person","tolerant","calm"], antonyms: ["impatient"], example: "The doctor saw many patients." },
+  { word: "allow", pos: "v.", phonetic: "/əˈlaʊ/", meaningEn: "to permit", meaningCn: "允许", synonyms: ["permit","let","authorize"], antonyms: ["forbid","prevent"], example: "My parents allow me to go out." }
+];
+
+/* =========================================================
+   2. 全局变量与 DOM
+   ========================================================= */
+let wordsData = defaultWordsData.slice();
+let currentIndex = 0;
+let isFlipped = false;
+
+const flashcard      = document.getElementById('flashcard');
+const frontWord      = document.getElementById('frontWord');
+const frontPos       = document.getElementById('frontPos');
+const frontPhonetic  = document.getElementById('frontPhonetic');
+const frontMeaningEn = document.getElementById('frontMeaningEn');
+const frontMeaningCn = document.getElementById('frontMeaningCn');
+const frontExample   = document.getElementById('frontExample');
+const backWord       = document.getElementById('backWord');
+const backPhonetic   = document.getElementById('backPhonetic');
+const synList        = document.getElementById('synList');
+const antList        = document.getElementById('antList');
+const backExample    = document.getElementById('backExample');
+const counter        = document.getElementById('counter');
+const audioBtn       = document.getElementById('audioBtnFront');
+const toastEl        = document.getElementById('toast');
+const appTitle       = document.getElementById('appTitle');
+const importBtn      = document.getElementById('importBtn');
+const importFile     = document.getElementById('importFile');
+const bookGrid       = document.getElementById('bookGrid');
+const homeView       = document.getElementById('homeView');
+const studyView      = document.getElementById('studyView');
+const backBtn        = document.getElementById('backBtn');
+const bookCountEl    = document.getElementById('bookCount');
+const homeTipEl      = document.getElementById('homeTip');
+const confirmModal   = document.getElementById('confirmModal');
+const confirmText    = document.getElementById('confirmText');
+const confirmOk      = document.getElementById('confirmOk');
+const confirmCancel  = document.getElementById('confirmCancel');
+const reportModal    = document.getElementById('reportModal');
+const reportText     = document.getElementById('reportText');
+const reportClose    = document.getElementById('reportClose');
+
+/* =========================================================
+   2.5 词汇本持久化（IndexedDB → localStorage → 内存）
+   ---------------------------------------------------------
+   - 首次打开没有任何词汇本，导入 .docx 后才会出现
+   - 优先 IndexedDB：配额远大于 localStorage，移动端 WebView 更稳
+   - 不可用时退回 localStorage，再不行降级为仅本次会话
+   - defaultWordsData 只作为导入时的释义匹配词典
+   ========================================================= */
+const BOOKS_KEY    = 'vn_books_v1';
+const PROGRESS_KEY = 'vn_progress_v1';
+const DB_NAME      = 'vocabulary_notebook';
+const DB_VERSION   = 1;
+const STORE_NAME   = 'kv';
+
+let books = [];
+let currentBookId = null;
+let progressCache = {};
+
+const storage = {
+  mode: 'memory',
+  db: null,
+  mem: {},
+
+  init: function () {
+    const self = this;
+    return new Promise(function (resolve) {
+      let chosen = false;
+
+      function chooseLocal() {
+        if (chosen) return;
+        chosen = true;
+        self._initLocal().then(resolve);
+      }
+
+      let req;
+      try {
+        if (!window.indexedDB) throw new Error('no indexedDB');
+        req = indexedDB.open(DB_NAME, DB_VERSION);
+      } catch (e) {
+        console.warn('IndexedDB 不可用，改用 localStorage:', e);
+        chooseLocal();
+        return;
+      }
+
+      req.onupgradeneeded = function () {
+        const db = req.result;
+        if (!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME);
+      };
+      req.onsuccess = function () {
+        if (chosen) { try { req.result.close(); } catch (e) {} return; }
+        chosen = true;
+        self.db = req.result;
+        self.mode = 'idb';
+        resolve();
+      };
+      req.onerror = function () {
+        console.warn('IndexedDB 打开失败，改用 localStorage:', req.error);
+        chooseLocal();
+      };
+      req.onblocked = function () {
+        console.warn('IndexedDB 被阻塞，改用 localStorage');
+        chooseLocal();
+      };
+      setTimeout(function () {
+        if (!chosen) {
+          console.warn('IndexedDB 打开超时，改用 localStorage');
+          chooseLocal();
+        }
+      }, 2500);
+    });
+  },
+
+  _initLocal: function () {
+    try {
+      localStorage.setItem('__vn_probe__', '1');
+      localStorage.removeItem('__vn_probe__');
+      this.mode = 'local';
+    } catch (e) {
+      console.warn('localStorage 不可用，使用内存模式:', e);
+      this.mode = 'memory';
+    }
+    return Promise.resolve();
+  },
+
+  get: function (key) {
+    const self = this;
+    if (this.mode === 'idb') {
+      return new Promise(function (resolve) {
+        try {
+          const tx = self.db.transaction(STORE_NAME, 'readonly');
+          const req = tx.objectStore(STORE_NAME).get(key);
+          req.onsuccess = function () { resolve(req.result); };
+          req.onerror = function () {
+            console.warn('IndexedDB 读取失败:', req.error);
+            resolve(undefined);
+          };
+        } catch (e) {
+          console.warn('IndexedDB 读取异常:', e);
+          resolve(undefined);
+        }
+      });
+    }
+    if (this.mode === 'local') {
+      try {
+        const raw = localStorage.getItem(key);
+        return Promise.resolve(raw ? JSON.parse(raw) : undefined);
+      } catch (e) {
+        console.warn('localStorage 读取失败:', e);
+        return Promise.resolve(undefined);
+      }
+    }
+    return Promise.resolve(this.mem[key]);
+  },
+
+  set: function (key, value) {
+    const self = this;
+    if (this.mode === 'idb') {
+      return new Promise(function (resolve) {
+        try {
+          const tx = self.db.transaction(STORE_NAME, 'readwrite');
+          tx.objectStore(STORE_NAME).put(value, key);
+          tx.oncomplete = function () { resolve({ ok: true }); };
+          tx.onerror = function () { resolve({ ok: false, error: tx.error }); };
+          tx.onabort = function () { resolve({ ok: false, error: tx.error }); };
+        } catch (e) {
+          resolve({ ok: false, error: e });
+        }
+      });
+    }
+    if (this.mode === 'local') {
+      try {
+        localStorage.setItem(key, JSON.stringify(value));
+        return Promise.resolve({ ok: true });
+      } catch (e) {
+        return Promise.resolve({ ok: false, error: e });
+      }
+    }
+    this.mem[key] = value;
+    return Promise.resolve({ ok: true });
+  },
+
+  label: function () {
+    if (this.mode === 'idb') return 'IndexedDB';
+    if (this.mode === 'local') return 'localStorage';
+    return '仅本次会话';
+  }
+};
+
+function makeId() {
+  return 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+function normalizeWord(w) {
+  if (!w || typeof w !== 'object' || typeof w.word !== 'string' || !w.word) return null;
+  return {
+    word: w.word,
+    pos: w.pos || '',
+    phonetic: w.phonetic || '',
+    meaningEn: w.meaningEn || '',
+    meaningCn: w.meaningCn || '—',
+    synonyms: Array.isArray(w.synonyms) ? w.synonyms : [],
+    antonyms: Array.isArray(w.antonyms) ? w.antonyms : [],
+    example: w.example || ''
+  };
+}
+
+function normalizeBook(b) {
+  if (!b || typeof b !== 'object') return null;
+  if (typeof b.title !== 'string' || !b.title) return null;
+  const words = Array.isArray(b.words) ? b.words.map(normalizeWord).filter(Boolean) : [];
+  if (!words.length) return null;
+  return {
+    id: typeof b.id === 'string' && b.id ? b.id : makeId(),
+    title: b.title,
+    createdAt: Number(b.createdAt) || Date.now(),
+    words: words
+  };
+}
+
+async function loadBooks() {
+  const arr = await storage.get(BOOKS_KEY);
+  if (!Array.isArray(arr)) return [];
+  return arr.map(normalizeBook).filter(Boolean);
+}
+
+async function saveBooks(list) {
+  const res = await storage.set(BOOKS_KEY, list);
+  if (res.ok) return true;
+
+  const e = res.error || {};
+  const quota = e.name === 'QuotaExceededError' ||
+                e.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
+                e.code === 22 || e.code === 1014;
+  console.warn('保存词汇本失败:', e);
+  showToast(quota
+    ? '保存失败：存储空间不足（可删除部分词汇本后重试）'
+    : '保存失败：' + (e.name || '未知错误'), 4000);
+  return false;
+}
+
+async function loadProgress() {
+  const p = await storage.get(PROGRESS_KEY);
+  progressCache = (p && typeof p === 'object' && !Array.isArray(p)) ? p : {};
+  return progressCache;
+}
+
+function getLastIndex(id) {
+  const n = progressCache[id];
+  return Number.isFinite(n) && n >= 0 ? Math.floor(n) : 0;
+}
+
+function setLastIndex(id, index) {
+  if (!id) return;
+  progressCache[id] = index;
+  storage.set(PROGRESS_KEY, progressCache).then(function (res) {
+    if (!res.ok) console.warn('进度保存失败:', res.error);
+  });
+}
+
+// 把旧版本存在 localStorage 里的词汇本迁移到 IndexedDB
+async function migrateLegacyStorage() {
+  if (storage.mode !== 'idb') return;
+  try {
+    const existing = await storage.get(BOOKS_KEY);
+    if (Array.isArray(existing) && existing.length) return;
+    const raw = localStorage.getItem(BOOKS_KEY);
+    if (!raw) return;
+    const arr = JSON.parse(raw);
+    if (!Array.isArray(arr) || !arr.length) return;
+    await storage.set(BOOKS_KEY, arr);
+    const praw = localStorage.getItem(PROGRESS_KEY);
+    if (praw) await storage.set(PROGRESS_KEY, JSON.parse(praw));
+    console.log('已从 localStorage 迁移 ' + arr.length + ' 个词汇本到 IndexedDB');
+  } catch (e) {
+    console.warn('迁移旧数据失败:', e);
+  }
+}
+
+function uniqueTitle(list, title) {
+  const used = {};
+  list.forEach(function (b) { used[b.title] = true; });
+  if (!used[title]) return title;
+  let n = 2;
+  while (used[title + ' (' + n + ')']) n++;
+  return title + ' (' + n + ')';
+}
+
+function formatDate(ts) {
+  const d = new Date(ts);
+  if (isNaN(d.getTime())) return '';
+  function p(n) { return n < 10 ? '0' + n : '' + n; }
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+}
+
+/* =========================================================
+   2.6 书架渲染与视图切换
+   ========================================================= */
+function renderHome() {
+  document.body.classList.add('home-mode');
+  bookGrid.innerHTML = '';
+  bookCountEl.textContent = '共 ' + books.length + ' 个词汇本';
+  homeTipEl.textContent = '点击词汇本开始学习 · 数据保存在本机（' + storage.label() + '），重新打开依然可见';
+
+  if (!books.length) {
+    const empty = document.createElement('div');
+    empty.className = 'book-empty';
+    const strong = document.createElement('strong');
+    strong.textContent = '还没有词汇本';
+    const span = document.createElement('span');
+    span.textContent = '点击上方「导入词汇本」选择 .docx 或 .pdf 文件（可多选）；数据保存在本机，重新打开依然可见。';
+    empty.appendChild(strong);
+    empty.appendChild(span);
+    bookGrid.appendChild(empty);
+    return;
+  }
+
+  books.forEach(function (book) {
+    const card = document.createElement('div');
+    card.className = 'book-card';
+    card.setAttribute('role', 'button');
+    card.setAttribute('tabindex', '0');
+    card.dataset.id = book.id;
+
+    const title = document.createElement('div');
+    title.className = 'book-title';
+    title.textContent = book.title;
+    card.appendChild(title);
+
+    const meta = document.createElement('div');
+    meta.className = 'book-meta';
+
+    const count = document.createElement('span');
+    count.className = 'book-count';
+    count.textContent = book.words.length + ' 词';
+    meta.appendChild(count);
+
+    const tag = document.createElement('span');
+    tag.className = 'book-tag';
+    tag.textContent = formatDate(book.createdAt);
+    meta.appendChild(tag);
+
+    const actions = document.createElement('div');
+    actions.className = 'book-actions';
+
+    const share = document.createElement('button');
+    share.type = 'button';
+    share.className = 'book-share';
+    share.setAttribute('aria-label', '分享词汇本 ' + book.title);
+    share.dataset.share = book.id;
+    share.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"' +
+      ' stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"' +
+      ' style="pointer-events:none">' +
+      '<circle cx="18" cy="5" r="3"></circle>' +
+      '<circle cx="6" cy="12" r="3"></circle>' +
+      '<circle cx="18" cy="19" r="3"></circle>' +
+      '<line x1="8.6" y1="10.7" x2="15.4" y2="6.3"></line>' +
+      '<line x1="8.6" y1="13.3" x2="15.4" y2="17.7"></line></svg>';
+    share.addEventListener('click', function (e) {
+      e.stopPropagation();
+      shareBook(book.id);
+    });
+    actions.appendChild(share);
+
+    const del = document.createElement('button');
+    del.type = 'button';
+    del.className = 'book-del';
+    del.setAttribute('aria-label', '删除词汇本 ' + book.title);
+    del.dataset.del = book.id;
+    del.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"' +
+      ' stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      '<polyline points="3 6 5 6 21 6"></polyline>' +
+      '<path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>' +
+      '<path d="M10 11v6M14 11v6"></path>' +
+      '<path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>';
+    actions.appendChild(del);
+
+    meta.appendChild(actions);
+    card.appendChild(meta);
+
+    bookGrid.appendChild(card);
+  });
+}
+
+function showHome() {
+  studyView.hidden = true;
+  homeView.hidden = false;
+  renderHome();
+  window.scrollTo(0, 0);
+}
+
+function openBook(id) {
+  const book = books.find(function (b) { return b.id === id; });
+  if (!book) {
+    showToast('词汇本不存在');
+    showHome();
+    return;
+  }
+
+  currentBookId = book.id;
+  wordsData = book.words;
+  appTitle.textContent = book.title;
+
+  const last = getLastIndex(book.id);
+  currentIndex = book.words.length ? (last % book.words.length) : 0;
+  renderWord(currentIndex);
+
+  document.body.classList.remove('home-mode');
+  homeView.hidden = true;
+  studyView.hidden = false;
+  window.scrollTo(0, 0);
+}
+
+/* 应用内确认框：window.confirm 在沙箱 iframe / 部分移动端 WebView 会被静默拦截 */
+function askConfirm(message, okText) {
+  return new Promise(function (resolve) {
+    if (!confirmModal) { resolve(true); return; }
+
+    confirmText.textContent = message;
+    confirmOk.textContent = okText || '确定';
+    confirmModal.hidden = false;
+    try { confirmOk.focus(); } catch (e) {}
+
+    let settled = false;
+    function finish(value) {
+      if (settled) return;
+      settled = true;
+      confirmModal.hidden = true;
+      confirmOk.removeEventListener('click', onOk);
+      confirmCancel.removeEventListener('click', onCancel);
+      confirmModal.removeEventListener('click', onBackdrop);
+      document.removeEventListener('keydown', onKey);
+      resolve(value);
+    }
+    function onOk() { finish(true); }
+    function onCancel() { finish(false); }
+    function onBackdrop(e) { if (e.target === confirmModal) finish(false); }
+    function onKey(e) { if (e.key === 'Escape') finish(false); }
+
+    confirmOk.addEventListener('click', onOk);
+    confirmCancel.addEventListener('click', onCancel);
+    confirmModal.addEventListener('click', onBackdrop);
+    document.addEventListener('keydown', onKey);
+  });
+}
+
+/* 导入报告：把「哪几行没被识别」直接显示出来，而不是静默少词 */
+function showReport(text) {
+  console.log('[导入报告]\n' + text);
+  if (!reportModal) return;
+  reportText.textContent = text;
+  reportModal.hidden = false;
+}
+
+if (reportClose) {
+  reportClose.addEventListener('click', function () { reportModal.hidden = true; });
+}
+if (reportModal) {
+  reportModal.addEventListener('click', function (e) {
+    if (e.target === reportModal) reportModal.hidden = true;
+  });
+}
+
+async function deleteBook(id) {
+  const book = books.find(function (b) { return b.id === id; });
+  if (!book) return;
+
+  const confirmed = await askConfirm('删除「' + book.title + '」？删除后无法恢复。', '删除');
+  if (!confirmed) return;
+
+  const next = books.filter(function (b) { return b.id !== id; });
+  if (!await saveBooks(next)) return;
+  books = next;
+
+  if (Object.prototype.hasOwnProperty.call(progressCache, id)) {
+    delete progressCache[id];
+    storage.set(PROGRESS_KEY, progressCache);
+  }
+
+  renderHome();
+  showToast('已删除「' + book.title + '」');
+}
+
+bookGrid.addEventListener('click', function (e) {
+  const delBtn = closestEl(e.target, '.book-del');
+  if (delBtn) {
+    e.stopPropagation();
+    deleteBook(delBtn.dataset.del);
+    return;
+  }
+  const shareBtn = closestEl(e.target, '.book-share');
+  if (shareBtn) {
+    e.stopPropagation();
+    shareBook(shareBtn.dataset.share);
+    return;
+  }
+  const card = closestEl(e.target, '.book-card');
+  if (card) openBook(card.dataset.id);
+});
+
+bookGrid.addEventListener('keydown', function (e) {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  if (closestEl(e.target, '.book-del') || closestEl(e.target, '.book-share')) return;
+  const card = closestEl(e.target, '.book-card');
+  if (!card) return;
+  e.preventDefault();
+  openBook(card.dataset.id);
+});
+
+backBtn.addEventListener('click', showHome);
+
+/* =========================================================
+   2.7 分享：把词汇本打包成一个独立 HTML 文件
+   ---------------------------------------------------------
+   - 复用本页样式与卡片结构，内嵌该词汇本的全部数据
+   - 生成的文件离线可用，接收方直接打开就能学习
+   - 移动端优先系统分享（可发微信），否则下载
+   ========================================================= */
+function escapeHtmlText(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+
+function safeFileName(name) {
+  return String(name == null ? '' : name)
+    .replace(/[\\/:*?"<>|\u0000-\u001f]/g, '_')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 60) || '词汇本';
+}
+
+// 分享页里的交互脚本（自包含，不依赖本页）
+function buildShareScript(words) {
+  const json = JSON.stringify(words).replace(/</g, '\\u003c');
+  return [
+    '"use strict";',
+    'var WORDS = ' + json + ';',
+    'var idx = 0, saying = false;',
+    'var flashcard = document.getElementById("flashcard");',
+    'var counter = document.getElementById("counter");',
+    'var frontWord = document.getElementById("frontWord");',
+    'var frontPos = document.getElementById("frontPos");',
+    'var frontPhonetic = document.getElementById("frontPhonetic");',
+    'var frontMeaningEn = document.getElementById("frontMeaningEn");',
+    'var frontMeaningCn = document.getElementById("frontMeaningCn");',
+    'var frontExample = document.getElementById("frontExample");',
+    'var backWord = document.getElementById("backWord");',
+    'var backPhonetic = document.getElementById("backPhonetic");',
+    'var synList = document.getElementById("synList");',
+    'var antList = document.getElementById("antList");',
+    'var backExample = document.getElementById("backExample");',
+    'var audioBtn = document.getElementById("audioBtnFront");',
+    'function chips(box, items, cls) { box.innerHTML = ""; if (!items || !items.length) { var e = document.createElement("span"); e.className = cls + " empty"; e.textContent = "—"; box.appendChild(e); return; } for (var i = 0; i < items.length; i++) { var s = document.createElement("span"); s.className = cls; s.textContent = items[i]; box.appendChild(s); } }',
+    'function render(i) { var w = WORDS[i]; if (!w) return; frontWord.textContent = w.word; frontPos.textContent = w.pos || "—"; frontPhonetic.textContent = w.phonetic || ""; frontMeaningEn.textContent = w.meaningEn || "—"; frontMeaningCn.textContent = w.meaningCn || "—"; frontExample.textContent = w.example || "—"; backWord.textContent = w.word; backPhonetic.textContent = [w.phonetic, w.pos].filter(Boolean).join(" · "); backExample.textContent = w.example || "—"; chips(synList, w.synonyms, "syn-item"); chips(antList, w.antonyms, "ant-item"); counter.textContent = (i + 1) + " / " + WORDS.length; if (flashcard.classList.contains("flipped")) flashcard.classList.remove("flipped"); }',
+    'function toggle() { flashcard.classList.toggle("flipped"); }',
+    'flashcard.addEventListener("click", function (e) { if (e.target.closest(".audio-btn")) return; toggle(); });',
+    'flashcard.addEventListener("keydown", function (e) { if (e.key === " " || e.key === "Enter") { e.preventDefault(); toggle(); } });',
+    'function speak(word) { if (!word || saying) return; saying = true; var a = new Audio("https://dict.youdao.com/dictvoice?audio=" + encodeURIComponent(word) + "&type=1"); function done() { saying = false; } a.onended = done; a.onerror = done; setTimeout(done, 10000); try { var p = a.play(); if (p && p.catch) p.catch(done); } catch (err) { done(); } }',
+    'if (audioBtn) audioBtn.addEventListener("click", function (e) { e.stopPropagation(); speak((WORDS[idx] || {}).word); });',
+    'document.getElementById("nextBtn").addEventListener("click", function () { idx = (idx + 1) % WORDS.length; render(idx); });',
+    'document.getElementById("randomBtn").addEventListener("click", function () { if (WORDS.length < 2) return; var n; do { n = Math.floor(Math.random() * WORDS.length); } while (n === idx); idx = n; render(idx); });',
+    'var counterEdit = false;',
+    'function restoreCounter() { counter.textContent = (idx + 1) + " / " + WORDS.length; }',
+    'function startCounterEdit() { if (counterEdit || !WORDS.length) return; counterEdit = true; counter.innerHTML = ""; var input = document.createElement("input"); input.type = "number"; input.className = "counter-input"; input.min = "1"; input.max = String(WORDS.length); input.value = String(idx + 1); var suffix = document.createElement("span"); suffix.textContent = " / " + WORDS.length; counter.appendChild(input); counter.appendChild(suffix); try { input.focus(); input.select(); } catch (e) {} var done = false; function finish(cancel) { if (done) return; done = true; counterEdit = false; if (!cancel) { var n = parseInt(input.value, 10); if (isFinite(n)) { idx = Math.min(WORDS.length, Math.max(1, n)) - 1; render(idx); return; } } restoreCounter(); } input.addEventListener("keydown", function (e) { e.stopPropagation(); if (e.key === "Enter") { e.preventDefault(); finish(false); } else if (e.key === "Escape") { e.preventDefault(); finish(true); } }); input.addEventListener("blur", function () { finish(false); }); }',
+    'counter.addEventListener("click", function (e) { if (e.target !== counter) return; startCounterEdit(); });',
+    'counter.addEventListener("keydown", function (e) { if (counterEdit) return; if (e.key === "Enter" || e.key === " ") { e.preventDefault(); startCounterEdit(); } });',
+    'document.addEventListener("keydown", function (e) { if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) return; if (e.target && e.target.closest && e.target.closest(".card")) return; if (e.key === "ArrowRight") { idx = (idx + 1) % WORDS.length; render(idx); } else if (e.key === "ArrowLeft") { idx = (idx - 1 + WORDS.length) % WORDS.length; render(idx); } });',
+    'render(0);'
+  ].join('\n');
+}
+
+function buildShareHtml(book) {
+  const styleEl = document.querySelector('style');
+  const styleText = styleEl ? styleEl.textContent : '';
+
+  const view = studyView.cloneNode(true);
+  view.removeAttribute('hidden');
+  const back = view.querySelector('#backBtn');
+  if (back) back.remove();
+  const t = view.querySelector('#appTitle');
+  if (t) t.textContent = book.title;
+
+  return '<!DOCTYPE html>\n' +
+    '<html lang="zh-CN">\n<head>\n' +
+    '<meta charset="UTF-8">\n' +
+    '<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">\n' +
+    '<meta name="theme-color" content="#0f1724">\n' +
+    '<title>' + escapeHtmlText(book.title) + '</title>\n' +
+    '<style>' + styleText + '</style>\n' +
+    '</head>\n<body>\n' +
+    '<div class="app-container">' + view.outerHTML + '</div>\n' +
+    '<script>\n' + buildShareScript(book.words) + '\n<\/script>\n' +
+    '</body>\n</html>';
+}
+
+// 逐级向上找匹配元素（不依赖 Element.closest，兼容老旧 WebView）
+function closestEl(node, sel) {
+  while (node && node !== document) {
+    if (node.nodeType === 1) {
+      if (node.matches && node.matches(sel)) return node;
+      if (node.classList && node.classList.contains(sel.replace('.', ''))) return node;
+    }
+    node = node.parentNode;
+  }
+  return null;
+}
+
+// 分享：优先系统分享；不支持文件分享时退回分享文本
+function buildShareText(book) {
+  const lines = book.words.map(function (w, i) {
+    const cn = (w.meaningCn && w.meaningCn !== '—') ? '  ' + w.meaningCn : '';
+    return (i + 1) + '. ' + w.word + cn;
+  });
+  return book.title + '\n' + lines.join('\n');
+}
+
+// 系统分享必须在 click 的同一任务里同步调用，否则会丢失用户激活
+// （transient activation），导致分享框不弹出。
+function shareBook(id) {
+  const book = books.find(function (b) { return b.id === id; });
+  if (!book) { showToast('词汇本不存在'); return; }
+  if (!book.words.length) { showToast('词汇本为空，无法分享'); return; }
+
+  if (!navigator.share) {
+    showToast('当前浏览器不支持系统分享', 5000);
+    return;
+  }
+
+  let data;
+  try {
+    const html = buildShareHtml(book);
+    const fileName = safeFileName(book.title) + '.html';
+    const text = buildShareText(book);
+    const file = new File([html], fileName, { type: 'text/html' });
+    data = (navigator.canShare && navigator.canShare({ files: [file] }))
+      ? { files: [file], title: book.title, text: text }
+      : { title: book.title, text: text };
+  } catch (e) {
+    console.warn('构造分享内容失败，退回文本分享:', e);
+    data = { title: book.title, text: buildShareText(book) };
+  }
+
+  let settled = false;
+  const hintTimer = setTimeout(function () {
+    if (!settled) showToast('系统分享没有弹出，请稍后重试', 5000);
+  }, 2000);
+
+  try {
+    navigator.share(data).then(function () {
+      settled = true;
+      clearTimeout(hintTimer);
+      showToast('已分享「' + book.title + '」');
+    }).catch(function (e) {
+      settled = true;
+      clearTimeout(hintTimer);
+      if (e && e.name === 'AbortError') return;
+      console.warn('系统分享失败:', e);
+      showToast('系统分享失败：' + (e && e.message ? e.message : '当前浏览器不支持'), 6000);
+    });
+  } catch (e) {
+    settled = true;
+    clearTimeout(hintTimer);
+    console.warn('系统分享异常:', e);
+    showToast('系统分享失败：' + (e && e.message ? e.message : '当前浏览器不支持'), 6000);
+  }
+}
+
+/* =========================================================
+   3. 渲染
+   ========================================================= */
+function renderChips(container, items, type) {
+  container.innerHTML = '';
+  if (!items || !items.length) {
+    const span = document.createElement('span');
+    span.className = (type === 'syn' ? 'syn-item' : 'ant-item') + ' empty';
+    span.textContent = '—';
+    container.appendChild(span);
+    return;
+  }
+  items.forEach(function (text) {
+    const span = document.createElement('span');
+    span.className = type === 'syn' ? 'syn-item' : 'ant-item';
+    span.textContent = text;
+    container.appendChild(span);
+  });
+}
+
+function renderWord(index) {
+  const data = wordsData[index];
+  if (!data) return;
+
+  frontWord.textContent      = data.word;
+  frontPos.textContent       = data.pos || '—';
+  frontPhonetic.textContent  = data.phonetic || '';
+  frontMeaningEn.textContent = data.meaningEn || '—';
+  frontMeaningCn.textContent = data.meaningCn || '—';
+  frontExample.textContent   = data.example || '—';
+
+  backWord.textContent     = data.word;
+  backPhonetic.textContent = [data.phonetic, data.pos].filter(Boolean).join(' · ');
+  backExample.textContent  = data.example || '—';
+
+  renderChips(synList, data.synonyms, 'syn');
+  renderChips(antList, data.antonyms, 'ant');
+
+  counter.textContent = (index + 1) + ' / ' + wordsData.length;
+
+  if (isFlipped) {
+    flashcard.classList.remove('flipped');
+    isFlipped = false;
+  }
+
+  setLastIndex(currentBookId, index);
+}
+
+/* =========================================================
+   4. 有道英式发音
+   ---------------------------------------------------------
+   接口：https://dict.youdao.com/dictvoice?audio=WORD&type=1
+   type=1 → 英式发音
+   ⚠️ 不要设置 audio.crossOrigin，否则会触发 CORS 检查导致加载失败
+   ========================================================= */
+let pronouncing = false;
+
+function setAudioBtnBusy(on) {
+  if (!audioBtn) return;
+  audioBtn.classList.toggle('speaking', !!on);
+}
+
+function speakWord(word) {
+  if (!word || pronouncing) return;
+  pronouncing = true;
+  setAudioBtnBusy(true);
+
+  function finish() {
+    pronouncing = false;
+    setAudioBtnBusy(false);
+  }
+
+  const url = 'https://dict.youdao.com/dictvoice?audio=' +
+              encodeURIComponent(word) + '&type=1';
+
+  let audio;
+  try {
+    audio = new Audio();
+    audio.preload = 'auto';
+    // 绝对不要设置 crossOrigin
+    audio.src = url;
+  } catch (e) {
+    console.warn('Audio create fail:', e);
+    showToast('语音播放失败');
+    finish();
+    return;
+  }
+
+  let done = false;
+  function doneOnce(ok, msg) {
+    if (done) return;
+    done = true;
+    if (!ok) showToast(msg || '语音播放失败');
+    finish();
+  }
+
+  audio.onended = function () { doneOnce(true); };
+  audio.onerror = function (e) {
+    console.warn('Audio error:', e);
+    doneOnce(false, '音频加载失败');
+  };
+  setTimeout(function () { doneOnce(false, '播放超时'); }, 10000);
+
+  try {
+    const p = audio.play();
+    if (p && typeof p.then === 'function') {
+      p.catch(function (err) {
+        console.warn('play() rejected:', err);
+        doneOnce(false, '播放失败，请点击页面任意位置后重试');
+      });
+    }
+  } catch (e) {
+    console.warn('play() throw:', e);
+    doneOnce(false, '播放失败');
+  }
+}
+
+/* =========================================================
+   5. 音频解锁（夸克 / 微信等环境需要）
+   ========================================================= */
+let audioCtx = null;
+try {
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+} catch (e) {}
+
+function unlockAudio() {
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume().catch(function () {});
+  }
+  try {
+    const silent = new Audio();
+    silent.volume = 0;
+    silent.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
+    silent.play().catch(function () {});
+  } catch (e) {}
+}
+
+document.addEventListener('click', function once() {
+  unlockAudio();
+  document.removeEventListener('click', once);
+}, { once: true });
+
+document.addEventListener('touchstart', function once() {
+  unlockAudio();
+  document.removeEventListener('touchstart', once);
+}, { once: true, passive: true });
+
+/* =========================================================
+   6. Toast
+   ========================================================= */
+let toastTimer = null;
+function showToast(msg, ms) {
+  if (!toastEl) return;
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () {
+    toastEl.classList.remove('show');
+  }, ms || 2400);
+}
+
+/* =========================================================
+   7. 导入（.docx / .pdf）
+   ---------------------------------------------------------
+   导入：从 .docx / .pdf 中提取英文词条，与内置词库匹配
+        - 命中内置词库 → 使用完整数据（音标、释义、例句等）
+        - 未命中 → 生成简略卡片（仅英文单词）
+   ========================================================= */
+/* =========================================================
+   解析库按需加载：多 CDN 依次重试
+   ---------------------------------------------------------
+   国内网络下 cdnjs / jsdelivr 可能不可达，故按序兜底：
+   jsdelivr → BootCDN（国内） → cdnjs
+   ========================================================= */
+const LIB_SOURCES = {
+  mammoth: [
+    'https://cdn.jsdelivr.net/npm/mammoth@1.4.16/mammoth.browser.min.js',
+    'https://cdn.bootcdn.net/ajax/libs/mammoth/1.4.16/mammoth.browser.min.js',
+    'https://cdn.staticfile.org/mammoth/1.4.16/mammoth.browser.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.16/mammoth.browser.min.js'
+  ],
+  pdfjs: [
+    'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js',
+    'https://cdn.bootcdn.net/ajax/libs/pdf.js/3.11.174/pdf.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js'
+  ]
+};
+
+const PDF_WORKERS = [
+  'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js',
+  'https://cdn.bootcdn.net/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'
+];
+
+function loadScriptOnce(url) {
+  return new Promise(function (resolve, reject) {
+    const s = document.createElement('script');
+    s.src = url;
+    s.async = true;
+    const timer = setTimeout(function () { reject(new Error('超时: ' + url)); }, 20000);
+    s.onload = function () { clearTimeout(timer); resolve(true); };
+    s.onerror = function () { clearTimeout(timer); reject(new Error('失败: ' + url)); };
+    document.head.appendChild(s);
+  });
+}
+
+async function ensureLib(key, globalName) {
+  if (window[globalName]) return true;
+  const urls = LIB_SOURCES[key] || [];
+  for (let i = 0; i < urls.length; i++) {
+    try {
+      await loadScriptOnce(urls[i]);
+      if (window[globalName]) return true;
+    } catch (e) {
+      console.warn('CDN 不可用，尝试下一个：' + urls[i], e && e.message);
+    }
+  }
+  return !!window[globalName];
+}
+
+// 点击按钮 -> 打开文件选择框（透明文件框优先由原生处理，落在按钮本身时用 JS 兜底）
+importBtn.addEventListener('click', function (e) {
+  if (e.target === importFile) return;
+  try { importFile.click(); } catch (err) { console.warn('文件选择器无法打开:', err); }
+});
+importBtn.addEventListener('keydown', function (e) {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    try { importFile.click(); } catch (err) { console.warn('文件选择器无法打开:', err); }
+  }
+});
+
+importFile.addEventListener('change', function (e) {
+  // 先复制成数组：input.value='' 会清空实时 FileList
+  const files = Array.prototype.slice.call(e.target.files || []);
+  importFile.value = '';
+  importFiles(files);
+});
+
+// 一批文件（.docx / .pdf）：每个文件生成一个独立词汇本
+async function importFiles(fileList) {
+  const files = Array.prototype.slice.call(fileList || []);
+
+  if (!files.length) {
+    showToast('没有选择文件');
+    return;
+  }
+
+  showToast('正在导入 ' + files.length + ' 个文件…', 1600);
+
+  const pending = books.slice();
+  const added = [];
+  const dupNames = [];
+  const rejNames = [];
+  const unusedLines = [];
+  let parsedTotal = 0;
+  let inlineTotal = 0;
+  let blockTotal = 0;
+  let dupTotal = 0;
+  let rejTotal = 0;
+  let unusedTotal = 0;
+  let failed = 0;
+
+  const errors = [];
+
+  // 串行解析，手机端内存更稳
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    try {
+      const buf = await readArrayBuffer(file);
+      let kind = fileKind(file);
+      if (!kind) kind = sniffKind(buf);
+
+      let parsed;
+      if (kind === 'pdf') {
+        if (!await ensureLib('pdfjs', 'pdfjsLib')) throw new Error('PDF 解析库加载失败（网络受限）');
+        await ensurePdfWorker();
+        parsed = await parsePdfBuffer(buf);
+      } else if (kind === 'docx') {
+        if (!await ensureLib('mammoth', 'mammoth')) throw new Error('Word 解析库加载失败（网络受限）');
+        parsed = await parseDocxBuffer(buf);
+      } else {
+        throw new Error('不是 .docx / .pdf 文件');
+      }
+
+      const st = parseWordList.lastStats;
+      if (st) {
+        inlineTotal += st.inlineCount;
+        blockTotal += st.blockCount;
+        dupTotal += st.duplicates.length;
+        rejTotal += st.rejected.length;
+        unusedTotal += st.unused.length;
+        st.duplicates.forEach(function (w) { if (dupNames.length < 12) dupNames.push(w); });
+        st.rejected.forEach(function (w) { if (rejNames.length < 12) rejNames.push(w); });
+        st.unused.forEach(function (w) { if (unusedLines.length < 40) unusedLines.push(w); });
+      }
+      if (!parsed.length) { failed++; continue; }
+      parsedTotal += parsed.length;
+      const base = file.name.replace(/\.(docx|pdf)$/i, '').trim() || '未命名词汇本';
+      const book = {
+        id: makeId(),
+        title: uniqueTitle(pending, base),
+        createdAt: Date.now(),
+        words: parsed
+      };
+      pending.push(book);
+      added.push(book);
+    } catch (err) {
+      console.warn('导入失败:', file.name, err);
+      errors.push((file.name || '文件') + '：' + ((err && err.message) ? err.message : '解析失败'));
+      failed++;
+    }
+  }
+
+  if (!added.length) {
+    const why = errors.length ? errors.slice(0, 2).join('；') : '没有解析到有效单词';
+    showToast('导入失败：' + why, 8000);
+    if (errors.length) showReport('导入失败\n\n' + errors.join('\n'));
+    return;
+  }
+  if (!await saveBooks(pending)) return;
+  books = pending;
+  renderHome();
+
+  const skipped = rejTotal + unusedTotal;
+  let msg = '已导入 ' + added.length + ' 个词汇本（' + parsedTotal + ' 词）';
+  if (failed) msg += '，' + failed + ' 个文件失败';
+  if (dupTotal) msg += '，重复合并 ' + dupTotal + ' 条';
+  if (skipped) msg += '，未识别 ' + skipped + ' 条';
+  showToast(msg + (skipped ? '（见导入报告）' : ''), skipped ? 6000 : 2400);
+
+  if (dupTotal || skipped || errors.length) {
+    const rep = [];
+    rep.push('解析成功：' + parsedTotal + ' 条');
+    rep.push('（整篇扫描 ' + inlineTotal + ' 条 / 逐段解析 ' + blockTotal + ' 条，取较多者）');
+    rep.push('重复合并：' + dupTotal + ' 条');
+    rep.push('未识别：' + skipped + ' 条');
+    if (dupNames.length) {
+      rep.push('');
+      rep.push('重复的单词：');
+      rep.push(dupNames.join('、'));
+    }
+    if (unusedLines.length) {
+      rep.push('');
+      rep.push('未识别的行（最多 40 条）：');
+      unusedLines.forEach(function (line, n) { rep.push((n + 1) + '. ' + line); });
+    }
+    if (rejNames.length) {
+      rep.push('');
+      rep.push('识别失败的内容：');
+      rejNames.forEach(function (line, n) { rep.push((n + 1) + '. ' + line); });
+    }
+    if (errors.length) {
+      rep.push('');
+      rep.push('失败的文件：');
+      errors.forEach(function (line, n) { rep.push((n + 1) + '. ' + line); });
+    }
+    showReport(rep.join('\n'));
+  }
+}
+
+// 统一用 FileReader 读文件（比 file.arrayBuffer() 兼容性更好）
+function readArrayBuffer(file) {
+  return new Promise(function (resolve, reject) {
+    const reader = new FileReader();
+    reader.onerror = function () { reject(reader.error || new Error('读取文件失败')); };
+    reader.onload = function (evt) { resolve(evt.target.result); };
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+// 先按扩展名 / MIME 判断；都判断不出来时按文件头判断
+function fileKind(file) {
+  const name = (file.name || '').toLowerCase();
+  if (name.length >= 4 && name.slice(-4) === '.pdf') return 'pdf';
+  if (name.length >= 5 && name.slice(-5) === '.docx') return 'docx';
+  const type = (file.type || '').toLowerCase();
+  if (type.indexOf('pdf') >= 0) return 'pdf';
+  if (type.indexOf('wordprocessingml') >= 0 || type.indexOf('msword') >= 0) return 'docx';
+  return '';
+}
+
+function sniffKind(buf) {
+  const b = new Uint8Array(buf.slice(0, 5));
+  if (b[0] === 0x25 && b[1] === 0x50 && b[2] === 0x44 && b[3] === 0x46) return 'pdf';  // %PDF
+  if (b[0] === 0x50 && b[1] === 0x4B) return 'docx';                                   // PK.. (zip)
+  return '';
+}
+
+async function parseDocxBuffer(buf) {
+  if (typeof mammoth === 'undefined') throw new Error('Word 解析库未加载');
+  const result = await mammoth.convertToHtml({ arrayBuffer: buf });
+  return parseWordList(result.value);
+}
+
+// 跨域 worker 会被浏览器拦截，先把 worker 脚本取回来转成同源 Blob
+async function ensurePdfWorker() {
+  if (!window.pdfjsLib || !pdfjsLib.GlobalWorkerOptions) return;
+  if (pdfjsLib.GlobalWorkerOptions.workerSrc) return;
+  for (let i = 0; i < PDF_WORKERS.length; i++) {
+    try {
+      const res = await fetch(PDF_WORKERS[i], { mode: 'cors' });
+      if (!res.ok) continue;
+      const code = await res.text();
+      if (code.length < 1000) continue;
+      pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(new Blob([code], { type: 'text/javascript' }));
+      return;
+    } catch (e) {
+      console.warn('worker 加载失败:', PDF_WORKERS[i], e && e.message);
+    }
+  }
+}
+
+// PDF：用 pdf.js 抽取文本，再交给同一套词条解析
+async function parsePdfBuffer(buf) {
+  if (typeof pdfjsLib === 'undefined') throw new Error('PDF 解析库未加载');
+  const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(buf) }).promise;
+  let text = '';
+  for (let p = 1; p <= pdf.numPages; p++) {
+    const page = await pdf.getPage(p);
+    const content = await page.getTextContent();
+    const parts = [];
+    content.items.forEach(function (item) {
+      if (item && typeof item.str === 'string') parts.push(item.str);
+      parts.push(item && item.hasEOL ? '\n' : ' ');
+    });
+    text += parts.join('') + ' ';
+  }
+  if (text.replace(/\s/g, '').length < 10) {
+    throw new Error('PDF 里没有可提取的文字（可能是扫描图片）');
+  }
+  return parseWordList(text);
+}
+
+// HTML -> 段落文本（保留 <p>/<li> 等块级边界）
+function htmlToBlocks(html) {
+  return String(html == null ? '' : html)
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/(p|div|li|h[1-6]|tr|td|th)\s*>/gi, '\n')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/[ \t\u00a0]+/g, ' ');
+}
+
+let defaultWordMap = null;
+function getDefaultWordMap() {
+  if (!defaultWordMap) {
+    defaultWordMap = {};
+    defaultWordsData.forEach(function (w) {
+      defaultWordMap[String(w.word).toLowerCase()] = w;
+    });
+  }
+  return defaultWordMap;
+}
+
+// 行内编号：1. / 1．/ 1。 / 1、 / 1, / 1: / 1) / （1） / 1- 等
+const NUMBERED_RE = /(?:^|[\s\u3000])\(?(\d{1,4})\)?\s*[.．。、,，:：;；)）\]】\-–—]\s*/g;
+
+function scanNumbered(flat) {
+  const marks = [];
+  let m;
+  NUMBERED_RE.lastIndex = 0;
+  while ((m = NUMBERED_RE.exec(flat)) !== null) {
+    marks.push({ from: m.index + m[0].length, at: m.index });
+  }
+  return marks;
+}
+
+const PARSE_CJK = /[\u4e00-\u9fa5\u3000-\u303f\uff00-\uffef]/;
+const PARSE_HAS_LETTER = /[A-Za-z]/;
+const PARSE_LOOSE = /^[A-Za-z][A-Za-z0-9'’./\-& ]*$/;
+
+// 解析 Word 内容：同时用「整篇扫描」和「逐段解析」两种方式，取条数更多的那个
+// 逐段能处理 Word 自动编号（<li> 无序号）；整篇扫描对跨段落 / 表格更宽容
+function parseWordList(html) {
+  const blocks = htmlToBlocks(html)
+    .split('\n')
+    .map(function (s) { return s.trim(); })
+    .filter(Boolean);
+
+  const dict = getDefaultWordMap();
+
+  function makeRun() {
+    const result = [];
+    const seen = new Set();
+    const stats = { duplicates: [], rejected: [], unused: [] };
+
+    function pushEntry(raw, source) {
+      let content = String(raw == null ? '' : raw).split(PARSE_CJK)[0];
+      content = content
+        .replace(/^[\s"'\`*※·•●○◆◇\-–—,.、;:：]+/, '')
+        .replace(/[\s"'\`*※·•●○◆◇\-–—,.;:：]+$/, '')
+        .replace(/\s+\d+\s*$/, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      if (!content || !/^[A-Za-z]/.test(content)) {
+        stats.rejected.push(String(source == null ? '' : source).trim().slice(0, 60));
+        return false;
+      }
+
+      const key = content.toLowerCase();
+      if (seen.has(key)) {
+        stats.duplicates.push(content);
+        return true;
+      }
+      seen.add(key);
+
+      const hit = dict[key];
+      if (hit) {
+        result.push(Object.assign({}, hit));
+      } else {
+        result.push({
+          word: content,
+          pos: '',
+          phonetic: '',
+          meaningEn: '',
+          meaningCn: '—',
+          synonyms: [],
+          antonyms: [],
+          example: ''
+        });
+      }
+      return true;
+    }
+
+    return { result: result, stats: stats, pushEntry: pushEntry };
+  }
+
+  // ---- A：整篇扫描（等同旧版行为，但对格式更宽容）----
+  const flat = blocks.join(' ');
+  const runA = makeRun();
+  const marks = scanNumbered(flat);
+  for (let i = 0; i < marks.length; i++) {
+    const end = (i + 1 < marks.length) ? marks[i + 1].at : flat.length;
+    const chunk = flat.slice(marks[i].from, end);
+    if (chunk.trim()) runA.pushEntry(chunk, chunk);
+  }
+  runA.stats.mode = 'inline';
+  runA.stats.markers = marks.length;
+
+  // ---- B：逐段解析（支持 Word 自动编号的列表项）----
+  const runB = makeRun();
+  blocks.forEach(function (block) {
+    if (/^(单词|word)\s*(词义|meaning)$/i.test(block)) return;
+    if (!PARSE_HAS_LETTER.test(block)) return;
+
+    const localMarks = [];
+    let m;
+    NUMBERED_RE.lastIndex = 0;
+    while ((m = NUMBERED_RE.exec(block)) !== null) {
+      localMarks.push({ from: m.index + m[0].length, at: m.index });
+    }
+
+    let used = false;
+    if (localMarks.length) {
+      for (let i = 0; i < localMarks.length; i++) {
+        const end = (i + 1 < localMarks.length) ? localMarks[i + 1].at : block.length;
+        const chunk = block.slice(localMarks[i].from, end);
+        if (chunk.trim() && runB.pushEntry(chunk, block)) used = true;
+      }
+    } else {
+      let english = block.split(PARSE_CJK)[0].replace(/^[\s"'\`*※·•●○◆◇\-–—,.、;:：]+/, '').trim();
+      english = english.replace(/^\d{1,4}[\s\u3000]+/, '').trim();  // “1 word”这种空格分隔的序号
+      const wordCount = english.split(/\s+/).length;
+      const looksLikeEntry = PARSE_CJK.test(block)
+        || (wordCount <= 2 && english.length <= 20)
+        || (wordCount <= 4 && english.length <= 30);
+      if (english && block.length <= 80 && PARSE_LOOSE.test(english) && looksLikeEntry) {
+        used = runB.pushEntry(english, '');
+      }
+    }
+    if (!used) runB.stats.unused.push(block.slice(0, 60));
+  });
+  runB.stats.mode = 'blocks';
+
+  // 两种方式取并集，尽量不丢词
+  const useA = runA.result.length >= runB.result.length;
+  const base = useA ? runA.result : runB.result;
+  const extra = useA ? runB.result : runA.result;
+  const primaryStats = useA ? runA.stats : runB.stats;
+
+  const keys = new Set();
+  base.forEach(function (w) { keys.add(String(w.word).toLowerCase()); });
+  let mergedExtra = 0;
+  extra.forEach(function (w) {
+    const k = String(w.word).toLowerCase();
+    if (!keys.has(k)) { keys.add(k); base.push(w); mergedExtra++; }
+  });
+
+  function candidateOf(line) {
+    let s = String(line).split(PARSE_CJK)[0];
+    s = s.replace(/^[\s"'\`*※·•●○◆◇\-–—,.、;:：]+/, '').replace(/^\d{1,4}[\s\u3000]+/, '');
+    return s.trim();
+  }
+
+  // 已经被另一路收进来的行，不再算「未识别」
+  const unused = runB.stats.unused.filter(function (line) {
+    const cand = candidateOf(line);
+    return !cand || !keys.has(cand.toLowerCase());
+  });
+
+  const stats = {
+    mode: useA ? 'inline' : 'blocks',
+    markers: runA.stats.markers,
+    inlineCount: runA.result.length,
+    blockCount: runB.result.length,
+    mergedExtra: mergedExtra,
+    duplicates: primaryStats.duplicates,
+    rejected: primaryStats.rejected,
+    unused: unused
+  };
+
+  parseWordList.lastStats = stats;
+  return base;
+}
+
+/* =========================================================
+   8. 交互：翻转 / 切换 / 发音
+   ========================================================= */
+let touchStartY = 0;
+let touchMoved = false;
+
+flashcard.addEventListener('touchstart', function (e) {
+  if (e.touches && e.touches.length) {
+    touchStartY = e.touches[0].clientY;
+  }
+  touchMoved = false;
+}, { passive: true });
+
+flashcard.addEventListener('touchmove', function (e) {
+  if (e.touches && e.touches.length) {
+    if (Math.abs(e.touches[0].clientY - touchStartY) > 8) touchMoved = true;
+  }
+}, { passive: true });
+
+flashcard.addEventListener('click', function (e) {
+  if (touchMoved) { touchMoved = false; return; }
+  if (e.target.closest('.audio-btn')) return;
+
+  flashcard.classList.toggle('flipped');
+  isFlipped = flashcard.classList.contains('flipped');
+});
+
+flashcard.addEventListener('keydown', function (e) {
+  if (e.key === ' ' || e.key === 'Enter') {
+    e.preventDefault();
+    flashcard.classList.toggle('flipped');
+    isFlipped = flashcard.classList.contains('flipped');
+  }
+});
+
+audioBtn.addEventListener('click', function (e) {
+  e.stopPropagation();
+  const data = wordsData[currentIndex];
+  if (data) speakWord(data.word);
+});
+
+document.getElementById('randomBtn').addEventListener('click', function () {
+  if (wordsData.length < 2) return;
+  let newIndex;
+  do {
+    newIndex = Math.floor(Math.random() * wordsData.length);
+  } while (newIndex === currentIndex);
+  currentIndex = newIndex;
+  renderWord(currentIndex);
+});
+
+document.getElementById('nextBtn').addEventListener('click', function () {
+  currentIndex = (currentIndex + 1) % wordsData.length;
+  renderWord(currentIndex);
+});
+
+/* 页码跳转：点击「1 / 298」，输入页码回车即可跳到该页 */
+let counterEditing = false;
+
+function restoreCounter() {
+  counter.textContent = (currentIndex + 1) + ' / ' + wordsData.length;
+}
+
+function startCounterEdit() {
+  if (counterEditing || !wordsData.length) return;
+  counterEditing = true;
+
+  counter.innerHTML = '';
+  const input = document.createElement('input');
+  input.type = 'number';
+  input.className = 'counter-input';
+  input.min = '1';
+  input.max = String(wordsData.length);
+  input.value = String(currentIndex + 1);
+  input.setAttribute('aria-label', '输入页码跳转');
+  const suffix = document.createElement('span');
+  suffix.textContent = ' / ' + wordsData.length;
+  counter.appendChild(input);
+  counter.appendChild(suffix);
+  try { input.focus(); input.select(); } catch (e) {}
+
+  let done = false;
+  function finish(cancel) {
+    if (done) return;
+    done = true;
+    counterEditing = false;
+    if (!cancel) {
+      const n = parseInt(input.value, 10);
+      if (isFinite(n)) {
+        currentIndex = Math.min(wordsData.length, Math.max(1, n)) - 1;
+        renderWord(currentIndex);
+        return;
+      }
+    }
+    restoreCounter();
+  }
+
+  input.addEventListener('keydown', function (e) {
+    e.stopPropagation();
+    if (e.key === 'Enter') { e.preventDefault(); finish(false); }
+    else if (e.key === 'Escape') { e.preventDefault(); finish(true); }
+  });
+  input.addEventListener('blur', function () { finish(false); });
+}
+
+counter.addEventListener('click', function (e) {
+  if (e.target !== counter) return;
+  startCounterEdit();
+});
+counter.addEventListener('keydown', function (e) {
+  if (counterEditing) return;
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); startCounterEdit(); }
+});
+
+document.addEventListener('keydown', function (e) {
+  if (studyView.hidden) return;
+  if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+  if (e.target && e.target.closest && e.target.closest('.card')) return;
+  if (e.key === 'ArrowRight') {
+    currentIndex = (currentIndex + 1) % wordsData.length;
+    renderWord(currentIndex);
+  } else if (e.key === 'ArrowLeft') {
+    currentIndex = (currentIndex - 1 + wordsData.length) % wordsData.length;
+    renderWord(currentIndex);
+  }
+});
+
+/* =========================================================
+   9. 启动
+   ---------------------------------------------------------
+   首次打开没有任何词汇本，展示空书架
+   ========================================================= */
+(async function init() {
+  await storage.init();
+  await migrateLegacyStorage();
+  await loadProgress();
+  books = await loadBooks();
+  renderHome();
+
+  if (storage.mode === 'memory') {
+    showToast('当前环境无法本地保存，刷新后已导入的词汇本会丢失', 5000);
+  }
+})();
+</script>
+</body>
+</html>
