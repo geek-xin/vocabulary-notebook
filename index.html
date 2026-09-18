@@ -929,6 +929,76 @@ body.home-mode .fab-stack { display: flex; }
   .download-fab svg { width: 15px; height: 15px; }
 }
 
+.update-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: min(72vw, 260px);
+  padding: 7px 8px 7px 12px;
+  border: 1px solid rgba(255, 217, 102, 0.34);
+  border-radius: 999px;
+  background: rgba(12, 20, 30, 0.92);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  color: #e6eef7;
+  font-size: 12.5px;
+  line-height: 1.35;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
+  animation: fab-pill-in 0.24s ease both;
+}
+.update-pill-dot { flex: none; width: 7px; height: 7px; border-radius: 50%; background: #ffd966; }
+.update-pill-text { flex: 1 1 auto; min-width: 0; }
+.update-pill-btn {
+  flex: none;
+  padding: 4px 10px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 217, 102, 0.18);
+  color: #ffd966;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.update-pill-btn:active { background: rgba(255, 217, 102, 0.4); }
+.update-pill-btn:focus-visible,
+.update-pill-close:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255, 217, 102, 0.25);
+}
+.update-pill-close {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #8fa6ba;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.update-pill-close:active { background: rgba(255, 255, 255, 0.14); color: #ffffff; }
+
+@keyframes fab-pill-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) { .update-pill { animation: none; } }
+
+@media (hover: hover) and (pointer: fine) {
+  .update-pill-btn:hover { background: rgba(255, 217, 102, 0.3); }
+  .update-pill-close:hover { background: rgba(255, 255, 255, 0.12); color: #ffffff; }
+}
+
 .toast {
   position: fixed;
   left: 50%;
@@ -2405,6 +2475,68 @@ function compareVersion(a, b) {
   return 0;
 }
 
+let updatePillEl   = null;
+let updatePillMute = false;   // 点过「更新」后本次会话不再显示（旧文件还没被替换）
+
+function ignoredVersion() {
+  try { return localStorage.getItem(APP_IGNORED_KEY) || ''; } catch (e) { return ''; }
+}
+
+function ignoreVersion(v) {
+  // file:// 下 localStorage 可能不可用，失败就只在本次会话内不提示
+  try { localStorage.setItem(APP_IGNORED_KEY, v); } catch (e) {}
+}
+
+function clearUpdatePill() {
+  if (updatePillEl && updatePillEl.parentNode) updatePillEl.parentNode.removeChild(updatePillEl);
+  updatePillEl = null;
+}
+
+function showUpdatePill(version) {
+  if (!fabStack || updatePillEl || updatePillMute) return;
+
+  const pill = document.createElement('div');
+  pill.className = 'update-pill';
+  pill.id = 'updatePill';
+  pill.innerHTML =
+    '<span class="update-pill-dot" aria-hidden="true"></span>' +
+    '<span class="update-pill-text"></span>' +
+    '<button class="update-pill-btn" type="button">更新</button>' +
+    '<button class="update-pill-close" type="button" aria-label="关闭更新提示">×</button>';
+  // 版本号来自远端页面，必须用 textContent 写入，不能拼进 innerHTML
+  pill.querySelector('.update-pill-text').textContent = '发现新版本 ' + version;
+
+  pill.querySelector('.update-pill-btn').addEventListener('click', updateToLatest);
+  pill.querySelector('.update-pill-close').addEventListener('click', function () {
+    ignoreVersion(version);
+    updatePillMute = true;
+    clearUpdatePill();
+  });
+
+  // 插在按钮之前，与视觉上的「提示条在上、按钮在下」一致
+  fabStack.insertBefore(pill, downloadFab);
+  updatePillEl = pill;
+}
+
+// 用检查时已抓到的原文直接下载，不重复请求；做了缓存丢失的兜底
+function updateToLatest() {
+  const finish = function (text) {
+    downloadHtml(text, APP_FILE_NAME);
+    showToast('新版本已下载，请用它替换当前文件', 6000);
+    updatePillMute = true;
+    clearUpdatePill();
+  };
+  if (remoteHtmlText) { finish(remoteHtmlText); return; }
+
+  fetch(APP_UPDATE_URL).then(function (res) {
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.text();
+  }).then(finish).catch(function (e) {
+    console.warn('下载新版本失败:', e);
+    showToast('下载新版本失败，请检查网络后重试', 5000);
+  });
+}
+
 // 失败一律静默：自动检查是锦上添花，不能打扰学习
 function checkUpdate() {
   if (!isLocalCopy()) return;
@@ -2422,8 +2554,11 @@ function checkUpdate() {
     if (!m) return;                                   // 读不到版本号视为检查失败
     const remote = m[1];
     if (compareVersion(remote, APP_VERSION) <= 0) return;
+    const ignored = ignoredVersion();
+    if (ignored && compareVersion(remote, ignored) <= 0) return;  // 用户已忽略这个版本
     pendingUpdateVersion = remote;
     remoteHtmlText = text;
+    showUpdatePill(remote);
   }).catch(function (e) {
     if (timer) clearTimeout(timer);
     console.warn('检查更新失败:', e);
