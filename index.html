@@ -892,7 +892,21 @@ body.home-mode #homeView .book-grid::-webkit-scrollbar-thumb {
 }
 body.home-mode .fab-stack { display: flex; }
 
-.download-fab {
+/* 版本号 + 检查更新 + 下载，排成一行贴在右下角；两个按钮共用 .icon-fab */
+.fab-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.app-version {
+  color: #7f96ab;
+  font-size: 12px;
+  line-height: 1;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.icon-fab {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -913,21 +927,30 @@ body.home-mode .fab-stack { display: flex; }
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
   transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
-.download-fab svg { width: 16px; height: 16px; }
-.download-fab:active { background: rgba(255, 255, 255, 0.2); color: #ffffff; }
-.download-fab:focus-visible {
+.icon-fab svg { width: 16px; height: 16px; }
+.icon-fab:active { background: rgba(255, 255, 255, 0.2); color: #ffffff; }
+.icon-fab:disabled { opacity: 0.55; cursor: default; }
+.icon-fab:focus-visible {
   outline: none;
   border-color: rgba(255, 217, 102, 0.42);
   box-shadow: 0 0 0 3px rgba(255, 217, 102, 0.16);
 }
+/* 检查更新进行中：图标匀速旋转，替代文字反馈 */
+.icon-fab.checking svg { animation: fab-spin 0.9s linear infinite; }
+@keyframes fab-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .icon-fab.checking svg { animation: none; opacity: 0.7; }
+}
 
 @media (hover: hover) and (pointer: fine) {
-  .download-fab:hover { background: rgba(255, 255, 255, 0.16); color: #ffffff; transform: translateY(-1px); }
+  .icon-fab:hover:not(:disabled) { background: rgba(255, 255, 255, 0.16); color: #ffffff; transform: translateY(-1px); }
 }
 
 @media (max-width: 640px) {
-  .download-fab { width: 34px; height: 34px; }
-  .download-fab svg { width: 15px; height: 15px; }
+  .icon-fab { width: 34px; height: 34px; }
+  .icon-fab svg { width: 15px; height: 15px; }
+  .fab-row { gap: 6px; }
+  .app-version { font-size: 11px; }
 }
 
 .update-pill {
@@ -1105,15 +1128,28 @@ body.home-mode .fab-stack { display: flex; }
     <!-- 右下角悬浮区：进入首页 flex 流贴在卡片底部右侧，而不是视口角落。
          视口角落的位置在窄屏（约 <950px）会压住上面这行提示文案。 -->
     <div class="fab-stack" id="fabStack">
-      <button class="download-fab" id="downloadFab" type="button"
-              aria-label="下载应用 HTML 到本地">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-          <polyline points="7 10 12 15 17 10"></polyline>
-          <line x1="12" y1="15" x2="12" y2="3"></line>
-        </svg>
-      </button>
+      <div class="fab-row" id="fabRow">
+        <span class="app-version" id="appVersion"></span>
+        <button class="icon-fab" id="checkUpdateBtn" type="button"
+                aria-label="检查更新" title="检查更新">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"></path>
+            <path d="M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+        </button>
+        <button class="icon-fab" id="downloadFab" type="button"
+                aria-label="下载应用 HTML 到本地">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+        </button>
+      </div>
     </div>
   </section>
 
@@ -2370,8 +2406,11 @@ function shareBook(id) {
    - 下载取文两条路径：在线预取页面原文优先，失败则回退初始 DOM 原文
    - 取用必须同步：异步会丢失用户激活，部分浏览器会拦截下载
    ========================================================= */
-const downloadFab = document.getElementById('downloadFab');
-const fabStack    = document.getElementById('fabStack');
+const downloadFab    = document.getElementById('downloadFab');
+const fabStack       = document.getElementById('fabStack');
+const fabRow         = document.getElementById('fabRow');
+const appVersionEl   = document.getElementById('appVersion');
+const checkUpdateBtn = document.getElementById('checkUpdateBtn');
 
 /* 在脚本执行的最早时刻留一份 DOM 原文：此刻还没有任何用户数据进入页面
    （词汇本卡片、学习页渲染出的词条、弹窗文案都还没写进来），
@@ -2471,8 +2510,10 @@ function clearUpdatePill() {
   updatePillEl = null;
 }
 
-function showUpdatePill(version) {
-  if (!fabStack || updatePillEl || updatePillMute) return;
+function showUpdatePill(version, force) {
+  if (!fabStack || updatePillEl) return;
+  if (updatePillMute && !force) return;
+  if (force) updatePillMute = false;   // 用户主动查过了，解除本次会话的静音
 
   const pill = document.createElement('div');
   pill.className = 'update-pill';
@@ -2492,8 +2533,8 @@ function showUpdatePill(version) {
     clearUpdatePill();
   });
 
-  // 插在按钮之前，与视觉上的「提示条在上、按钮在下」一致
-  fabStack.insertBefore(pill, downloadFab);
+  // 插在这一行之前，与视觉上的「提示条在上、按钮在下」一致
+  fabStack.insertBefore(pill, fabRow);
   updatePillEl = pill;
 }
 
@@ -2516,41 +2557,66 @@ function updateToLatest() {
   });
 }
 
-// 失败一律静默：自动检查是锦上添花，不能打扰学习
-function checkUpdate() {
-  if (!isLocalCopy()) return;
-  if (navigator.onLine === false) return;   // 离线时省掉一次必然失败的请求
+/* manual=true 是用户主动点「检查更新」：任何打开方式下都执行，且结果必须明确反馈；
+   manual=false 是打开本地副本时的自动检查：只在本地副本跑，全程静默。 */
+function checkUpdate(manual) {
+  if (!manual) {
+    if (!isLocalCopy()) return Promise.resolve();
+    if (navigator.onLine === false) return Promise.resolve();  // 离线时省掉必然失败的请求
+  }
 
   const ctrl = (typeof AbortController === 'function') ? new AbortController() : null;
   const timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 8000) : null;
 
-  fetch(APP_UPDATE_URL, ctrl ? { signal: ctrl.signal } : undefined).then(function (res) {
+  return fetch(APP_UPDATE_URL, ctrl ? { signal: ctrl.signal } : undefined).then(function (res) {
     if (!res.ok) throw new Error('HTTP ' + res.status);
     return res.text();
   }).then(function (text) {
     if (timer) clearTimeout(timer);
     const m = text.match(REMOTE_VERSION_RE);
-    if (!m) return;                                   // 读不到版本号视为检查失败
+    if (!m) throw new Error('读不到版本号');          // 视为检查失败
     const remote = m[1];
-    if (compareVersion(remote, APP_VERSION) <= 0) return;
-    const ignored = ignoredVersion();
-    if (ignored && compareVersion(remote, ignored) <= 0) return;  // 用户已忽略这个版本
+    if (compareVersion(remote, APP_VERSION) <= 0) {
+      if (manual) showToast('已是最新版本（v' + APP_VERSION + '）');
+      return;
+    }
+    if (!manual) {
+      const ignored = ignoredVersion();
+      if (ignored && compareVersion(remote, ignored) <= 0) return;  // 用户已忽略这个版本
+    }
     pendingUpdateVersion = remote;
     remoteHtmlText = text;
-    showUpdatePill(remote);
+    // manual 时 force：用户刚主动查过，即使之前关掉过提示条也要重新提示
+    showUpdatePill(remote, manual);
+    if (manual) showToast('发现新版本 ' + remote);
   }).catch(function (e) {
     if (timer) clearTimeout(timer);
     console.warn('检查更新失败:', e);
+    if (manual) showToast('检查失败，请检查网络后重试', 5000);
   });
 }
 
+function manualCheckUpdate() {
+  if (!checkUpdateBtn || checkUpdateBtn.disabled) return;
+  checkUpdateBtn.disabled = true;
+  checkUpdateBtn.classList.add('checking');   // 图标旋转，替代文字反馈
+  const restore = function () {
+    checkUpdateBtn.disabled = false;
+    checkUpdateBtn.classList.remove('checking');
+  };
+  const p = checkUpdate(true);
+  if (p && p.then) p.then(restore, restore); else restore();
+}
+
+if (appVersionEl) appVersionEl.textContent = 'v' + APP_VERSION;   // 版本号常驻显示
 if (downloadFab) {
   // 版本号是脚本常量，title 由 JS 写入，避免静态 HTML 里写死后与常量脱节
   downloadFab.title = '下载应用 HTML（当前 ' + APP_VERSION + '）';
   downloadFab.addEventListener('click', downloadAppHtml);
 }
+if (checkUpdateBtn) checkUpdateBtn.addEventListener('click', manualCheckUpdate);
 prefetchSelfHtml();
-setTimeout(checkUpdate, 1500);
+setTimeout(function () { checkUpdate(false); }, 1500);
 
 /* =========================================================
    3. 渲染
