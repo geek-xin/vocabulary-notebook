@@ -95,13 +95,20 @@ body.home-mode .fab-stack { display: flex; }
 ### 取文策略：fetch 优先，快照兜底
 
 ```
-buildSelfHtml():
-  1) 取 location.href 去掉 # 后的地址，fetch 它，读 response.text()
+prefetchSelfHtml()（页面加载后，仅 http/https 时执行）:
+  1) 取 location.href 去掉 # 后的地址，fetch 它，把 response.text() 存进 selfHtmlText
      —— 拿到与服务器逐字节一致的原文，最干净
-  2) 上面任一步失败（file:// 下浏览器禁止 fetch 自身、离线、被拦截），
-     回退 snapshotSelfHtml()
-  3) 两条路径都失败 → toast 报错，不产生文件
+  2) 失败（file:// 下浏览器禁止 fetch 自身、离线、被拦截）就保持为空，静默降级
+
+downloadAppHtml()（点击时执行）:
+  1) 同步取用 selfHtmlText；为空则回退 snapshotSelfHtml()
+  2) 两者都拿不到内容 → toast 报错，不产生文件
 ```
+
+**取用必须同步**：如果改成「点击时才 fetch，在 Promise 回调里触发 `<a download>`」，
+就跨了任务边界、丢失用户激活（transient activation），部分浏览器（Safari）会直接拦截下载。
+预取在页面加载后空闲时进行，用户点击时通常早已就绪；万一没就绪就用快照——两条路径产出的
+文件功能等价。
 
 采用这个策略的原因：在线访问（GitHub Pages / 本地 http 服务）时，下载到的就是**线上那份原文**，
 不会有任何运行时痕迹；只有在 `file://` 下打开本地副本、又要点按钮重新下载时，才走兜底路径。
