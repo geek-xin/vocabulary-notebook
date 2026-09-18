@@ -37,9 +37,11 @@
 
 ### 结构
 
-在 `.app-container` 之后、`.toast` 附近新增一个固定定位的竖列容器：
+在 `#homeView` 内部、`.home-tip` **之后**新增一个竖列容器（`#homeView` 是 flex 列）：
 
 ```html
+<p class="home-tip" id="homeTip">…</p>
+
 <div class="fab-stack" id="fabStack">
   <!-- 更新提示条由 JS 动态插入，位于按钮上方 -->
   <button class="download-fab" id="downloadFab" type="button"
@@ -49,29 +51,34 @@
 </div>
 ```
 
+容器**不是** `position: fixed` 贴视口角落，而是作为首页 flex 流里的最后一项、`align-self: flex-end`
+贴在卡片底部右侧。原因是实测发现视口角落的定位在窄屏会压住 `.home-tip` 那行提示文案，
+详见下面「与首页底部文案的关系」。
+
 提示条在按钮**上方**、同一列内（`flex-direction: column; align-items: flex-end; gap: 8px`），
-因此提示条出现或消失**不会顶动按钮的位置**。DOM 顺序上提示条插在按钮**之前**
-（`fabStack.insertBefore(pill, downloadFab)`），与视觉上的上下关系一致。
+因此提示条出现或消失**不会顶动按钮的位置**（只是让卡片内容整体上移一行）。DOM 顺序上提示条
+插在按钮**之前**（`fabStack.insertBefore(pill, downloadFab)`），与视觉上的上下关系一致。
 
 ### 显示范围
 
 用 CSS 门控，不改视图切换逻辑：
 
 ```css
-.fab-stack { display: none; position: fixed; … }
+.fab-stack { display: none; … }
 body.home-mode .fab-stack { display: flex; }
 ```
 
 `renderHome()` 会加 `body.home-mode`，`openBook()` 会移除它，所以按钮天然只在书架页出现，
-且首次渲染前不会闪现在错误位置。
+且首次渲染前不会闪现在错误位置。容器位于 `#homeView` 内，学习页下 `#homeView` 带 `hidden`，
+是一层额外的保险。
 
 ### 尺寸与视觉
 
 | 项 | 值 |
 | --- | --- |
 | 按钮 | 圆形 36px（`≤640px` 为 34px），图标 16px |
-| 位置 | `right: max(14px, env(safe-area-inset-right))`，`bottom: max(14px, env(safe-area-inset-bottom))` |
-| 层级 | `z-index: 900`——低于 toast（999）与弹窗遮罩（1000），弹窗打开时自动被盖住 |
+| 位置 | `align-self: flex-end`，右边缘与首页内容区右边缘对齐，处在 `.home-tip` 下方 |
+| 层级 | 不需要 `z-index`。它是普通流内元素，toast（`fixed`，999）与弹窗遮罩（`fixed`，1000）天然盖在它上面 |
 | 配色 | 沿用玻璃拟态：`rgba(255,255,255,0.08)` 背景、1px 半透明描边、`backdrop-filter: blur(10px)`、`color: #cfe1f2` |
 | 按下/悬停 | `:active` 加深背景；`@media (hover: hover) and (pointer: fine)` 下 hover 轻微提亮并上浮 1px |
 | 焦点 | `:focus-visible` 用主题黄 `rgba(255, 217, 102, 0.42)` 描边，与搜索框聚焦态一致 |
@@ -80,11 +87,26 @@ body.home-mode .fab-stack { display: flex; }
 `title` 里带版本号是让用户零成本地知道本地版本，不在界面上额外占位置。该 `title` 由 JS 在
 初始化时写入（`APP_VERSION` 是脚本常量，静态 HTML 里写死会与常量脱节）。
 
-### 与首页底部文案的关系
+### 与首页底部文案的关系（实测后改成进入文档流）
 
-首页底部有一行居中的小字（`.home-tip`）。在窄屏（如 375px）下，右下角按钮有压到这行文案的
-风险。处理原则：**先截图实测，确实相碰再让位**——给 `.home-tip` 加右侧留白把文字让开，
-不凭猜测提前改布局。
+首页底部有一行居中的小字（`.home-tip`）。实现后按验收要求实测了几何关系，结论是
+**贴视口角落的定位会真实压住这行文案**，而不是仅仅盒子相邻：
+
+| 视口 | 结果 |
+| --- | --- |
+| 375px | 提示条盖住文案第二行、按钮压住第一行右侧——文案被切成「点击词汇本开…／新打开依然可见」 |
+| 1440px | 无碰撞（容器 `max-width: 1080px` 居中，按钮在容器右侧之外） |
+| 推算 | 文案居中、宽约 400px，按钮/提示条从视口右侧 14px 起算，**视口窄于约 950px 就会真实重叠** |
+
+曾考虑的两种「让位」方案都不成立：
+
+1. 给 `.home-tip` 加右侧留白：提示条最宽 260px，375px 屏下内容区仅约 311px，留白后文案会被挤成
+   一列窄字，观感更差；
+2. 仅手机端改布局：重叠区间一直延伸到约 950px，平板同样中招，按设备分叉并不覆盖问题。
+
+最终做法是让悬浮区**进入首页的 flex 流**（`align-self: flex-end`，排在 `.home-tip` 之后）。
+这样在任何宽度下都不可能重叠，没有魔法数字、不隐藏任何内容，按钮依然是页面右下角的位置——
+只是从「浏览器窗口的右下角」变成「应用卡片内容区的右下角」，与卡片圆角对齐后反而更整齐。
 
 ### 交互
 

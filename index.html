@@ -878,16 +878,17 @@ body.home-mode #homeView .book-grid::-webkit-scrollbar-thumb {
   .btn-danger:hover { background: #cf5943; }
 }
 
-/* 右下角悬浮区：下载按钮 + 更新提示条（提示条在按钮上方，出现时不顶动按钮） */
+/* 右下角悬浮区：下载按钮 + 更新提示条（提示条在按钮上方，出现时不顶动按钮）
+   贴在首页卡片底部右侧，而不是视口角落——视口角落的位置在窄屏会压住
+   .home-tip 那行提示文案（实测约 <950px 就会真实重叠） */
 .fab-stack {
   display: none;
-  position: fixed;
-  right: max(14px, env(safe-area-inset-right));
-  bottom: max(14px, env(safe-area-inset-bottom));
-  z-index: 900; /* 低于 toast(999) 与弹窗遮罩(1000)，弹窗打开时被盖住 */
+  flex: none;
   flex-direction: column;
   align-items: flex-end;
+  align-self: flex-end;
   gap: 8px;
+  margin-top: 8px;
 }
 body.home-mode .fab-stack { display: flex; }
 
@@ -1100,6 +1101,20 @@ body.home-mode .fab-stack { display: flex; }
     <div class="book-grid" id="bookGrid"></div>
 
     <p class="home-tip" id="homeTip">点击词汇本开始学习 · 数据保存在本机浏览器，重新打开依然可见</p>
+
+    <!-- 右下角悬浮区：进入首页 flex 流贴在卡片底部右侧，而不是视口角落。
+         视口角落的位置在窄屏（约 <950px）会压住上面这行提示文案。 -->
+    <div class="fab-stack" id="fabStack">
+      <button class="download-fab" id="downloadFab" type="button"
+              aria-label="下载应用 HTML 到本地">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+      </button>
+    </div>
   </section>
 
   <!-- ================= 学习页：单词卡片 ================= -->
@@ -1238,18 +1253,6 @@ body.home-mode .fab-stack { display: flex; }
 
   </section>
 
-</div>
-
-<div class="fab-stack" id="fabStack">
-  <button class="download-fab" id="downloadFab" type="button"
-          aria-label="下载应用 HTML 到本地">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-      <polyline points="7 10 12 15 17 10"></polyline>
-      <line x1="12" y1="15" x2="12" y2="3"></line>
-    </svg>
-  </button>
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>

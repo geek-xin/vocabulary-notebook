@@ -1310,3 +1310,33 @@ git commit -m "docs: 补充发版必须更新 APP_VERSION 的说明"
    （Task 3 Step 6 负责同步设计文档）。
 2. 第四节新增了「预取未就绪时用快照」这一分支——两条路径产出的文件功能等价，
    不会破坏验收标准 2、3。
+
+## 执行记录
+
+计划写完后按 Task 0 → Task 8 顺序执行，实际发生的偏差记录如下。
+
+**Task 0 追加了一步**：工作区 `.npm-cache/` 在计划执行途中被清空（`.cp*`、`__vn-*.html` 一并消失），
+原计划的脚手架依赖它定位 `playwright-core`。改为在 `/tmp/vn-verify/` 下用
+`npm install playwright-core --cache /tmp/vn-npm-cache` 装一份，`pw.mjs` 直接引绝对路径，
+不再依赖工作区。`npm install` 需要 `--cache` 指向临时目录，因为 `/Users/xin/.npm` 无写权限。
+
+**Task 2 的断言在 Task 6 之后被改写**：原断言是「按钮贴视口右下角 14px」。Task 6 实测发现该定位
+在窄屏真实压住 `.home-tip` 文案，于是改成「进入首页 flex 流、贴卡片底部右侧」，断言相应改为
+「在卡片内 / 右边缘与 `#homeView` 内容区对齐 / 在提示文案下方」。设计与理由已同步到设计文档
+第三节「与首页底部文案的关系（实测后改成进入文档流）」。
+
+**Task 4 Step 5 的验证脚本修过一次**：最初用 `page.route('https://geek-xin.github.io/**')` 计数，
+把顶层页面导航也算了进去（得到 2 次）。改为只统计 `route.request().resourceType() === 'fetch'`
+的请求后为 1 次，符合预期。
+
+**Task 4 Step 5 的首次 Task 4 脚本报错**：`page.evaluate(() => pendingUpdateVersion)` 在变量
+尚未定义时抛 `ReferenceError` 而不是返回 `undefined`——这正是「先看它失败」那一步看到的现象，
+实现后即通过。
+
+**Task 6 增加了一个宽度扫描脚本 `t6-sweep.mjs`**：在 320 / 375 / 414 / 480 / 640 / 768 / 900 /
+1024 / 1280 / 1440 / 1920px 共 11 个宽度下，带提示条测量按钮、提示条与 `.home-tip`、`.bookGrid`、
+卡片的位置关系，全部无重叠、无横纵溢出。设计文档里「任何宽度下都不可能重叠」这句话由此实测支撑，
+而不是仅靠 flex 布局的推理。
+
+验证脚本全部位于 `/tmp/vn-verify/`，不进仓库。截至 Task 7，`t1`、`t2`、`t3-file`、`t3-http`、
+`t4`、`t4-online`、`t5`、`t6`、`t6-sweep`、`t7` 全部通过。
