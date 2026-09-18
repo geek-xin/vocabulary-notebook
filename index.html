@@ -495,6 +495,71 @@ h1 .logo svg { width: 100%; height: 100%; display: block; }
 }
 .home-actions .btn { min-width: 220px; }
 
+/* 首页查询框：按词汇本名称或单词内容过滤卡片 */
+.home-search {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 42px;
+  margin: 0 0 14px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.07);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.home-search:focus-within {
+  border-color: rgba(255, 217, 102, 0.42);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.search-icon { width: 16px; height: 16px; flex: none; color: #7f96ab; transition: color 0.15s ease; }
+.home-search:focus-within .search-icon { color: #ffd966; }
+
+.search-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: #e8f1fa;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.4;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.search-input::placeholder { color: #7f96ab; }
+/* 关掉 WebKit 自带的清除按钮，避免和自定义的「×」重复 */
+.search-input::-webkit-search-cancel-button,
+.search-input::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+}
+
+.search-clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #c3d7e8;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: background 0.15s, color 0.15s;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.search-clear svg { width: 13px; height: 13px; pointer-events: none; }
+.search-clear:active { background: rgba(255, 255, 255, 0.26); color: #ffffff; }
+
 /* 导入按钮：文件框透明铺满按钮，点击直接命中原生控件（安卓/WebView 更可靠） */
 .import-btn { position: relative; overflow: hidden; }
 .import-btn .file-input {
@@ -512,6 +577,7 @@ h1 .logo svg { width: 100%; height: 100%; display: block; }
 .book-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  /* 不让卡片互相拉伸：高度由内容决定，按钮下方才不会留大片空白 */
   align-items: start;
   gap: 14px;
   margin-top: 6px;
@@ -520,8 +586,8 @@ h1 .logo svg { width: 100%; height: 100%; display: block; }
 .book-card {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  height: 118px;
+  /* 行与行之间留够呼吸感 */
+  gap: 10px;
   overflow: hidden;
   padding: 16px;
   border-radius: 16px;
@@ -541,38 +607,60 @@ h1 .logo svg { width: 100%; height: 100%; display: block; }
   line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  /* 不预留第二行高度：单行标题时下方不留空行 */
   color: #ffffff;
   font-size: 1rem;
   font-weight: 600;
   line-height: 1.35;
   word-break: break-word;
+  /* line-height 1.35 会在文字下方留出 0.175em 的半行距，
+     用等量负外边距抵消，使「标题→数量时间」与「数量时间→按钮」的间距都等于卡片 gap */
+  margin-bottom: -0.175em;
 }
 
+/* 第二行：数量 + 时间（+ 命中词数），紧贴标题，中间不留空行 */
 .book-meta {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: auto;
+  overflow: hidden;
   color: #9fb6cc;
   font-size: 12px;
   font-variant-numeric: tabular-nums;
 }
-.book-count { white-space: nowrap; }
+.book-count { flex: none; white-space: nowrap; }
 
-.book-tag {
+.book-tag,
+.book-hit {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
   padding: 2px 8px;
   border-radius: 999px;
+  font-size: 11px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.book-tag {
   border: 1px solid rgba(255, 217, 102, 0.3);
   background: rgba(255, 217, 102, 0.14);
   color: #ffd966;
-  font-size: 11px;
-  white-space: nowrap;
+}
+/* 桌面显示完整日期，窄屏换成 MM-DD，避免第二行溢出 */
+.tag-short { display: none; }
+
+.book-hit {
+  border: 1px solid rgba(143, 208, 255, 0.3);
+  background: rgba(143, 208, 255, 0.14);
+  color: #8fd0ff;
 }
 
+/* 第三行：分享 / 删除按钮，靠左 */
 .book-actions {
   display: flex;
+  justify-content: flex-start;
   gap: 6px;
-  margin-left: auto;
 }
 
 .book-share,
@@ -615,6 +703,24 @@ h1 .logo svg { width: 100%; height: 100%; display: block; }
 .book-empty strong { color: #dbe8f3; font-size: 14.5px; font-weight: 600; }
 .book-empty span { max-width: 380px; font-size: 12.5px; line-height: 1.75; }
 
+.book-empty-clear {
+  margin-top: 4px;
+  padding: 7px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #dbe8f3;
+  font-family: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: background 0.15s, border-color 0.15s;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.book-empty-clear:active { background: rgba(255, 255, 255, 0.2); }
+
 .home-tip {
   margin: 18px 0 2px;
   text-align: center;
@@ -645,6 +751,7 @@ body.home-mode #homeView {
 }
 body.home-mode #homeView .app-header,
 body.home-mode #homeView .home-actions,
+body.home-mode #homeView .home-search,
 body.home-mode #homeView .home-tip { flex: 0 0 auto; }
 body.home-mode #homeView .book-grid {
   flex: 1 1 auto;
@@ -653,7 +760,9 @@ body.home-mode #homeView .book-grid {
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   align-content: start;
-  padding: 2px 6px 4px 2px;
+  /* 顶部至少留出卡片 hover 抬升的 3px：滚动容器的裁切边界在 padding 边缘，
+     只留 2px 会把第一行卡片顶端的描边与圆角裁平 */
+  padding: 6px 6px 4px 2px;
 }
 body.home-mode #homeView .book-grid::-webkit-scrollbar { width: 5px; }
 body.home-mode #homeView .book-grid::-webkit-scrollbar-track { background: transparent; }
@@ -684,22 +793,29 @@ body.home-mode #homeView .book-grid::-webkit-scrollbar-thumb {
 
 @media (hover: hover) and (pointer: fine) {
   .book-card:hover { transform: translateY(-3px); border-color: rgba(255, 217, 102, 0.42); }
+  /* 必须排在 :hover 之后：两者特异度相同，否则鼠标按下时点击动画会被 hover 抬升覆盖掉 */
+  .book-card:active { transform: scale(0.985); }
   .book-del:hover { background: rgba(224, 90, 70, 0.3); color: #ffffff; }
   .book-share:hover { background: rgba(80, 160, 220, 0.32); color: #ffffff; }
   .back-btn:hover { background: rgba(255, 255, 255, 0.16); color: #ffffff; }
+  .search-clear:hover { background: rgba(255, 255, 255, 0.24); color: #ffffff; }
+  .book-empty-clear:hover { background: rgba(255, 255, 255, 0.18); border-color: rgba(255, 255, 255, 0.26); }
 }
 
 @media (max-width: 640px) {
-  /* 手机固定每行两张，等高 + 标题两行截断，按钮收进底部一行，避免错乱 */
+  /* 手机固定每行两张，等高 + 标题两行截断，第二行数量时间、第三行按钮，避免错乱 */
   .book-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-  .book-card { height: 106px; padding: 12px; border-radius: 14px; }
+  .book-card { padding: 12px; border-radius: 14px; }
   .book-title { font-size: 0.92rem; }
   .book-meta { gap: 6px; font-size: 11px; }
-  .book-tag { display: none; }
+  .book-tag, .book-hit { padding: 2px 6px; }
+  .tag-full { display: none; }
+  .tag-short { display: inline; }
   .book-actions { gap: 5px; }
   .book-share, .book-del { width: 26px; height: 26px; }
   .book-share svg, .book-del svg { width: 13px; height: 13px; }
   .home-actions .btn { flex: 1 1 auto; min-width: 0; }
+  .home-search { height: 40px; margin-bottom: 12px; }
 }
 
 /* 应用内确认弹窗（不依赖 window.confirm，沙箱 iframe / WebView 也能用） */
@@ -821,7 +937,7 @@ body.home-mode #homeView .book-grid::-webkit-scrollbar-thumb {
             <polyline points="2 12 12 17 22 12"></polyline>
           </svg>
         </span>
-        <span>我的词汇本</span>
+        <span>词汇本 · 多词库学习</span>
       </h1>
       <div class="counter-badge" id="bookCount">共 0 个词汇本</div>
     </div>
@@ -837,6 +953,23 @@ body.home-mode #homeView .book-grid::-webkit-scrollbar-thumb {
         导入词汇本（.docx / .pdf）
         <input type="file" id="importFile" class="file-input" multiple tabindex="-1" aria-label="选择文件">
       </label>
+    </div>
+
+    <div class="home-search" id="homeSearch">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input type="search" id="searchInput" class="search-input" autocomplete="off"
+             spellcheck="false" placeholder="搜索词汇本名称或单词…" aria-label="搜索词汇本或单词">
+      <button type="button" class="search-clear" id="searchClear" hidden aria-label="清空搜索">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
     </div>
 
     <div class="book-grid" id="bookGrid"></div>
@@ -1343,6 +1476,8 @@ const studyView      = document.getElementById('studyView');
 const backBtn        = document.getElementById('backBtn');
 const bookCountEl    = document.getElementById('bookCount');
 const homeTipEl      = document.getElementById('homeTip');
+const searchInput    = document.getElementById('searchInput');
+const searchClear    = document.getElementById('searchClear');
 const confirmModal   = document.getElementById('confirmModal');
 const confirmText    = document.getElementById('confirmText');
 const confirmOk      = document.getElementById('confirmOk');
@@ -1598,21 +1733,68 @@ function uniqueTitle(list, title) {
   return title + ' (' + n + ')';
 }
 
-function formatDate(ts) {
+function formatDate(ts, short) {
   const d = new Date(ts);
   if (isNaN(d.getTime())) return '';
   function p(n) { return n < 10 ? '0' + n : '' + n; }
-  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+  const md = p(d.getMonth() + 1) + '-' + p(d.getDate());
+  return short ? md : d.getFullYear() + '-' + md;
 }
 
 /* =========================================================
-   2.6 书架渲染与视图切换
+   2.6 首页查询：按词汇本名称或单词内容过滤
+   ========================================================= */
+let homeQuery = '';
+
+// 统计某词汇本里命中关键词的词条数（单词或中文释义命中）
+function countWordHits(book, q) {
+  let hit = 0;
+  for (let i = 0; i < book.words.length; i++) {
+    const w = book.words[i];
+    if ((w.word || '').toLowerCase().indexOf(q) !== -1 ||
+        (w.meaningCn || '').toLowerCase().indexOf(q) !== -1) hit++;
+  }
+  return hit;
+}
+
+// 过滤词汇本，返回 [{ book, hits }]：标题命中或词条命中都保留
+function queryBooks(q) {
+  const out = [];
+  books.forEach(function (book) {
+    if (!q) { out.push({ book: book, hits: 0 }); return; }
+    const hits = countWordHits(book, q);
+    if (hits > 0 || (book.title || '').toLowerCase().indexOf(q) !== -1) {
+      out.push({ book: book, hits: hits });
+    }
+  });
+  return out;
+}
+
+function clearSearch() {
+  homeQuery = '';
+  if (searchInput) searchInput.value = '';
+  renderHome();
+  if (searchInput) { try { searchInput.focus(); } catch (e) {} }
+}
+
+/* =========================================================
+   2.7 书架渲染与视图切换
    ========================================================= */
 function renderHome() {
   document.body.classList.add('home-mode');
+  const q = homeQuery.trim().toLowerCase();
+  const filtering = !!q;
+  const visible = queryBooks(q);
+
   bookGrid.innerHTML = '';
-  bookCountEl.textContent = '共 ' + books.length + ' 个词汇本';
-  homeTipEl.textContent = '点击词汇本开始学习 · 数据保存在本机（' + storage.label() + '），重新打开依然可见';
+
+  bookCountEl.textContent = filtering
+    ? '匹配 ' + visible.length + ' / 共 ' + books.length + ' 个词汇本'
+    : '共 ' + books.length + ' 个词汇本';
+  homeTipEl.textContent = filtering
+    ? '按名称或单词内容实时过滤 · 点击卡片开始学习'
+    : '点击词汇本开始学习 · 数据保存在本机（' + storage.label() + '），重新打开依然可见';
+  if (searchClear) searchClear.hidden = !homeQuery;
 
   if (!books.length) {
     const empty = document.createElement('div');
@@ -1627,7 +1809,27 @@ function renderHome() {
     return;
   }
 
-  books.forEach(function (book) {
+  if (!visible.length) {
+    const empty = document.createElement('div');
+    empty.className = 'book-empty';
+    const strong = document.createElement('strong');
+    strong.textContent = '没有匹配的词汇本';
+    const span = document.createElement('span');
+    span.textContent = '没有找到与「' + homeQuery.trim() + '」相关的词汇本名称、单词或释义，换个关键词试试。';
+    const clearBtn = document.createElement('button');
+    clearBtn.type = 'button';
+    clearBtn.className = 'book-empty-clear';
+    clearBtn.textContent = '清除查询';
+    clearBtn.addEventListener('click', clearSearch);
+    empty.appendChild(strong);
+    empty.appendChild(span);
+    empty.appendChild(clearBtn);
+    bookGrid.appendChild(empty);
+    return;
+  }
+
+  visible.forEach(function (entry) {
+    const book = entry.book;
     const card = document.createElement('div');
     card.className = 'book-card';
     card.setAttribute('role', 'button');
@@ -1639,6 +1841,7 @@ function renderHome() {
     title.textContent = book.title;
     card.appendChild(title);
 
+    // 第二行：数量 + 时间（搜索命中时追加命中词数）
     const meta = document.createElement('div');
     meta.className = 'book-meta';
 
@@ -1649,9 +1852,26 @@ function renderHome() {
 
     const tag = document.createElement('span');
     tag.className = 'book-tag';
-    tag.textContent = formatDate(book.createdAt);
+    const tagFull = document.createElement('span');
+    tagFull.className = 'tag-full';
+    tagFull.textContent = formatDate(book.createdAt);
+    const tagShort = document.createElement('span');
+    tagShort.className = 'tag-short';
+    tagShort.textContent = formatDate(book.createdAt, true);
+    tag.appendChild(tagFull);
+    tag.appendChild(tagShort);
     meta.appendChild(tag);
 
+    if (entry.hits > 0) {
+      const hit = document.createElement('span');
+      hit.className = 'book-hit';
+      hit.textContent = '命中 ' + entry.hits + ' 词';
+      meta.appendChild(hit);
+    }
+
+    card.appendChild(meta);
+
+    // 第三行：分享 / 删除
     const actions = document.createElement('div');
     actions.className = 'book-actions';
 
@@ -1687,8 +1907,8 @@ function renderHome() {
       '<path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>';
     actions.appendChild(del);
 
-    meta.appendChild(actions);
-    card.appendChild(meta);
+    // 第三行独立于第二行：数量/时间在第二行，按钮在第三行
+    card.appendChild(actions);
 
     bookGrid.appendChild(card);
   });
@@ -1821,8 +2041,23 @@ bookGrid.addEventListener('keydown', function (e) {
 
 backBtn.addEventListener('click', showHome);
 
+// 首页查询：输入即实时过滤；输入框在 bookGrid 之外，重绘不会丢焦点
+searchInput.addEventListener('input', function () {
+  homeQuery = searchInput.value;
+  renderHome();
+});
+
+searchInput.addEventListener('keydown', function (e) {
+  if (e.key === 'Escape') {
+    e.preventDefault();
+    clearSearch();
+  }
+});
+
+searchClear.addEventListener('click', clearSearch);
+
 /* =========================================================
-   2.7 分享：把词汇本打包成一个独立 HTML 文件
+   2.8 分享：把词汇本打包成一个独立 HTML 文件
    ---------------------------------------------------------
    - 复用本页样式与卡片结构，内嵌该词汇本的全部数据
    - 生成的文件离线可用，接收方直接打开就能学习
