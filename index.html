@@ -1500,6 +1500,15 @@ const DB_NAME      = 'vocabulary_notebook';
 const DB_VERSION   = 1;
 const STORE_NAME   = 'kv';
 
+/* 应用版本与「下载到本地 / 检查更新」配置
+   APP_VERSION 是本地副本判断自己是否过期的唯一依据：
+   **每次发布新版本都必须手动改这一行**，格式 YYYY.MM.DD.N */
+const APP_VERSION     = '2026.09.18.1';
+const APP_ORIGIN      = 'https://geek-xin.github.io';
+const APP_UPDATE_URL  = APP_ORIGIN + '/vocabulary-notebook/index.html';
+const APP_FILE_NAME   = 'vocabulary-notebook.html';
+const APP_IGNORED_KEY = 'vn_update_ignored_version';
+
 let books = [];
 let currentBookId = null;
 let progressCache = {};
