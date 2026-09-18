@@ -2568,7 +2568,11 @@ function checkUpdate() {
   });
 }
 
-if (downloadFab) downloadFab.addEventListener('click', downloadAppHtml);
+if (downloadFab) {
+  // 版本号是脚本常量，title 由 JS 写入，避免静态 HTML 里写死后与常量脱节
+  downloadFab.title = '下载应用 HTML（当前 ' + APP_VERSION + '）';
+  downloadFab.addEventListener('click', downloadAppHtml);
+}
 prefetchSelfHtml();
 setTimeout(checkUpdate, 1500);
 
