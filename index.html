@@ -1099,7 +1099,7 @@ body.home-mode .fab-stack { display: flex; }
           <polyline points="17 8 12 3 7 8"></polyline>
           <line x1="12" y1="3" x2="12" y2="15"></line>
         </svg>
-        导入词汇本（.docx / .pdf）
+        导入词汇本（.docx / .pdf / .txt）
         <input type="file" id="importFile" class="file-input" multiple tabindex="-1" aria-label="选择文件">
       </label>
     </div>
@@ -1618,7 +1618,359 @@ const defaultWordsData = [
   { word: "develop", pos: "v.", phonetic: "/dɪˈveləp/", meaningEn: "to grow or improve", meaningCn: "发展；开发", synonyms: ["grow","evolve","expand"], antonyms: ["decline","shrink"], example: "The company is developing new products." },
   { word: "solve", pos: "v.", phonetic: "/sɒlv/", meaningEn: "to find an answer to a problem", meaningCn: "解决", synonyms: ["resolve","settle","fix"], antonyms: ["create"], example: "Can you solve this puzzle?" },
   { word: "patient", pos: "n./adj.", phonetic: "/ˈpeɪʃnt/", meaningEn: "a sick person; able to wait calmly", meaningCn: "病人；有耐心的", synonyms: ["sick person","tolerant","calm"], antonyms: ["impatient"], example: "The doctor saw many patients." },
-  { word: "allow", pos: "v.", phonetic: "/əˈlaʊ/", meaningEn: "to permit", meaningCn: "允许", synonyms: ["permit","let","authorize"], antonyms: ["forbid","prevent"], example: "My parents allow me to go out." }
+  { word: "allow", pos: "v.", phonetic: "/əˈlaʊ/", meaningEn: "to permit", meaningCn: "允许", synonyms: ["permit","let","authorize"], antonyms: ["forbid","prevent"], example: "My parents allow me to go out." },
+
+  /* ---- PET 词表补全（2026-09-19，源自 PET 2.txt，共 350 条）---- */
+  { word: "postpone", pos: "v.", phonetic: "/pəˈspəʊn/", meaningEn: "to arrange for something to happen at a later time", meaningCn: "推迟；延期", synonyms: ["delay","put off"], antonyms: ["advance"], example: "They postponed the meeting until Friday." },
+  { word: "refund", pos: "n./v.", phonetic: "/ˈriːfʌnd/", meaningEn: "money returned to you, or to give money back", meaningCn: "退款；退还；退钱", synonyms: ["repayment","rebate"], antonyms: [], example: "The shop gave me a full refund for the broken toy." },
+  { word: "spend", pos: "v.", phonetic: "/spend/", meaningEn: "to use money to buy things, or to pass time", meaningCn: "花（钱）；度过（时间）", synonyms: ["pay out","use"], antonyms: ["save"], example: "I spend too much money on coffee every week." },
+  { word: "pay", pos: "v./n.", phonetic: "/peɪ/", meaningEn: "to give money for goods or work done", meaningCn: "支付；付款；工资", synonyms: ["settle","give"], antonyms: ["owe"], example: "You can pay by card at the entrance." },
+  { word: "direct", pos: "adj./v./adv.", phonetic: "/dəˈrekt/", meaningEn: "going straight without stopping, or to guide someone", meaningCn: "直接的；径直的；指引；导演", synonyms: ["straight","guide"], antonyms: ["indirect"], example: "Is there a direct train from here to London?" },
+  { word: "direction", pos: "n.", phonetic: "/dəˈrekʃn/", meaningEn: "the way something moves or points; instructions", meaningCn: "方向；方位；指示", synonyms: ["way","route"], antonyms: [], example: "We walked in the wrong direction and got lost." },
+  { word: "till", pos: "prep./conj.", phonetic: "/tɪl/", meaningEn: "until; up to the time that something happens", meaningCn: "直到；直到…为止", synonyms: ["until"], antonyms: [], example: "The café is open till nine every evening." },
+  { word: "have to", pos: "phrase", phonetic: "/ˈhæv tə/", meaningEn: "to need to do something because it is necessary", meaningCn: "不得不；必须", synonyms: ["must","need to"], antonyms: ["need not"], example: "I have to finish my homework before dinner." },
+  { word: "journey", pos: "n.", phonetic: "/ˈdʒɜːni/", meaningEn: "the act of travelling from one place to another", meaningCn: "旅行；行程", synonyms: ["trip","travel"], antonyms: [], example: "The journey to the mountains took four hours." },
+  { word: "as long as", pos: "phrase", phonetic: "/əz ˈlɒŋ əz/", meaningEn: "only if; on condition that something happens", meaningCn: "只要；如果", synonyms: ["provided that","if"], antonyms: [], example: "You can go out as long as you finish your work." },
+  { word: "delivery", pos: "n.", phonetic: "/dɪˈlɪvəri/", meaningEn: "the act of bringing goods to a place or person", meaningCn: "递送；投递；交付", synonyms: ["shipment","distribution"], antonyms: [], example: "The shop offers free delivery on all orders." },
+  { word: "extra", pos: "adj./adv./n.", phonetic: "/ˈekstrə/", meaningEn: "more than what is usual or expected; additional", meaningCn: "额外的；另外的；额外的东西", synonyms: ["additional","more"], antonyms: ["less"], example: "We paid extra for a room with a sea view." },
+  { word: "charge", pos: "v./n.", phonetic: "/tʃɑːdʒ/", meaningEn: "to ask money for something; the money asked", meaningCn: "收费；要价；费用", synonyms: ["fee","bill"], antonyms: [], example: "They charge ten pounds for parking here." },
+  { word: "detail", pos: "n.", phonetic: "/ˈdiːteɪl/", meaningEn: "a small fact or piece of information about something", meaningCn: "细节；详情", synonyms: ["point","fact"], antonyms: [], example: "Please give me more details about the course." },
+  { word: "be willing to", pos: "phrase", phonetic: "/biː ˈwɪlɪŋ tə/", meaningEn: "to be ready and happy to do something", meaningCn: "愿意做；乐意做", synonyms: ["be ready to","be glad to"], antonyms: ["refuse to"], example: "You must be willing to try new things." },
+  { word: "pick up", pos: "phrase", phonetic: "/pɪk ˈʌp/", meaningEn: "to collect someone or something from a place", meaningCn: "拾起；接人；取（物）", synonyms: ["collect","get"], antonyms: ["drop off"], example: "I will pick up my sister from the station." },
+  { word: "gym", pos: "n.", phonetic: "/dʒɪm/", meaningEn: "a place with equipment for doing physical exercise", meaningCn: "健身房；体育馆", synonyms: ["fitness centre"], antonyms: [], example: "He goes to the gym three times a week." },
+  { word: "website", pos: "n.", phonetic: "/ˈwebsaɪt/", meaningEn: "a set of pages on the internet about a subject", meaningCn: "网站", synonyms: ["site","web page"], antonyms: [], example: "You can book tickets on the museum website." },
+  { word: "information", pos: "n.", phonetic: "/ˌɪnfəˈmeɪʃn/", meaningEn: "facts or details about someone or something", meaningCn: "信息；资料；消息", synonyms: ["facts","data","details"], antonyms: [], example: "I need more information about the train times." },
+  { word: "location", pos: "n.", phonetic: "/ləʊˈkeɪʃn/", meaningEn: "the place where someone or something is", meaningCn: "位置；地点；场所", synonyms: ["place","position","site"], antonyms: [], example: "The hotel is in a quiet location near the beach." },
+  { word: "locate", pos: "v.", phonetic: "/ləʊˈkeɪt/", meaningEn: "to find the exact position of something", meaningCn: "找出…的位置；确定地点", synonyms: ["find","discover"], antonyms: ["lose"], example: "We used a map to locate the old castle." },
+  { word: "online", pos: "adj./adv.", phonetic: "/ˌɒnˈlaɪn/", meaningEn: "connected to or done using the internet", meaningCn: "在线的；网上的；在网上", synonyms: ["on the internet","connected"], antonyms: ["offline"], example: "I bought these shoes online last week." },
+  { word: "instrument", pos: "n.", phonetic: "/ˈɪnstrəmənt/", meaningEn: "a tool for doing something, or a thing for making music", meaningCn: "工具；仪器；乐器", synonyms: ["tool","device"], antonyms: [], example: "The guitar is my favourite musical instrument." },
+  { word: "upload", pos: "v.", phonetic: "/ˌʌpˈləʊd/", meaningEn: "to move a file from your computer to the internet", meaningCn: "上传", synonyms: ["post","transfer"], antonyms: ["download"], example: "Please upload your photo to the school website." },
+  { word: "download", pos: "v.", phonetic: "/ˌdaʊnˈləʊd/", meaningEn: "to move a file from the internet to your computer", meaningCn: "下载", synonyms: ["save","transfer"], antonyms: ["upload"], example: "You can download the app for free." },
+  { word: "advert", pos: "n.", phonetic: "/ˈædvɜːt/", meaningEn: "a short notice that tries to sell something", meaningCn: "广告", synonyms: ["advertisement","ad"], antonyms: [], example: "I saw an advert for a new phone online." },
+  { word: "second-hand", pos: "adj./adv.", phonetic: "/ˌsekənd ˈhænd/", meaningEn: "not new; owned by someone else before", meaningCn: "二手的；旧的", synonyms: ["used","pre-owned"], antonyms: ["new"], example: "She bought a second-hand bike for fifty pounds." },
+  { word: "find out", pos: "phrase", phonetic: "/faɪnd ˈaʊt/", meaningEn: "to get information about something; to discover", meaningCn: "查明；弄清；发现", synonyms: ["discover","learn"], antonyms: [], example: "I want to find out when the next train leaves." },
+  { word: "from around the world", pos: "phrase", phonetic: "/frəm əˈraʊnd ðə wɜːld/", meaningEn: "from many different countries in the world", meaningCn: "来自世界各地", synonyms: ["from everywhere","globally"], antonyms: ["from one place"], example: "Students from around the world study at this school." },
+  { word: "all over the country", pos: "phrase", phonetic: "/ɔːl ˈəʊvə ðə ˈkʌntri/", meaningEn: "in every part of a country", meaningCn: "全国各地；遍及全国", synonyms: ["nationwide","everywhere"], antonyms: ["locally"], example: "There are shops all over the country." },
+  { word: "review", pos: "n./v.", phonetic: "/rɪˈvjuː/", meaningEn: "to examine or judge something again; a report giving an opinion", meaningCn: "复习；评论；审视", synonyms: ["examine","assess","critique"], antonyms: [], example: "Let's review the notes before the exam." },
+  { word: "recording", pos: "n.", phonetic: "/rɪˈkɔːdɪŋ/", meaningEn: "music or sound that has been stored to listen to later", meaningCn: "录音；唱片；录制品", synonyms: ["tape","track"], antonyms: [], example: "This recording of the concert sounds wonderful." },
+  { word: "skill", pos: "n.", phonetic: "/skɪl/", meaningEn: "the ability to do something well because of training", meaningCn: "技能；技巧；本领", synonyms: ["ability","talent","craft"], antonyms: [], example: "Cooking is a useful skill to learn." },
+  { word: "focus on", pos: "phrase", phonetic: "/ˈfəʊkəs ɒn/", meaningEn: "to give all your attention to one thing", meaningCn: "专注于；集中于", synonyms: ["concentrate on","centre on"], antonyms: [], example: "Please focus on your homework and stop chatting." },
+  { word: "concentrate", pos: "v.", phonetic: "/ˈkɒnsntreɪt/", meaningEn: "to give all your attention to what you are doing", meaningCn: "集中注意力；专心；专注", synonyms: ["focus","pay attention"], antonyms: [], example: "It is hard to concentrate in a noisy room." },
+  { word: "chat", pos: "v./n.", phonetic: "/tʃæt/", meaningEn: "to talk in a friendly, informal way; a friendly talk", meaningCn: "聊天；闲谈", synonyms: ["talk","converse"], antonyms: [], example: "We chatted for an hour after class." },
+  { word: "orchestra", pos: "n.", phonetic: "/ˈɔːkɪstrə/", meaningEn: "a large group of musicians who play together", meaningCn: "管弦乐队；乐团", synonyms: ["band","ensemble"], antonyms: [], example: "She plays the violin in a school orchestra." },
+  { word: "performance", pos: "n.", phonetic: "/pəˈfɔːməns/", meaningEn: "an occasion when music, a play or a show is presented", meaningCn: "表演；演出；表现", synonyms: ["show","act","concert"], antonyms: [], example: "The performance starts at seven o'clock." },
+  { word: "especially", pos: "adv.", phonetic: "/ɪˈspeʃəli/", meaningEn: "more than usual, or more than other things", meaningCn: "尤其；特别是；格外", synonyms: ["particularly","specially"], antonyms: [], example: "I love fruit, especially strawberries." },
+  { word: "opera", pos: "n.", phonetic: "/ˈɒprə/", meaningEn: "a play in which the words are sung to music", meaningCn: "歌剧", synonyms: [], antonyms: [], example: "My grandparents often go to the opera in London." },
+  { word: "link", pos: "n./v.", phonetic: "/lɪŋk/", meaningEn: "a connection between things; to connect two things", meaningCn: "链接；联系；连接", synonyms: ["connection","connect","join"], antonyms: ["separate"], example: "Click the link to open the website." },
+  { word: "latest", pos: "adj.", phonetic: "/ˈleɪtɪst/", meaningEn: "the newest or most recent of its kind", meaningCn: "最新的；最近的", synonyms: ["newest","most recent"], antonyms: ["oldest"], example: "Have you heard their latest song?" },
+  { word: "albums", pos: "n.", phonetic: "/ˈælbəmz/", meaningEn: "collections of songs released together as one set", meaningCn: "专辑（album 的复数）", synonyms: ["records","collections"], antonyms: [], example: "The band has released three albums this year." },
+  { word: "quantity", pos: "n.", phonetic: "/ˈkwɒntəti/", meaningEn: "an amount or number of something", meaningCn: "数量；量", synonyms: ["amount","number","volume"], antonyms: [], example: "We need a large quantity of paper for the project." },
+  { word: "quality", pos: "n.", phonetic: "/ˈkwɒləti/", meaningEn: "how good or bad something is", meaningCn: "质量；品质；特性", synonyms: ["standard","grade"], antonyms: [], example: "The quality of the sound was excellent." },
+  { word: "qualified", pos: "adj.", phonetic: "/ˈkwɒlɪfaɪd/", meaningEn: "having the training or exams needed for a job", meaningCn: "有资格的；合格的；胜任的", synonyms: ["trained","certified","capable"], antonyms: ["unqualified"], example: "She is a qualified music teacher." },
+  { word: "article", pos: "n.", phonetic: "/ˈɑːtɪkl/", meaningEn: "a piece of writing about a subject in a newspaper", meaningCn: "文章；报道", synonyms: ["piece","report","story"], antonyms: [], example: "I read an interesting article about jazz." },
+  { word: "be popular with", pos: "phrase", phonetic: "/biː ˈpɒpjələ wɪð/", meaningEn: "to be liked or enjoyed by a group of people", meaningCn: "受……欢迎；为……所喜爱", synonyms: ["be liked by","be loved by"], antonyms: ["be unpopular with"], example: "This singer is popular with young people." },
+  { word: "post", pos: "n./v.", phonetic: "/pəʊst/", meaningEn: "to put a message online; a message put online", meaningCn: "发布（帖子）；帖子；邮件", synonyms: ["publish","upload","message"], antonyms: [], example: "She posts photos of her concerts online." },
+  { word: "tip", pos: "n.", phonetic: "/tɪp/", meaningEn: "a useful piece of advice about doing something", meaningCn: "建议；提示；小费；尖端", synonyms: ["hint","suggestion","advice"], antonyms: [], example: "Here is a tip for learning new words quickly." },
+  { word: "development", pos: "n.", phonetic: "/dɪˈveləpmənt/", meaningEn: "the process of growing or changing and becoming better", meaningCn: "发展；开发；进展", synonyms: ["growth","progress","improvement"], antonyms: [], example: "The development of the internet changed music forever." },
+  { word: "century", pos: "n.", phonetic: "/ˈsentʃəri/", meaningEn: "a period of one hundred years", meaningCn: "世纪；百年", synonyms: ["hundred years"], antonyms: [], example: "This castle was built in the twelfth century." },
+  { word: "exactly", pos: "adv.", phonetic: "/ɪɡˈzæktli/", meaningEn: "in a precise way, with no difference at all", meaningCn: "确切地；准确地；正是", synonyms: ["precisely","just"], antonyms: ["approximately"], example: "The film starts at exactly eight o'clock." },
+  { word: "knowledge", pos: "n.", phonetic: "/ˈnɒlɪdʒ/", meaningEn: "the facts and understanding a person has about something", meaningCn: "知识；了解；学识", synonyms: ["understanding","learning","information"], antonyms: ["ignorance"], example: "He has a good knowledge of classical music." },
+  { word: "through", pos: "prep./adv.", phonetic: "/θruː/", meaningEn: "from one end or side of something to the other", meaningCn: "穿过；通过；从头到尾", synonyms: ["across","via"], antonyms: [], example: "We walked through the park to the concert hall." },
+  { word: "although", pos: "conj.", phonetic: "/ɔːlˈðəʊ/", meaningEn: "used to introduce a fact that makes the other part surprising", meaningCn: "虽然；尽管", synonyms: ["though","even though"], antonyms: [], example: "Although it was raining, we enjoyed the show." },
+  { word: "though", pos: "conj./adv.", phonetic: "/ðəʊ/", meaningEn: "despite the fact that; however", meaningCn: "虽然；尽管；不过", synonyms: ["although","however"], antonyms: [], example: "Though the tickets were expensive, she bought two." },
+  { word: "relate", pos: "v.", phonetic: "/rɪˈleɪt/", meaningEn: "to connect two things, or to understand how someone feels", meaningCn: "联系；关联；理解；讲述", synonyms: ["connect","link","associate"], antonyms: [], example: "The teacher related the song to its history." },
+  { word: "site", pos: "n.", phonetic: "/saɪt/", meaningEn: "a place on the internet with pages of information", meaningCn: "网站；地点；场所", synonyms: ["website","place","location"], antonyms: [], example: "This site has hundreds of free music lessons." },
+  { word: "tour", pos: "n./v.", phonetic: "/tʊə/", meaningEn: "a journey visiting several places; to travel around", meaningCn: "巡回演出；旅行；参观", synonyms: ["trip","journey","travel"], antonyms: [], example: "The band is on tour in Europe this month." },
+  { word: "tourist", pos: "n.", phonetic: "/ˈtʊərɪst/", meaningEn: "a person who travels to a place for pleasure", meaningCn: "游客；旅游者", synonyms: ["visitor","traveller","holidaymaker"], antonyms: ["local","resident"], example: "Every summer thousands of tourists visit the old town." },
+  { word: "tourism", pos: "n.", phonetic: "/ˈtʊərɪzəm/", meaningEn: "the business of travelling to places for holidays", meaningCn: "旅游业", synonyms: ["travel industry"], antonyms: [], example: "Tourism brings a lot of money into this region." },
+  { word: "part-time", pos: "adj./adv.", phonetic: "/ˌpɑːt ˈtaɪm/", meaningEn: "working or happening for only part of the week", meaningCn: "兼职的；部分时间的", synonyms: ["casual"], antonyms: ["full-time"], example: "She has a part-time job at the weekend." },
+  { word: "full-time", pos: "adj./adv.", phonetic: "/ˌfʊl ˈtaɪm/", meaningEn: "working or happening for the whole normal working week", meaningCn: "全职的；全日制的", synonyms: [], antonyms: ["part-time"], example: "He started a full-time job after leaving university." },
+  { word: "course", pos: "n.", phonetic: "/kɔːs/", meaningEn: "a series of lessons on a subject", meaningCn: "课程", synonyms: ["class","programme","program"], antonyms: [], example: "I am taking an English course this year." },
+  { word: "consider", pos: "v.", phonetic: "/kənˈsɪdə/", meaningEn: "to think carefully about something before deciding", meaningCn: "考虑；仔细思考", synonyms: ["think about","weigh","contemplate"], antonyms: ["ignore","dismiss"], example: "We are considering moving to a bigger flat." },
+  { word: "option", pos: "n.", phonetic: "/ˈɒpʃn/", meaningEn: "a thing that you can choose to do", meaningCn: "选择；选项", synonyms: ["choice","alternative","possibility"], antonyms: [], example: "Staying at home is another option." },
+  { word: "several", pos: "adj./pron.", phonetic: "/ˈsevrəl/", meaningEn: "more than two but not very many", meaningCn: "几个；数个", synonyms: ["a few","some"], antonyms: [], example: "I have read several books about China." },
+  { word: "whole", pos: "adj.", phonetic: "/həʊl/", meaningEn: "complete, including every part", meaningCn: "全部的；整个的", synonyms: ["entire","complete","total"], antonyms: ["partial"], example: "He ate the whole cake by himself." },
+  { word: "simple", pos: "adj.", phonetic: "/ˈsɪmpl/", meaningEn: "easy to do or understand; not complicated", meaningCn: "简单的；容易的", synonyms: ["easy","plain","straightforward"], antonyms: ["difficult","complicated"], example: "The recipe is very simple to follow." },
+  { word: "in fact", pos: "phrase", phonetic: "/ɪn ˈfækt/", meaningEn: "used to give more exact or surprising information", meaningCn: "事实上；其实", synonyms: ["actually","really","in reality"], antonyms: [], example: "I thought he was lazy, but in fact he works very hard." },
+  { word: "license", pos: "n./v.", phonetic: "/ˈlaɪsns/", meaningEn: "an official document allowing you to do something", meaningCn: "执照；许可证；批准", synonyms: ["permit","certificate","authorization"], antonyms: ["ban","prohibition"], example: "You need a license to drive a car." },
+  { word: "so far", pos: "phrase", phonetic: "/ˌsəʊ ˈfɑː/", meaningEn: "until now; up to this moment", meaningCn: "到目前为止；迄今为止", synonyms: ["until now","yet","to date"], antonyms: [], example: "We have visited three museums so far." },
+  { word: "cover", pos: "v./n.", phonetic: "/ˈkʌvə/", meaningEn: "to place something over another thing; to include", meaningCn: "覆盖；遮盖；包括", synonyms: ["hide","conceal","include"], antonyms: ["uncover","reveal","expose"], example: "Snow covered the whole village last night." },
+  { word: "architecture", pos: "n.", phonetic: "/ˈɑːkɪtektʃə/", meaningEn: "the art of designing buildings; the style of buildings", meaningCn: "建筑学；建筑风格", synonyms: ["building design","construction"], antonyms: [], example: "She studied architecture at university in Rome." },
+  { word: "rule", pos: "n./v.", phonetic: "/ruːl/", meaningEn: "an instruction about what you must or must not do", meaningCn: "规则；规定；统治", synonyms: ["regulation","law","instruction"], antonyms: ["freedom"], example: "The first rule of the club is to arrive on time." },
+  { word: "public", pos: "adj./n.", phonetic: "/ˈpʌblɪk/", meaningEn: "for everyone to use or see; connected with everyone", meaningCn: "公共的；公众的；公众", synonyms: ["open","communal","general"], antonyms: ["private","personal"], example: "The library is a public building open to all." },
+  { word: "gain", pos: "v./n.", phonetic: "/ɡeɪn/", meaningEn: "to get something useful, especially gradually", meaningCn: "获得；增加；收益", synonyms: ["obtain","acquire","win"], antonyms: ["lose"], example: "Students gain useful experience from this course." },
+  { word: "qualification", pos: "n.", phonetic: "/ˌkwɒlɪfɪˈkeɪʃn/", meaningEn: "an exam pass or skill that lets you do a job", meaningCn: "资格；学历；资格证书", synonyms: ["certificate","degree","credential"], antonyms: [], example: "You need a teaching qualification to work in this school." },
+  { word: "independent", pos: "adj.", phonetic: "/ˌɪndɪˈpendənt/", meaningEn: "not controlled by other people; able to look after yourself", meaningCn: "独立的；自主的", synonyms: ["free","self-reliant","autonomous"], antonyms: ["dependent"], example: "She became independent after moving to another city." },
+  { word: "make sure", pos: "phrase", phonetic: "/ˌmeɪk ˈʃʊə/", meaningEn: "to check something so that you are certain", meaningCn: "确保；查明", synonyms: ["ensure","check","confirm"], antonyms: ["assume"], example: "Please make sure you lock the door." },
+  { word: "situation", pos: "n.", phonetic: "/ˌsɪtʃuˈeɪʃn/", meaningEn: "the things that are happening at a certain time", meaningCn: "情况；处境", synonyms: ["circumstances","position","state"], antonyms: [], example: "The situation in the city is getting better." },
+  { word: "route", pos: "n.", phonetic: "/ruːt/", meaningEn: "the way you travel from one place to another", meaningCn: "路线；路途", synonyms: ["way","path","course"], antonyms: [], example: "This route to the airport is much quicker." },
+  { word: "organize", pos: "v.", phonetic: "/ˈɔːɡənaɪz/", meaningEn: "to plan and arrange an event or activity", meaningCn: "组织；安排", synonyms: ["arrange","plan","coordinate"], antonyms: ["disorganize"], example: "Our teacher organized a trip to the science museum." },
+  { word: "otherwise", pos: "adv.", phonetic: "/ˈʌðəwaɪz/", meaningEn: "used to say what will happen if something is not done", meaningCn: "否则；另外；在其他方面", synonyms: ["or else","if not"], antonyms: [], example: "Write it down, otherwise you will forget it." },
+  { word: "essential", pos: "adj.", phonetic: "/ɪˈsenʃl/", meaningEn: "completely necessary; extremely important", meaningCn: "必不可少的；极其重要的", synonyms: ["necessary","vital","crucial"], antonyms: ["unnecessary","optional"], example: "Water is essential for all living things." },
+  { word: "enthusiasm", pos: "n.", phonetic: "/ɪnˈθjuːziæzəm/", meaningEn: "a strong feeling of interest and excitement", meaningCn: "热情；热忱", synonyms: ["eagerness","passion","zeal"], antonyms: ["apathy","indifference"], example: "She talked about her new job with great enthusiasm." },
+  { word: "mean", pos: "v./adj.", phonetic: "/miːn/", meaningEn: "to have a particular meaning; to intend", meaningCn: "意思是；意味着；打算", synonyms: ["signify","indicate","intend"], antonyms: [], example: "What does this word mean in English?" },
+  { word: "already", pos: "adv.", phonetic: "/ɔːlˈredi/", meaningEn: "before now; sooner than expected", meaningCn: "已经；早已", synonyms: ["by now","previously"], antonyms: [], example: "I have already finished my homework." },
+  { word: "require", pos: "v.", phonetic: "/rɪˈkwaɪə/", meaningEn: "to need something, or to officially demand it", meaningCn: "需要；要求", synonyms: ["need","demand","call for"], antonyms: [], example: "This job requires good communication skills." },
+  { word: "check", pos: "v./n.", phonetic: "/tʃek/", meaningEn: "to look at something to make sure it is right", meaningCn: "检查；核对；检查（名词）", synonyms: ["examine","verify","inspect"], antonyms: ["ignore"], example: "Please check your answers before you hand in the test." },
+  { word: "photograph", pos: "n./v.", phonetic: "/ˈfəʊtəɡrɑːf/", meaningEn: "a picture made with a camera; to take a picture", meaningCn: "照片；拍照", synonyms: ["photo","picture","snap"], antonyms: [], example: "She took a photograph of the old bridge." },
+  { word: "photographer", pos: "n.", phonetic: "/fəˈtɒɡrəfə/", meaningEn: "a person who takes photographs, especially as a job", meaningCn: "摄影师；拍照的人", synonyms: ["cameraman"], antonyms: [], example: "My uncle works as a wedding photographer." },
+  { word: "photographic", pos: "adj.", phonetic: "/ˌfəʊtəˈɡræfɪk/", meaningEn: "connected with photography or taking photographs", meaningCn: "摄影的；与摄影有关的", synonyms: [], antonyms: [], example: "He keeps all his photographic equipment in one bag." },
+  { word: "exist", pos: "v.", phonetic: "/ɪɡˈzɪst/", meaningEn: "to be real or present in the world", meaningCn: "存在；生存", synonyms: ["be","live","survive"], antonyms: ["vanish"], example: "Some scientists believe that life may exist on other planets." },
+  { word: "species", pos: "n.", phonetic: "/ˈspiːʃiːz/", meaningEn: "a group of animals or plants of the same kind", meaningCn: "物种；种类", synonyms: ["kind","type"], antonyms: [], example: "This species of bird only lives in the north." },
+  { word: "increase", pos: "v./n.", phonetic: "/ɪnˈkriːs/", meaningEn: "to become larger in number or amount; a rise", meaningCn: "增加；增长；增加（名词）", synonyms: ["grow","rise","expand"], antonyms: ["decrease","reduce"], example: "The number of visitors increased last summer." },
+  { word: "decrease", pos: "v./n.", phonetic: "/dɪˈkriːs/", meaningEn: "to become smaller in number or amount; a fall", meaningCn: "减少；下降；减少（名词）", synonyms: ["reduce","fall","drop"], antonyms: ["increase","grow"], example: "Sales decreased by ten per cent this year." },
+  { word: "create", pos: "v.", phonetic: "/kriˈeɪt/", meaningEn: "to make something new exist or happen", meaningCn: "创造；创建；创作", synonyms: ["make","produce","invent"], antonyms: ["destroy"], example: "The company plans to create fifty new jobs." },
+  { word: "creation", pos: "n.", phonetic: "/kriˈeɪʃn/", meaningEn: "the act of making something new, or that thing", meaningCn: "创造；创作；作品", synonyms: ["invention","production"], antonyms: ["destruction"], example: "The creation of the new park took two years." },
+  { word: "creative", pos: "adj.", phonetic: "/kriˈeɪtɪv/", meaningEn: "good at thinking of new ideas or making new things", meaningCn: "有创造力的；创造性的", synonyms: ["inventive","imaginative","original"], antonyms: ["unimaginative"], example: "She is very creative and writes her own songs." },
+  { word: "creature", pos: "n.", phonetic: "/ˈkriːtʃə/", meaningEn: "any living animal, especially an unusual one", meaningCn: "生物；动物", synonyms: ["animal","being"], antonyms: [], example: "Strange creatures live deep in the ocean." },
+  { word: "behaviour", pos: "n.", phonetic: "/bɪˈheɪvjə/", meaningEn: "the way someone or something acts", meaningCn: "行为；举止", synonyms: ["conduct","manners"], antonyms: [], example: "The teacher praised the class for their good behaviour." },
+  { word: "proper", pos: "adj.", phonetic: "/ˈprɒpə/", meaningEn: "right, correct or suitable for a situation", meaningCn: "合适的；恰当的；正确的", synonyms: ["correct","right","suitable"], antonyms: ["wrong","improper"], example: "You need proper shoes for walking in the mountains." },
+  { word: "scientific", pos: "adj.", phonetic: "/ˌsaɪənˈtɪfɪk/", meaningEn: "relating to science or its careful methods", meaningCn: "科学的；与科学有关的", synonyms: [], antonyms: ["unscientific"], example: "They did a scientific study of the local river." },
+  { word: "particular", pos: "adj.", phonetic: "/pəˈtɪkjələ/", meaningEn: "used to talk about one specific person or thing", meaningCn: "特定的；某个；特别的", synonyms: ["specific","special","certain"], antonyms: ["general"], example: "Is there a particular book you are looking for?" },
+  { word: "human", pos: "adj./n.", phonetic: "/ˈhjuːmən/", meaningEn: "relating to people; a person", meaningCn: "人类的；人", synonyms: ["person","mortal"], antonyms: ["animal"], example: "The human body needs water every day." },
+  { word: "trust", pos: "v./n.", phonetic: "/trʌst/", meaningEn: "to believe someone is honest; a strong belief", meaningCn: "信任；相信；信任（名词）", synonyms: ["believe","rely on","faith"], antonyms: ["doubt","distrust"], example: "I trust her because she never tells lies." },
+  { word: "shame", pos: "n.", phonetic: "/ʃeɪm/", meaningEn: "a sad feeling when you have done something wrong", meaningCn: "羞耻；羞愧；遗憾", synonyms: ["embarrassment","disgrace"], antonyms: ["pride"], example: "He felt a deep sense of shame after the accident." },
+  { word: "respect", pos: "n./v.", phonetic: "/rɪˈspekt/", meaningEn: "a good opinion of someone; to admire someone", meaningCn: "尊重；尊敬；尊重（动词）", synonyms: ["admire","esteem","honour"], antonyms: ["disrespect","despise"], example: "Students should respect their teachers." },
+  { word: "despite", pos: "prep.", phonetic: "/dɪˈspaɪt/", meaningEn: "used to show that something happens even though another thing", meaningCn: "尽管；虽然", synonyms: ["in spite of","notwithstanding"], antonyms: [], example: "Despite the rain, we enjoyed the trip." },
+  { word: "in addition", pos: "phrase", phonetic: "/ɪn əˈdɪʃn/", meaningEn: "used to add another fact or point", meaningCn: "此外；另外", synonyms: ["besides","moreover","also"], antonyms: [], example: "The hotel is cheap; in addition, it has a small pool." },
+  { word: "bottom", pos: "n./adj.", phonetic: "/ˈbɒtəm/", meaningEn: "the lowest part of something", meaningCn: "底部；最下部；底部的", synonyms: ["base","foot","lowest part"], antonyms: ["top"], example: "Her name was at the bottom of the list." },
+  { word: "reality", pos: "n.", phonetic: "/riˈæləti/", meaningEn: "the way things really are, not how they seem", meaningCn: "现实；实际情况", synonyms: ["fact","truth"], antonyms: ["fantasy","imagination"], example: "In reality, the journey took much longer." },
+  { word: "realistic", pos: "adj.", phonetic: "/ˌriːəˈlɪstɪk/", meaningEn: "sensible and likely to happen or be true", meaningCn: "现实的；实际的；逼真的", synonyms: ["practical","sensible"], antonyms: ["unrealistic","idealistic"], example: "We need to set realistic goals for the project." },
+  { word: "fix", pos: "v.", phonetic: "/fɪks/", meaningEn: "to repair something, or to arrange a time", meaningCn: "修理；固定；确定（时间）", synonyms: ["repair","mend","arrange"], antonyms: ["break"], example: "Can you fix my bike before the weekend?" },
+  { word: "search", pos: "v./n.", phonetic: "/sɜːtʃ/", meaningEn: "to look carefully for something; an attempt to find", meaningCn: "搜索；寻找；搜查", synonyms: ["look for","seek","hunt"], antonyms: [], example: "The police searched the whole building." },
+  { word: "Spanish", pos: "adj./n.", phonetic: "/ˈspænɪʃ/", meaningEn: "relating to Spain; the language of Spain", meaningCn: "西班牙的；西班牙语", synonyms: [], antonyms: [], example: "She is learning Spanish at school this year." },
+  { word: "conversation", pos: "n.", phonetic: "/ˌkɒnvəˈseɪʃn/", meaningEn: "a talk between two or more people", meaningCn: "谈话；对话", synonyms: ["talk","chat","discussion"], antonyms: [], example: "We had a long conversation about our future." },
+  { word: "beginner", pos: "n.", phonetic: "/bɪˈɡɪnə/", meaningEn: "a person who is starting to learn something", meaningCn: "初学者；新手", synonyms: ["novice","learner"], antonyms: ["expert"], example: "This book is perfect for a beginner in French." },
+  { word: "volunteer", pos: "n./v.", phonetic: "/ˌvɒlənˈtɪə(r)/", meaningEn: "someone who works without pay; to offer to do something", meaningCn: "志愿者；自愿做", synonyms: ["helper","offer"], antonyms: [], example: "She works as a volunteer at the animal centre." },
+  { word: "the number of", pos: "phrase", phonetic: "/ðə ˈnʌmbə(r) əv/", meaningEn: "used to talk about the total count of something", meaningCn: "……的数量", synonyms: ["the total of"], antonyms: [], example: "The number of students in our class is thirty." },
+  { word: "a number of", pos: "phrase", phonetic: "/ə ˈnʌmbə(r) əv/", meaningEn: "several; more than a few people or things", meaningCn: "许多；若干", synonyms: ["several","a few"], antonyms: [], example: "A number of people were waiting outside the theatre." },
+  { word: "an amount of", pos: "phrase", phonetic: "/ən əˈmaʊnt əv/", meaningEn: "a quantity of something, often uncountable", meaningCn: "一定量的；一些", synonyms: ["a quantity of","some"], antonyms: [], example: "We need an amount of sugar for this cake." },
+  { word: "member", pos: "n.", phonetic: "/ˈmembə(r)/", meaningEn: "a person who belongs to a group or club", meaningCn: "成员；会员", synonyms: ["associate"], antonyms: [], example: "He is a member of the school chess club." },
+  { word: "background", pos: "n.", phonetic: "/ˈbækɡraʊnd/", meaningEn: "a person's family, education and experience", meaningCn: "背景；出身；经历", synonyms: ["history"], antonyms: [], example: "She comes from a poor background but studied hard." },
+  { word: "in order to", pos: "phrase", phonetic: "/ɪn ˈɔːdə(r) tuː/", meaningEn: "with the purpose of doing something", meaningCn: "为了；以便", synonyms: ["so as to","to"], antonyms: [], example: "I got up early in order to catch the first bus." },
+  { word: "delay", pos: "n./v.", phonetic: "/dɪˈleɪ/", meaningEn: "to make something happen later; a period of waiting", meaningCn: "推迟；延误；延误的时间", synonyms: ["postpone","put off"], antonyms: ["hurry"], example: "Bad weather delayed our flight by two hours." },
+  { word: "be likely to", pos: "phrase", phonetic: "/bi ˈlaɪkli tuː/", meaningEn: "to be expected or probable to happen", meaningCn: "很可能", synonyms: ["tend to"], antonyms: [], example: "It is likely to rain this afternoon." },
+  { word: "routine", pos: "n./adj.", phonetic: "/ruːˈtiːn/", meaningEn: "the usual order of doing things; ordinary and regular", meaningCn: "常规；例行的", synonyms: ["habit","regular"], antonyms: ["unusual"], example: "My morning routine starts with a short run." },
+  { word: "programme", pos: "n.", phonetic: "/ˈprəʊɡræm/", meaningEn: "a show on television or radio; a planned series", meaningCn: "节目；方案；计划", synonyms: ["show","plan"], antonyms: [], example: "This programme about wild animals is very interesting." },
+  { word: "recent", pos: "adj.", phonetic: "/ˈriːsnt/", meaningEn: "happening or starting only a short time ago", meaningCn: "最近的；近来的", synonyms: ["new","latest"], antonyms: ["old"], example: "In recent years the city has grown quickly." },
+  { word: "size", pos: "n.", phonetic: "/saɪz/", meaningEn: "how big or small something is", meaningCn: "大小；尺寸；尺码", synonyms: ["measure"], antonyms: [], example: "What size shoes do you wear?" },
+  { word: "level", pos: "n./adj.", phonetic: "/ˈlevl/", meaningEn: "a height or standard; flat and not sloping", meaningCn: "水平；级别；水平的", synonyms: ["standard","flat"], antonyms: ["uneven"], example: "Her English is at a high level now." },
+  { word: "pollution", pos: "n.", phonetic: "/pəˈluːʃn/", meaningEn: "damage to air, water or land from harmful substances", meaningCn: "污染", synonyms: ["contamination"], antonyms: [], example: "Air pollution is a serious problem in big cities." },
+  { word: "pollute", pos: "v.", phonetic: "/pəˈluːt/", meaningEn: "to make air, water or land dirty and harmful", meaningCn: "污染", synonyms: ["contaminate"], antonyms: ["clean"], example: "Factories should not pollute the river." },
+  { word: "annoy", pos: "v.", phonetic: "/əˈnɔɪ/", meaningEn: "to make someone feel slightly angry", meaningCn: "使恼怒；打扰", synonyms: ["irritate","bother"], antonyms: ["please"], example: "Loud music at night really annoys my neighbours." },
+  { word: "confuse", pos: "v.", phonetic: "/kənˈfjuːz/", meaningEn: "to make someone unable to think or understand clearly", meaningCn: "使困惑；使糊涂；混淆", synonyms: ["puzzle","mix up"], antonyms: ["clarify"], example: "The long instructions confused most of the students." },
+  { word: "length", pos: "n.", phonetic: "/leŋθ/", meaningEn: "how long something is from end to end", meaningCn: "长度；时长", synonyms: ["distance"], antonyms: [], example: "The length of the swimming pool is fifty metres." },
+  { word: "wide life", pos: "n.", phonetic: "/ˈwaɪldlaɪf/", meaningEn: "animals and plants living freely in nature", meaningCn: "野生动物（源文件拼写有误，标准写法 wildlife）", synonyms: ["wild animals"], antonyms: [], example: "We must protect wildlife in the forests." },
+  { word: "receive", pos: "v.", phonetic: "/rɪˈsiːv/", meaningEn: "to get or be given something", meaningCn: "收到；接到；接待", synonyms: ["get","accept"], antonyms: ["send"], example: "I received a letter from my aunt yesterday." },
+  { word: "exhibition", pos: "n.", phonetic: "/ˌeksɪˈbɪʃn/", meaningEn: "a public show of art or other interesting objects", meaningCn: "展览；展览会", synonyms: ["show","display"], antonyms: [], example: "There is a photography exhibition in the town hall." },
+  { word: "well-known", pos: "adj.", phonetic: "/ˌwel ˈnəʊn/", meaningEn: "famous; known by many people", meaningCn: "著名的；众所周知的", synonyms: ["famous","popular"], antonyms: ["unknown"], example: "She is a well-known singer in our country." },
+  { word: "achieve", pos: "v.", phonetic: "/əˈtʃiːv/", meaningEn: "to succeed in doing something after trying hard", meaningCn: "实现；达到；取得", synonyms: ["accomplish","reach"], antonyms: ["fail"], example: "He achieved his goal of running a marathon." },
+  { word: "achievement", pos: "n.", phonetic: "/əˈtʃiːvmənt/", meaningEn: "something good that you succeed in doing", meaningCn: "成就；成绩", synonyms: ["success","accomplishment"], antonyms: ["failure"], example: "Winning the prize was her greatest achievement." },
+  { word: "plenty of", pos: "phrase", phonetic: "/ˈplenti əv/", meaningEn: "a large amount or number of something", meaningCn: "大量的；许多", synonyms: ["a lot of","lots of"], antonyms: ["little"], example: "There is plenty of food for everyone at the party." },
+  { word: "load of", pos: "phrase", phonetic: "/ləʊd əv/", meaningEn: "a large amount or number of something", meaningCn: "许多；大量", synonyms: ["lots of","plenty of"], antonyms: [], example: "I have a load of homework to do tonight." },
+  { word: "fortnight", pos: "n.", phonetic: "/ˈfɔːtnaɪt/", meaningEn: "a period of two weeks", meaningCn: "两星期；十四天", synonyms: ["two weeks"], antonyms: [], example: "We are going to Italy for a fortnight in July." },
+  { word: "rubbish", pos: "n.", phonetic: "/ˈrʌbɪʃ/", meaningEn: "things you throw away; something of poor quality", meaningCn: "垃圾；废物；废话", synonyms: ["garbage","trash"], antonyms: [], example: "Please put your rubbish in the bin." },
+  { word: "collect", pos: "v.", phonetic: "/kəˈlekt/", meaningEn: "to bring things together; to gather things as a hobby", meaningCn: "收集；采集；收取", synonyms: ["gather","gather up"], antonyms: ["scatter"], example: "My brother collects stamps from many countries." },
+  { word: "collection", pos: "n.", phonetic: "/kəˈlekʃn/", meaningEn: "a group of similar things gathered together", meaningCn: "收藏品；一批物品；收集", synonyms: ["set","group","assortment"], antonyms: [], example: "He showed me his collection of old coins." },
+  { word: "match", pos: "n./v.", phonetic: "/mætʃ/", meaningEn: "a sports game; to be the same as something else", meaningCn: "比赛；相配；匹配", synonyms: ["game","contest","fit"], antonyms: ["mismatch"], example: "Our team won the football match yesterday." },
+  { word: "lift", pos: "n./v.", phonetic: "/lɪft/", meaningEn: "a machine that carries people between floors; to raise something", meaningCn: "电梯；举起；抬起", synonyms: ["elevator","raise","hoist"], antonyms: ["lower","drop"], example: "The lift was broken, so we walked up the stairs." },
+  { word: "give sb. a lift", pos: "phrase", phonetic: "/ɡɪv ˈsʌmbɒdi ə lɪft/", meaningEn: "to take someone somewhere in your car", meaningCn: "开车捎某人一程", synonyms: ["give a ride"], antonyms: [], example: "Can you give me a lift to the station, please?" },
+  { word: "serve", pos: "v.", phonetic: "/sɜːv/", meaningEn: "to give food or drink to someone", meaningCn: "端上；供应；服务", synonyms: ["supply","provide"], antonyms: [], example: "They serve breakfast from seven until ten." },
+  { word: "annual", pos: "adj.", phonetic: "/ˈænjuəl/", meaningEn: "happening once every year", meaningCn: "每年的；一年一次的", synonyms: ["yearly"], antonyms: ["monthly","daily"], example: "The school holds an annual sports day in June." },
+  { word: "in case", pos: "phrase", phonetic: "/ɪn keɪs/", meaningEn: "because something might happen; if it does", meaningCn: "以防；万一", synonyms: ["in the event"], antonyms: [], example: "Take an umbrella in case it rains." },
+  { word: "both", pos: "pron./adj.", phonetic: "/bəʊθ/", meaningEn: "the two people or things together", meaningCn: "两者都；双方", synonyms: ["the two"], antonyms: ["neither"], example: "Both of my sisters play the piano." },
+  { word: "either", pos: "pron./adv.", phonetic: "/ˈaɪðə(r)/", meaningEn: "one or the other of two things", meaningCn: "两者之一；（否定句）也", synonyms: ["one of two"], antonyms: ["neither"], example: "You can take either bus to the city centre." },
+  { word: "neither", pos: "pron./adv.", phonetic: "/ˈnaɪðə(r)/", meaningEn: "not one and not the other of two things", meaningCn: "两者都不；也不", synonyms: ["not either"], antonyms: ["both","either"], example: "Neither of the answers was correct." },
+  { word: "provide", pos: "v.", phonetic: "/prəˈvaɪd/", meaningEn: "to give someone something they need", meaningCn: "提供；供给", synonyms: ["supply","offer","give"], antonyms: ["take","refuse"], example: "The hotel provides free towels for guests." },
+  { word: "elderly", pos: "adj.", phonetic: "/ˈeldəli/", meaningEn: "old; used politely about older people", meaningCn: "年长的；上了年纪的", synonyms: ["old","aged"], antonyms: ["young"], example: "She helps her elderly neighbour with the shopping." },
+  { word: "accommodation", pos: "n.", phonetic: "/əˌkɒməˈdeɪʃn/", meaningEn: "a place to live or stay", meaningCn: "住处；住宿", synonyms: ["housing","lodging"], antonyms: [], example: "The price of the trip includes accommodation and food." },
+  { word: "choice", pos: "n.", phonetic: "/tʃɔɪs/", meaningEn: "a decision between two or more things", meaningCn: "选择；选择权；可供选择的事物", synonyms: ["option","selection"], antonyms: [], example: "You have a choice of chicken or fish." },
+  { word: "choose", pos: "v.", phonetic: "/tʃuːz/", meaningEn: "to decide which one you want", meaningCn: "选择；挑选", synonyms: ["select","pick"], antonyms: ["reject"], example: "Please choose a book from the shelf." },
+  { word: "indoor", pos: "adj.", phonetic: "/ˈɪndɔː(r)/", meaningEn: "happening or used inside a building", meaningCn: "室内的；户内的", synonyms: ["inside"], antonyms: ["outdoor"], example: "There is an indoor swimming pool at the hotel." },
+  { word: "outdoor", pos: "adj.", phonetic: "/ˈaʊtdɔː(r)/", meaningEn: "happening or used outside a building", meaningCn: "户外的；室外的", synonyms: ["outside","open-air"], antonyms: ["indoor"], example: "We bought new outdoor chairs for the garden." },
+  { word: "inside", pos: "prep./adv./n.", phonetic: "/ˌɪnˈsaɪd/", meaningEn: "in or into a building or container", meaningCn: "在……里面；内部", synonyms: ["indoors","within"], antonyms: ["outside"], example: "It was cold, so we waited inside the café." },
+  { word: "outside", pos: "prep./adv./n.", phonetic: "/ˌaʊtˈsaɪd/", meaningEn: "not in a building; beyond the limits of something", meaningCn: "在外面；外部；在……之外", synonyms: ["outdoors","beyond"], antonyms: ["inside"], example: "The children are playing outside in the garden." },
+  { word: "depend on", pos: "phrase", phonetic: "/dɪˈpend ɒn/", meaningEn: "to need someone or something for help or support", meaningCn: "依靠；取决于", synonyms: ["rely on","count on"], antonyms: [], example: "We depend on the bus to get to school." },
+  { word: "have fun", pos: "phrase", phonetic: "/hæv fʌn/", meaningEn: "to enjoy yourself doing something", meaningCn: "玩得开心；享受乐趣", synonyms: ["enjoy oneself"], antonyms: [], example: "We had fun at the beach all afternoon." },
+  { word: "have a good time", pos: "phrase", phonetic: "/hæv ə ɡʊd taɪm/", meaningEn: "to enjoy yourself at an event or place", meaningCn: "玩得愉快；过得开心", synonyms: ["enjoy oneself","have fun"], antonyms: [], example: "We had a good time at the party last night." },
+  { word: "enjoy oneself", pos: "phrase", phonetic: "/ɪnˌdʒɔɪ wʌnˈself/", meaningEn: "to have a pleasant time", meaningCn: "玩得开心；过得愉快", synonyms: ["have fun"], antonyms: [], example: "I hope you enjoy yourself at the concert." },
+  { word: "facility", pos: "n.", phonetic: "/fəˈsɪləti/", meaningEn: "a place or service provided for a purpose", meaningCn: "设施；设备", synonyms: ["amenity","equipment"], antonyms: [], example: "The hotel has a facility for keeping luggage." },
+  { word: "access", pos: "n./v.", phonetic: "/ˈækses/", meaningEn: "the right or way to enter or use something", meaningCn: "进入；使用权；通道", synonyms: ["entry","admission"], antonyms: ["denial"], example: "Students have free access to the library computers." },
+  { word: "celebrate", pos: "v.", phonetic: "/ˈselɪbreɪt/", meaningEn: "to do something special for an important occasion", meaningCn: "庆祝；庆贺", synonyms: ["mark","observe"], antonyms: ["mourn"], example: "We celebrated her birthday with a big cake." },
+  { word: "celebration", pos: "n.", phonetic: "/ˌselɪˈbreɪʃn/", meaningEn: "a party or event to mark an important occasion", meaningCn: "庆祝活动；庆典", synonyms: ["party","festivity"], antonyms: [], example: "The town held a celebration for the new bridge." },
+  { word: "budget", pos: "n./adj.", phonetic: "/ˈbʌdʒɪt/", meaningEn: "a plan of how much money you can spend", meaningCn: "预算；廉价的", synonyms: ["allowance","funds"], antonyms: [], example: "We have a small budget for the school trip." },
+  { word: "chef", pos: "n.", phonetic: "/ʃef/", meaningEn: "a person whose job is cooking in a restaurant", meaningCn: "厨师长；厨师", synonyms: ["cook"], antonyms: [], example: "The chef made a delicious soup for us." },
+  { word: "refreshment", pos: "n.", phonetic: "/rɪˈfreʃmənt/", meaningEn: "a light snack or drink", meaningCn: "茶点；饮料；点心", synonyms: ["snack","drink"], antonyms: [], example: "Light refreshments will be served after the talk." },
+  { word: "snack", pos: "n.", phonetic: "/snæk/", meaningEn: "a small amount of food eaten between meals", meaningCn: "零食；小吃", synonyms: ["bite","nibble"], antonyms: [], example: "I usually have a snack after school." },
+  { word: "magnificent", pos: "adj.", phonetic: "/mæɡˈnɪfɪsnt/", meaningEn: "very good or beautiful; extremely impressive", meaningCn: "壮丽的；极好的", synonyms: ["splendid","wonderful","grand"], antonyms: ["ordinary","poor"], example: "The view from the hill was magnificent." },
+  { word: "ensure", pos: "v.", phonetic: "/ɪnˈʃɔː/", meaningEn: "to make certain that something happens", meaningCn: "确保；保证", synonyms: ["guarantee","make sure"], antonyms: [], example: "Please ensure that the door is locked." },
+  { word: "fabulous", pos: "adj.", phonetic: "/ˈfæbjələs/", meaningEn: "extremely good; wonderful", meaningCn: "极好的；绝妙的", synonyms: ["wonderful","amazing","great"], antonyms: ["awful","terrible"], example: "We had a fabulous time at the party." },
+  { word: "double", pos: "adj./v.", phonetic: "/ˈdʌbl/", meaningEn: "twice as much; to make something twice as big", meaningCn: "两倍的；使加倍", synonyms: ["twice","duplicate"], antonyms: ["half"], example: "The price of the ticket is double now." },
+  { word: "relationship", pos: "n.", phonetic: "/rɪˈleɪʃnʃɪp/", meaningEn: "the way two people or things are connected", meaningCn: "关系；关联", synonyms: ["connection","link"], antonyms: [], example: "She has a close relationship with her sister." },
+  { word: "take care of", pos: "phrase", phonetic: "/teɪk keə əv/", meaningEn: "to look after someone or something", meaningCn: "照顾；照料", synonyms: ["look after","care for"], antonyms: ["neglect"], example: "I take care of my little brother at weekends." },
+  { word: "sick", pos: "adj.", phonetic: "/sɪk/", meaningEn: "ill; not feeling well", meaningCn: "生病的；恶心的", synonyms: ["ill","unwell"], antonyms: ["healthy","well"], example: "He stayed at home because he was sick." },
+  { word: "rescue", pos: "v./n.", phonetic: "/ˈreskjuː/", meaningEn: "to save someone from a dangerous situation", meaningCn: "营救；救援", synonyms: ["save","free"], antonyms: ["abandon"], example: "The firemen rescued the cat from the tree." },
+  { word: "have ...in common", pos: "phrase", phonetic: "/hæv ˈsʌmθɪŋ ɪn ˈkɒmən/", meaningEn: "to share the same interests or features", meaningCn: "有共同之处", synonyms: ["share","resemble"], antonyms: ["differ"], example: "My sister and I have a lot in common." },
+  { word: "the rest of", pos: "phrase", phonetic: "/ðə rest əv/", meaningEn: "the remaining part of something", meaningCn: "其余的；剩下的", synonyms: ["the remainder of","the others"], antonyms: [], example: "We spent the rest of the day at the beach." },
+  { word: "wet", pos: "adj.", phonetic: "/wet/", meaningEn: "covered with water or another liquid", meaningCn: "湿的；潮湿的", synonyms: ["damp","soaked"], antonyms: ["dry"], example: "My shoes got wet in the rain." },
+  { word: "worth", pos: "adj./n.", phonetic: "/wɜːθ/", meaningEn: "having a certain value or use", meaningCn: "值……的；值得的", synonyms: ["valuable","useful"], antonyms: ["worthless"], example: "This old bike is worth about fifty pounds." },
+  { word: "even if", pos: "conj.", phonetic: "/ˈiːvn ɪf/", meaningEn: "used to say something is true in any case", meaningCn: "即使；即便", synonyms: ["although","even though"], antonyms: [], example: "Even if it rains, we will go to the park." },
+  { word: "share", pos: "v./n.", phonetic: "/ʃeə/", meaningEn: "to give part of something to others", meaningCn: "分享；分担；份额", synonyms: ["divide","split"], antonyms: ["keep"], example: "The two girls share a bedroom." },
+  { word: "space", pos: "n.", phonetic: "/speɪs/", meaningEn: "an empty area; the area beyond the earth", meaningCn: "空间；太空", synonyms: ["room","area"], antonyms: [], example: "There is not enough space for another chair." },
+  { word: "on one’s own", pos: "phrase", phonetic: "/ɒn wʌnz əʊn/", meaningEn: "alone, without help from other people", meaningCn: "独自；靠自己", synonyms: ["alone","by oneself"], antonyms: ["together"], example: "She lives on her own in a small flat." },
+  { word: "be keen on", pos: "phrase", phonetic: "/biː kiːn ɒn/", meaningEn: "to like or be interested in something", meaningCn: "热衷于；喜爱", synonyms: ["be fond of","enjoy"], antonyms: ["dislike","hate"], example: "My brother is keen on playing football." },
+  { word: "advantage", pos: "n.", phonetic: "/ədˈvɑːntɪdʒ/", meaningEn: "something that helps you or is useful", meaningCn: "优势；好处", synonyms: ["benefit","plus"], antonyms: ["disadvantage","drawback"], example: "Living near school is a big advantage." },
+  { word: "disadvantage", pos: "n.", phonetic: "/ˌdɪsədˈvɑːntɪdʒ/", meaningEn: "something that makes a situation worse or harder", meaningCn: "缺点；不利条件", synonyms: ["drawback","minus"], antonyms: ["advantage","benefit"], example: "The main disadvantage is the high price." },
+  { word: "fortunately", pos: "adv.", phonetic: "/ˈfɔːtʃənətli/", meaningEn: "used to say that something good happened", meaningCn: "幸运的是；幸好", synonyms: ["luckily","thankfully"], antonyms: ["unfortunately","sadly"], example: "Fortunately, nobody was hurt in the accident." },
+  { word: "miss", pos: "v.", phonetic: "/mɪs/", meaningEn: "to not hit or catch something; to feel sad without someone", meaningCn: "错过；未击中；想念", synonyms: ["long for"], antonyms: ["catch","hit"], example: "I missed the bus and was late for school." },
+  { word: "wonder", pos: "v./n.", phonetic: "/ˈwʌndə/", meaningEn: "to want to know something; a feeling of surprise", meaningCn: "想知道；惊奇", synonyms: ["think","question"], antonyms: [], example: "I wonder why she is so late today." },
+  { word: "get on well with", pos: "phrase", phonetic: "/ɡet ɒn wel wɪð/", meaningEn: "to have a good friendly relationship with someone", meaningCn: "与……相处融洽", synonyms: ["get along with"], antonyms: ["argue with","fight with"], example: "I get on well with all my classmates." },
+  { word: "argue", pos: "v.", phonetic: "/ˈɑːɡjuː/", meaningEn: "to speak angrily with someone who disagrees", meaningCn: "争论；争吵", synonyms: ["quarrel","disagree"], antonyms: ["agree"], example: "The boys often argue about football." },
+  { word: "notice", pos: "v./n.", phonetic: "/ˈnəʊtɪs/", meaningEn: "to see or become aware of something", meaningCn: "注意到；通知", synonyms: ["see","spot","observe"], antonyms: ["ignore","overlook"], example: "Did you notice the new sign on the door?" },
+  { word: "destroy", pos: "v.", phonetic: "/dɪˈstrɔɪ/", meaningEn: "to damage something so badly it no longer exists", meaningCn: "摧毁；破坏", synonyms: ["ruin","damage","wreck"], antonyms: ["build","create"], example: "The storm destroyed many houses in the village." },
+  { word: "entrance", pos: "n.", phonetic: "/ˈentrəns/", meaningEn: "the door or way into a place", meaningCn: "入口；进入", synonyms: ["door","entry","gateway"], antonyms: ["exit"], example: "Let us meet at the entrance of the cinema." },
+  { word: "enter", pos: "v.", phonetic: "/ˈentə/", meaningEn: "to go into a place; to take part in a competition", meaningCn: "进入；参加", synonyms: ["go in","join"], antonyms: ["leave","exit"], example: "Please knock before you enter the room." },
+  { word: "entry", pos: "n.", phonetic: "/ˈentri/", meaningEn: "the act of going in; a single item in a list", meaningCn: "进入；参赛作品；条目", synonyms: ["entrance","item"], antonyms: ["exit"], example: "Her painting was the best entry in the competition." },
+  { word: "exit", pos: "n./v.", phonetic: "/ˈeksɪt/", meaningEn: "a way out of a building; to go out", meaningCn: "出口；出去；退出", synonyms: ["way out","leave"], antonyms: ["entrance","enter"], example: "The exit is at the end of the corridor." },
+  { word: "queue", pos: "n./v.", phonetic: "/kjuː/", meaningEn: "a line of people waiting; to wait in a line", meaningCn: "队列；排队", synonyms: ["line","wait"], antonyms: [], example: "We had to queue for tickets for an hour." },
+  { word: "checkout", pos: "n.", phonetic: "/ˈtʃekaʊt/", meaningEn: "the place where you pay in a shop", meaningCn: "收银台；结账处", synonyms: ["till","cash desk"], antonyms: [], example: "There was a long queue at the checkout." },
+  { word: "shelf", pos: "n.", phonetic: "/ʃelf/", meaningEn: "a flat board for putting things on", meaningCn: "架子；搁板", synonyms: ["ledge","rack"], antonyms: [], example: "She put the books back on the shelf." },
+  { word: "be full of", pos: "phrase", phonetic: "/biː fʊl əv/", meaningEn: "to contain a lot of something", meaningCn: "充满；满是", synonyms: ["be filled with","be crowded with"], antonyms: ["be empty of"], example: "The bus will be full of tourists in July." },
+  { word: "be filled with", pos: "phrase", phonetic: "/biː fɪld wɪð/", meaningEn: "to be made full of something", meaningCn: "被填满；充满", synonyms: ["be full of","be packed with"], antonyms: ["be emptied of"], example: "The hall will be filled with the sound of music." },
+  { word: "height", pos: "n.", phonetic: "/haɪt/", meaningEn: "how tall or high something is", meaningCn: "高度；身高", synonyms: ["altitude","tallness"], antonyms: ["depth"], example: "What is the height of that building?" },
+  { word: "convenient", pos: "adj.", phonetic: "/kənˈviːniənt/", meaningEn: "easy to use or good for your plans", meaningCn: "方便的；便利的", synonyms: ["handy","useful","suitable"], antonyms: ["inconvenient","awkward"], example: "The hotel is convenient for the station." },
+  { word: "reach", pos: "v./n.", phonetic: "/riːtʃ/", meaningEn: "to arrive at a place or touch something", meaningCn: "到达；伸手够到", synonyms: ["arrive at","get to"], antonyms: ["leave","depart"], example: "We reached the top of the hill at noon." },
+  { word: "arrive", pos: "v.", phonetic: "/əˈraɪv/", meaningEn: "to get to a place", meaningCn: "到达；抵达", synonyms: ["reach","come","turn up"], antonyms: ["leave","depart"], example: "The train will arrive at six o'clock." },
+  { word: "arrival", pos: "n.", phonetic: "/əˈraɪvl/", meaningEn: "the act of getting to a place", meaningCn: "到达；抵达", synonyms: ["coming","appearance"], antonyms: ["departure"], example: "Her arrival surprised everyone at the party." },
+  { word: "section", pos: "n.", phonetic: "/ˈsekʃn/", meaningEn: "one part of something larger", meaningCn: "部分；部门；章节", synonyms: ["part","division","piece"], antonyms: ["whole"], example: "This section of the shop sells toys." },
+  { word: "technique", pos: "n.", phonetic: "/tekˈniːk/", meaningEn: "a special way of doing something", meaningCn: "技巧；方法", synonyms: ["method","skill","approach"], antonyms: [], example: "The teacher showed us a new painting technique." },
+  { word: "temperature", pos: "n.", phonetic: "/ˈtemprətʃə/", meaningEn: "how hot or cold something is", meaningCn: "温度；气温", synonyms: ["warmth","heat"], antonyms: [], example: "The temperature fell below zero last night." },
+  { word: "control", pos: "v./n.", phonetic: "/kənˈtrəʊl/", meaningEn: "to make something do what you want; power over it", meaningCn: "控制；管理；支配", synonyms: ["manage","direct","operate"], antonyms: ["release","free"], example: "She could not control the little dog." },
+  { word: "speed", pos: "n./v.", phonetic: "/spiːd/", meaningEn: "how fast something moves; to go quickly", meaningCn: "速度；快速移动", synonyms: ["pace","rate","hurry"], antonyms: ["slowness"], example: "The car was moving at great speed." },
+  { word: "condition", pos: "n.", phonetic: "/kənˈdɪʃn/", meaningEn: "the state that something or someone is in", meaningCn: "状况；条件", synonyms: ["state","situation","shape"], antonyms: [], example: "The old bike is still in good condition." },
+  { word: "concern", pos: "n./v.", phonetic: "/kənˈsɜːn/", meaningEn: "worry about something; to make someone worry", meaningCn: "担心；关切；使担忧", synonyms: ["worry","anxiety","interest"], antonyms: ["calm","reassure"], example: "There is growing concern about air pollution." },
+  { word: "conclude", pos: "v.", phonetic: "/kənˈkluːd/", meaningEn: "to decide something after thinking about it", meaningCn: "得出结论；断定；结束", synonyms: ["decide","deduce","finish"], antonyms: ["begin","start"], example: "We concluded that the plan was too expensive." },
+  { word: "conclusion", pos: "n.", phonetic: "/kənˈkluːʒn/", meaningEn: "a decision or opinion reached after thinking", meaningCn: "结论；结尾", synonyms: ["decision","result","ending"], antonyms: ["introduction"], example: "What conclusion did you draw from the results?" },
+  { word: "solution", pos: "n.", phonetic: "/səˈluːʃn/", meaningEn: "a way to solve a problem", meaningCn: "解决办法；答案", synonyms: ["answer","remedy","fix"], antonyms: ["problem"], example: "We finally found a solution to the problem." },
+  { word: "effect", pos: "n.", phonetic: "/ɪˈfekt/", meaningEn: "a change that happens because of something", meaningCn: "影响；效果；作用", synonyms: ["result","influence","impact"], antonyms: ["cause"], example: "The new law had a big effect on drivers." },
+  { word: "recognize", pos: "v.", phonetic: "/ˈrekəɡnaɪz/", meaningEn: "to know someone or something you have seen before", meaningCn: "认出；辨认；承认", synonyms: ["identify","know","spot"], antonyms: ["forget","ignore"], example: "I did not recognize you with short hair." },
+  { word: "general", pos: "adj.", phonetic: "/ˈdʒenrəl/", meaningEn: "relating to most people or things; not detailed", meaningCn: "总的；普遍的；大体的", synonyms: ["common","overall","usual"], antonyms: ["particular","specific"], example: "In general, the students did quite well." },
+  { word: "normal", pos: "adj.", phonetic: "/ˈnɔːml/", meaningEn: "usual and not strange or special", meaningCn: "正常的；普通的", synonyms: ["usual","ordinary","typical"], antonyms: ["unusual","strange"], example: "It is normal to feel tired after a long trip." },
+  { word: "predict", pos: "v.", phonetic: "/prɪˈdɪkt/", meaningEn: "to say what you think will happen", meaningCn: "预测；预言", synonyms: ["forecast","expect","guess"], antonyms: [], example: "It is hard to predict the weather here." },
+  { word: "distance", pos: "n.", phonetic: "/ˈdɪstəns/", meaningEn: "the space between two places or things", meaningCn: "距离；间距", synonyms: ["space","gap","length"], antonyms: ["closeness"], example: "The distance between the two towns is ten kilometres." },
+  { word: "distant", pos: "adj.", phonetic: "/ˈdɪstənt/", meaningEn: "far away in space or time", meaningCn: "远的；遥远的", synonyms: ["far","remote","faraway"], antonyms: ["near","close"], example: "We could see a distant mountain from the window." },
+  { word: "picnic", pos: "n.", phonetic: "/ˈpɪknɪk/", meaningEn: "a meal eaten outdoors, often in the countryside", meaningCn: "野餐", synonyms: ["outdoor meal","barbecue"], antonyms: [], example: "We had a picnic by the river on Sunday." },
+  { word: "in spite of", pos: "phrase", phonetic: "/ɪn spaɪt əv/", meaningEn: "even though something makes it difficult", meaningCn: "尽管；不管", synonyms: ["despite","regardless of"], antonyms: ["because of"], example: "We went out in spite of the heavy rain." },
+  { word: "apply", pos: "v.", phonetic: "/əˈplaɪ/", meaningEn: "to make a formal request for a job or place", meaningCn: "申请；应用；涂抹", synonyms: ["request","use"], antonyms: [], example: "I want to apply for a new job." },
+  { word: "wallet", pos: "n.", phonetic: "/ˈwɒlɪt/", meaningEn: "a small flat case for carrying money and cards", meaningCn: "钱包；皮夹", synonyms: ["purse","billfold"], antonyms: [], example: "He lost his wallet on the bus." },
+  { word: "pleased", pos: "adj.", phonetic: "/pliːzd/", meaningEn: "happy or satisfied about something", meaningCn: "高兴的；满意的", synonyms: ["happy","glad","delighted"], antonyms: ["unhappy","disappointed"], example: "She was pleased with her exam results." },
+  { word: "prize", pos: "n.", phonetic: "/praɪz/", meaningEn: "something given to the winner of a competition", meaningCn: "奖品；奖金", synonyms: ["award","reward"], antonyms: [], example: "He won first prize in the competition." },
+  { word: "parking", pos: "n.", phonetic: "/ˈpɑːkɪŋ/", meaningEn: "the act of leaving a car somewhere for a time", meaningCn: "停车；停车场", synonyms: [], antonyms: [], example: "Parking is free in this street on Sundays." },
+  { word: "complicated", pos: "adj.", phonetic: "/ˈkɒmplɪkeɪtɪd/", meaningEn: "difficult to understand because it has many parts", meaningCn: "复杂的；难懂的", synonyms: ["complex","difficult","tricky"], antonyms: ["simple","easy"], example: "The instructions were too complicated to follow." },
+  { word: "talent", pos: "n.", phonetic: "/ˈtælənt/", meaningEn: "a natural ability to do something well", meaningCn: "天赋；才能", synonyms: ["gift","ability","skill"], antonyms: [], example: "She has a real talent for drawing." },
+  { word: "correct", pos: "adj./v.", phonetic: "/kəˈrekt/", meaningEn: "right and without mistakes; to make something right", meaningCn: "正确的；准确的；改正", synonyms: ["right","accurate"], antonyms: ["wrong","incorrect"], example: "Please choose the correct answer." },
+  { word: "session", pos: "n.", phonetic: "/ˈseʃn/", meaningEn: "a period of time used for one activity", meaningCn: "一段时间；会议；课时", synonyms: ["meeting","period"], antonyms: [], example: "The training session lasted two hours." },
+  { word: "fit", pos: "v./adj.", phonetic: "/fɪt/", meaningEn: "to be the right size; healthy and strong", meaningCn: "合身；适合；健康的", synonyms: ["suit","healthy"], antonyms: ["unfit"], example: "These shoes don't fit me very well." },
+  { word: "fitness", pos: "n.", phonetic: "/ˈfɪtnəs/", meaningEn: "the condition of being physically healthy and strong", meaningCn: "健康；健身", synonyms: ["health","strength"], antonyms: [], example: "She goes running to improve her fitness." },
+  { word: "address", pos: "n./v.", phonetic: "/əˈdres/", meaningEn: "details of where someone lives; to speak to someone", meaningCn: "地址；住址；演说；处理", synonyms: ["speech","talk"], antonyms: [], example: "Please write your address on this form." },
+  { word: "in advance", pos: "phrase", phonetic: "/ɪn ədˈvɑːns/", meaningEn: "before a particular time or event happens", meaningCn: "提前；预先", synonyms: ["beforehand","earlier"], antonyms: [], example: "Please book your tickets in advance." },
+  { word: "climate", pos: "n.", phonetic: "/ˈklaɪmət/", meaningEn: "the usual weather conditions in a place", meaningCn: "气候", synonyms: ["weather"], antonyms: [], example: "The climate here is warm and dry." },
+  { word: "wood", pos: "n.", phonetic: "/wʊd/", meaningEn: "the hard material from trees; a small forest", meaningCn: "木头；木材；树林", synonyms: ["timber","forest"], antonyms: [], example: "This table is made of wood." },
+  { word: "cotton", pos: "n.", phonetic: "/ˈkɒtn/", meaningEn: "soft white cloth made from a plant", meaningCn: "棉；棉布；棉花", synonyms: [], antonyms: [], example: "She wore a white cotton shirt." },
+  { word: "wool", pos: "n.", phonetic: "/wʊl/", meaningEn: "soft thick hair from sheep, used for clothes", meaningCn: "羊毛；毛线", synonyms: [], antonyms: [], example: "This jumper is made of wool." },
+  { word: "similar", pos: "adj.", phonetic: "/ˈsɪmələ/", meaningEn: "almost the same as something else", meaningCn: "相似的；类似的", synonyms: ["alike","comparable"], antonyms: ["different"], example: "Our opinions about the film were similar." },
+  { word: "due to", pos: "phrase", phonetic: "/ˈdjuː tə/", meaningEn: "because of something", meaningCn: "由于；因为", synonyms: ["because of","owing to"], antonyms: [], example: "The match was cancelled due to rain." },
+  { word: "fail", pos: "v.", phonetic: "/feɪl/", meaningEn: "to not succeed in doing something", meaningCn: "失败；不及格；未能", synonyms: ["flop"], antonyms: ["succeed","pass"], example: "He was afraid he would fail the exam." },
+  { word: "failure", pos: "n.", phonetic: "/ˈfeɪljə/", meaningEn: "a lack of success; something that does not succeed", meaningCn: "失败；失败的人或事", synonyms: ["defeat"], antonyms: ["success"], example: "The whole plan ended in failure." },
+  { word: "lead to", pos: "phrase", phonetic: "/ˈliːd tuː/", meaningEn: "to cause something to happen", meaningCn: "导致；引起；通向", synonyms: ["cause","result in"], antonyms: [], example: "Eating too much sugar can lead to health problems." },
+  { word: "advertisement", pos: "n.", phonetic: "/ədˈvɜːtɪsmənt/", meaningEn: "a notice that tries to make people buy something", meaningCn: "广告", synonyms: ["ad","commercial"], antonyms: [], example: "I saw an advertisement for the new phone." },
+  { word: "biology", pos: "n.", phonetic: "/baɪˈɒlədʒi/", meaningEn: "the scientific study of living things", meaningCn: "生物学", synonyms: [], antonyms: [], example: "She is studying biology at university." },
+  { word: "tent", pos: "n.", phonetic: "/tent/", meaningEn: "a shelter made of cloth held up by poles", meaningCn: "帐篷", synonyms: [], antonyms: [], example: "We slept in a tent beside the lake." },
+  { word: "among", pos: "prep.", phonetic: "/əˈmʌŋ/", meaningEn: "in the middle of a group of people or things", meaningCn: "在…之中；在…中间", synonyms: ["amongst","between"], antonyms: [], example: "She was sitting among her friends." },
+  { word: "hike", pos: "n./v.", phonetic: "/haɪk/", meaningEn: "a long walk in the countryside; to walk a long way", meaningCn: "徒步；远足；长途步行", synonyms: ["walk","trek"], antonyms: [], example: "We went for a long hike in the mountains." },
+  { word: "camp", pos: "n./v.", phonetic: "/kæmp/", meaningEn: "a place to stay outdoors in tents; to stay there", meaningCn: "营地；露营", synonyms: [], antonyms: [], example: "We decided to camp near the river." },
+  { word: "campsite", pos: "n.", phonetic: "/ˈkæmpsaɪt/", meaningEn: "a place where people can stay in tents", meaningCn: "露营地", synonyms: ["campground"], antonyms: [], example: "The campsite had showers and a small shop." },
+  { word: "dive", pos: "v.", phonetic: "/daɪv/", meaningEn: "to jump into water with your head first", meaningCn: "跳水；潜水；俯冲", synonyms: ["plunge"], antonyms: [], example: "He likes to dive into the pool." },
+  { word: "sociable", pos: "adj.", phonetic: "/ˈsəʊʃəbl/", meaningEn: "liking to spend time with other people", meaningCn: "好交际的；友善的", synonyms: ["friendly","outgoing"], antonyms: ["unsociable","shy"], example: "She is very sociable and has lots of friends." },
+  { word: "hill", pos: "n.", phonetic: "/hɪl/", meaningEn: "an area of land higher than the land around it", meaningCn: "小山；山丘", synonyms: ["mound","hillock"], antonyms: ["valley"], example: "We walked up the hill to see the view." },
+  { word: "coast", pos: "n.", phonetic: "/kəʊst/", meaningEn: "the land next to the sea", meaningCn: "海岸；海滨", synonyms: ["shore","seaside"], antonyms: [], example: "We drove along the coast for two hours." },
+  { word: "sail", pos: "v./n.", phonetic: "/seɪl/", meaningEn: "to travel on water in a boat or ship", meaningCn: "航行；帆", synonyms: ["cruise","voyage"], antonyms: [], example: "They sail to the island every summer." },
+  { word: "surfing", pos: "n.", phonetic: "/ˈsɜːfɪŋ/", meaningEn: "the sport of riding on waves on a board", meaningCn: "冲浪运动", synonyms: [], antonyms: [], example: "He goes surfing every weekend in summer." },
+  { word: "beneath", pos: "prep.", phonetic: "/bɪˈniːθ/", meaningEn: "under something or someone", meaningCn: "在……下面；在……下方", synonyms: ["under","below"], antonyms: ["above","over"], example: "The cat was sleeping beneath the table." },
+  { word: "peaceful", pos: "adj.", phonetic: "/ˈpiːsfl/", meaningEn: "quiet, calm and without trouble", meaningCn: "平静的；安宁的", synonyms: ["calm","quiet","tranquil"], antonyms: ["noisy","violent"], example: "The village is a peaceful place to relax." },
+  { word: "peace", pos: "n.", phonetic: "/piːs/", meaningEn: "a time when there is no war or fighting", meaningCn: "和平；平静", synonyms: ["calm","quiet"], antonyms: ["war","conflict"], example: "Everyone hopes for peace in the world." },
+  { word: "unique", pos: "adj.", phonetic: "/juˈniːk/", meaningEn: "being the only one of its kind", meaningCn: "独特的；唯一的", synonyms: ["special","unusual"], antonyms: ["common","ordinary"], example: "This building has a unique design." },
+  { word: "hut", pos: "n.", phonetic: "/hʌt/", meaningEn: "a small, simple building", meaningCn: "小屋；棚屋", synonyms: ["cabin","shack"], antonyms: [], example: "They stayed in a small wooden hut by the lake." },
+  { word: "luxury", pos: "n.", phonetic: "/ˈlʌkʃəri/", meaningEn: "great comfort and expensive things", meaningCn: "奢侈；奢华；奢侈品", synonyms: ["comfort","wealth"], antonyms: ["poverty"], example: "They stayed in a luxury hotel in the city centre." },
+  { word: "situate", pos: "v.", phonetic: "/ˈsɪtʃueɪt/", meaningEn: "to put something in a particular place", meaningCn: "使位于；使处于", synonyms: ["place","locate"], antonyms: [], example: "The hotel is situated close to the beach." },
+  { word: "region", pos: "n.", phonetic: "/ˈriːdʒən/", meaningEn: "a particular area of a country or the world", meaningCn: "地区；区域", synonyms: ["area","district","zone"], antonyms: [], example: "This region is famous for its wine." },
+  { word: "extreme", pos: "adj./n.", phonetic: "/ɪkˈstriːm/", meaningEn: "very great in degree or very severe", meaningCn: "极度的；极端的；极端", synonyms: ["severe","intense"], antonyms: ["mild","moderate"], example: "The desert has extreme weather in summer." },
+  { word: "far away from", pos: "phrase", phonetic: "/ˌfɑːr əˈweɪ frəm/", meaningEn: "at a long distance from a place", meaningCn: "远离；离……很远", synonyms: ["distant from"], antonyms: ["close to","near"], example: "The village is far away from the city." },
+  { word: "plant", pos: "n./v.", phonetic: "/plɑːnt/", meaningEn: "a living thing that grows in soil; to put in soil", meaningCn: "植物；种植", synonyms: ["sow"], antonyms: [], example: "I plant vegetables in my garden every spring." },
+  { word: "cosy", pos: "adj.", phonetic: "/ˈkəʊzi/", meaningEn: "warm and comfortable", meaningCn: "温暖舒适的；惬意的", synonyms: ["comfortable","snug"], antonyms: ["cold","uncomfortable"], example: "Their little house is warm and cosy in winter." },
+  { word: "decorate", pos: "v.", phonetic: "/ˈdekəreɪt/", meaningEn: "to make something look more attractive", meaningCn: "装饰；布置", synonyms: ["adorn","beautify"], antonyms: [], example: "We decorate the classroom with colourful pictures." },
+  { word: "wedding", pos: "n.", phonetic: "/ˈwedɪŋ/", meaningEn: "a ceremony where two people get married", meaningCn: "婚礼", synonyms: ["marriage","ceremony"], antonyms: [], example: "My sister's wedding is next Saturday." },
+  { word: "huge", pos: "adj.", phonetic: "/hjuːdʒ/", meaningEn: "extremely large in size or amount", meaningCn: "巨大的；庞大的", synonyms: ["enormous","massive","giant"], antonyms: ["tiny","small"], example: "They live in a huge house near the park." },
+  { word: "still", pos: "adv./adj.", phonetic: "/stɪl/", meaningEn: "continuing up to now; not moving", meaningCn: "仍然；还；静止的", synonyms: ["yet","motionless"], antonyms: ["moving"], example: "She is still waiting for the bus." },
+  { word: "bother", pos: "v.", phonetic: "/ˈbɒðə(r)/", meaningEn: "to annoy or worry someone", meaningCn: "打扰；烦扰", synonyms: ["annoy","trouble","worry"], antonyms: ["please"], example: "Please don't bother your sister while she studies." },
+  { word: "sight", pos: "n.", phonetic: "/saɪt/", meaningEn: "the ability to see, or something you see", meaningCn: "视力；景象；风景", synonyms: ["view","vision"], antonyms: [], example: "The mountains were a beautiful sight." },
+  { word: "guilty", pos: "adj.", phonetic: "/ˈɡɪlti/", meaningEn: "feeling bad because you did something wrong", meaningCn: "内疚的；有罪的", synonyms: ["ashamed","sorry"], antonyms: ["innocent"], example: "I felt guilty about forgetting her birthday." },
+  { word: "upset", pos: "adj./v.", phonetic: "/ʌpˈset/", meaningEn: "unhappy or worried; to make someone unhappy", meaningCn: "难过的；心烦的；使心烦", synonyms: ["sad","unhappy","worried"], antonyms: ["happy","pleased"], example: "She was upset when she lost her keys." },
+  { word: "occasion", pos: "n.", phonetic: "/əˈkeɪʒn/", meaningEn: "a special time or event", meaningCn: "场合；时刻；特殊事件", synonyms: ["event","moment"], antonyms: [], example: "We wear smart clothes on special occasions." },
+  { word: "sculpture", pos: "n.", phonetic: "/ˈskʌlptʃə(r)/", meaningEn: "a work of art made from stone, wood or metal", meaningCn: "雕塑；雕塑作品", synonyms: ["statue","carving"], antonyms: [], example: "There is a marble sculpture in the museum." },
+  { word: "statue", pos: "n.", phonetic: "/ˈstætʃuː/", meaningEn: "a figure of a person or animal made of stone", meaningCn: "雕像；塑像", synonyms: ["sculpture","figure"], antonyms: [], example: "They took photos next to the statue." },
+  { word: "be used to", pos: "phrase", phonetic: "/biː ˈjuːst tuː/", meaningEn: "to be familiar with something and not find it strange", meaningCn: "习惯于", synonyms: ["be accustomed to"], antonyms: [], example: "You will soon be used to the noise here." },
+  { word: "language", pos: "n.", phonetic: "/ˈlæŋɡwɪdʒ/", meaningEn: "the words people use to communicate", meaningCn: "语言", synonyms: ["speech","tongue"], antonyms: [], example: "How many languages can you speak?" },
+  { word: "pupil", pos: "n.", phonetic: "/ˈpjuːpl/", meaningEn: "a child who is learning at school", meaningCn: "小学生；学生", synonyms: ["student","schoolchild"], antonyms: ["teacher"], example: "There are thirty pupils in my class." },
+  { word: "award", pos: "n./v.", phonetic: "/əˈwɔːd/", meaningEn: "a prize given for good work; to give a prize", meaningCn: "奖品；奖项；授予；颁发", synonyms: ["prize","present","grant"], antonyms: [], example: "She won an award for her excellent essay." },
+  { word: "chance", pos: "n.", phonetic: "/tʃɑːns/", meaningEn: "a possibility or opportunity for something to happen", meaningCn: "机会；可能性；偶然", synonyms: ["opportunity","possibility","luck"], antonyms: [], example: "There is a good chance of rain tomorrow." },
+  { word: "serious", pos: "adj.", phonetic: "/ˈsɪəriəs/", meaningEn: "bad or dangerous; not joking or funny", meaningCn: "严重的；严肃的；认真的", synonyms: ["severe","grave","earnest"], antonyms: ["minor","funny"], example: "He was in a serious accident last year." },
+  { word: "tiny", pos: "adj.", phonetic: "/ˈtaɪni/", meaningEn: "extremely small in size or amount", meaningCn: "极小的；微小的", synonyms: ["small","little","minute"], antonyms: ["huge","enormous"], example: "They live in a tiny flat near the station." },
+  { word: "piece", pos: "n.", phonetic: "/piːs/", meaningEn: "a part of something, or a single item", meaningCn: "块；片；段；一件", synonyms: ["part","bit","portion"], antonyms: ["whole"], example: "Would you like a piece of cake?" },
+  { word: "perhaps", pos: "adv.", phonetic: "/pəˈhæps/", meaningEn: "used to say that something may be true", meaningCn: "也许；可能", synonyms: ["maybe","possibly"], antonyms: ["certainly","definitely"], example: "Perhaps we should take a taxi home." },
+  { word: "probably", pos: "adv.", phonetic: "/ˈprɒbəbli/", meaningEn: "used when something is very likely to happen", meaningCn: "很可能；大概", synonyms: ["likely","presumably"], antonyms: ["unlikely","certainly"], example: "It will probably rain this afternoon." },
+  { word: "feed", pos: "v.", phonetic: "/fiːd/", meaningEn: "to give food to a person or animal", meaningCn: "喂养；饲养；给…食物", synonyms: ["nourish","supply"], antonyms: ["starve"], example: "Please feed the cat before you leave." },
+  { word: "penguin", pos: "n.", phonetic: "/ˈpeŋɡwɪn/", meaningEn: "a black and white bird that swims but cannot fly", meaningCn: "企鹅", synonyms: [], antonyms: [], example: "We saw a penguin at the zoo." },
+  { word: "total", pos: "n./adj./v.", phonetic: "/ˈtəʊtl/", meaningEn: "the whole amount; complete; to add up to", meaningCn: "总数；总的；完全的；总计", synonyms: ["whole","entire","sum"], antonyms: ["partial"], example: "In total, fifty students joined the trip." },
+  { word: "approach", pos: "n./v.", phonetic: "/əˈprəʊtʃ/", meaningEn: "a way of dealing with something; to come near", meaningCn: "方法；途径；接近；靠近", synonyms: ["method","way","near"], antonyms: ["leave","retreat"], example: "We need a new approach to this problem." },
+  { word: "complaint", pos: "n.", phonetic: "/kəmˈpleɪnt/", meaningEn: "a statement saying you are not satisfied", meaningCn: "抱怨；投诉；控告", synonyms: ["grievance","protest"], antonyms: ["praise","compliment"], example: "The hotel received a complaint about the noise." },
+  { word: "judge", pos: "n./v.", phonetic: "/dʒʌdʒ/", meaningEn: "a person who decides in court; to form an opinion", meaningCn: "法官；裁判；评判；判断", synonyms: ["referee","assess","evaluate"], antonyms: [], example: "The judge listened carefully to both sides." },
+  { word: "desert", pos: "n./v.", phonetic: "/ˈdezət/", meaningEn: "a large dry area of land; to leave someone", meaningCn: "沙漠；抛弃；遗弃", synonyms: ["abandon","wasteland"], antonyms: ["stay","support"], example: "Camels can travel for days across the desert." },
+  { word: "invite", pos: "v.", phonetic: "/ɪnˈvaɪt/", meaningEn: "to ask someone to come to an event", meaningCn: "邀请；招待", synonyms: ["ask","request"], antonyms: ["reject","refuse"], example: "I will invite all my friends to the party." },
+  { word: "invitation", pos: "n.", phonetic: "/ˌɪnvɪˈteɪʃn/", meaningEn: "a written or spoken request to come somewhere", meaningCn: "邀请；请柬", synonyms: ["request","invite"], antonyms: [], example: "She sent me an invitation to her wedding." },
+  { word: "factory", pos: "n.", phonetic: "/ˈfæktri/", meaningEn: "a building where goods are made by machines", meaningCn: "工厂；制造厂", synonyms: ["plant","mill","works"], antonyms: [], example: "My uncle works in a car factory." },
+  { word: "security", pos: "n.", phonetic: "/sɪˈkjʊərəti/", meaningEn: "protection from danger, crime or attack", meaningCn: "安全；保安；保障", synonyms: ["safety","protection"], antonyms: ["danger","risk"], example: "Airport security checked all our bags." },
+  { word: "refuse", pos: "v.", phonetic: "/rɪˈfjuːz/", meaningEn: "to say that you will not do something", meaningCn: "拒绝；回绝", synonyms: ["decline","reject"], antonyms: ["accept","agree"], example: "He refused to help us with the project." },
+  { word: "resort", pos: "n.", phonetic: "/rɪˈzɔːt/", meaningEn: "a place where people go for holidays", meaningCn: "度假胜地；旅游胜地", synonyms: ["spa","retreat"], antonyms: [], example: "We spent a week at a ski resort." },
+  { word: "grateful", pos: "adj.", phonetic: "/ˈɡreɪtfl/", meaningEn: "feeling thankful for something someone did", meaningCn: "感激的；感谢的", synonyms: ["thankful","appreciative"], antonyms: ["ungrateful"], example: "I am grateful for all your help." },
+  { word: "main course", pos: "phrase", phonetic: "/ˌmeɪn ˈkɔːs/", meaningEn: "the largest and most important dish of a meal", meaningCn: "主菜", synonyms: ["entree"], antonyms: ["starter","dessert"], example: "For my main course I ordered roast chicken." },
+  { word: "dessert", pos: "n.", phonetic: "/dɪˈzɜːt/", meaningEn: "sweet food eaten at the end of a meal", meaningCn: "甜点；餐后甜食", synonyms: ["pudding","sweet"], antonyms: [], example: "We had ice cream for dessert." },
+  { word: "promise", pos: "n./v.", phonetic: "/ˈprɒmɪs/", meaningEn: "to say you will surely do something; such a statement", meaningCn: "承诺；答应；诺言", synonyms: ["pledge","vow","guarantee"], antonyms: ["break"], example: "She promised to call me tonight." },
+  { word: "persuade", pos: "v.", phonetic: "/pəˈsweɪd/", meaningEn: "to make someone agree to do something", meaningCn: "说服；劝说", synonyms: ["convince","urge"], antonyms: ["dissuade","discourage"], example: "I persuaded my brother to join the club." },
+  { word: "atmosphere", pos: "n.", phonetic: "/ˈætməsfɪə/", meaningEn: "the feeling a place gives; the air around Earth", meaningCn: "气氛；氛围；大气", synonyms: ["mood","feeling","air"], antonyms: [], example: "The restaurant has a relaxed atmosphere." },
+  { word: "profit", pos: "n.", phonetic: "/ˈprɒfɪt/", meaningEn: "money you gain after paying all costs", meaningCn: "利润；盈利", synonyms: ["gain","earnings","return"], antonyms: ["loss"], example: "The shop made a big profit last year." },
+  { word: "reliable", pos: "adj.", phonetic: "/rɪˈlaɪəbl/", meaningEn: "able to be trusted to work well or be honest", meaningCn: "可靠的；可信赖的", synonyms: ["dependable","trustworthy"], antonyms: ["unreliable"], example: "She is a reliable friend who always helps." },
+  { word: "poster", pos: "n.", phonetic: "/ˈpəʊstə/", meaningEn: "a large printed picture or notice on a wall", meaningCn: "海报；招贴画", synonyms: ["notice","bill"], antonyms: [], example: "There is a poster of a band on my wall." },
+  { word: "quiz", pos: "n.", phonetic: "/kwɪz/", meaningEn: "a short test of knowledge", meaningCn: "测验；小考", synonyms: ["test","exam"], antonyms: [], example: "We had a quiz on irregular verbs today." },
+  { word: "anxious", pos: "adj.", phonetic: "/ˈæŋkʃəs/", meaningEn: "feeling worried or nervous about something", meaningCn: "焦虑的；担心的", synonyms: ["worried","nervous","uneasy"], antonyms: ["calm","relaxed"], example: "She felt anxious before the exam." },
+  { word: "completely", pos: "adv.", phonetic: "/kəmˈpliːtli/", meaningEn: "in every way; totally", meaningCn: "完全地；彻底地", synonyms: ["totally","entirely","fully"], antonyms: ["partly"], example: "I completely forgot about the meeting." },
+  { word: "definitely", pos: "adv.", phonetic: "/ˈdefɪnətli/", meaningEn: "without any doubt; certainly", meaningCn: "肯定地；确定地", synonyms: ["certainly","surely"], antonyms: [], example: "I will definitely come to your party." },
+  { word: "guess", pos: "v./n.", phonetic: "/ɡes/", meaningEn: "to give an answer without being sure; an opinion without proof", meaningCn: "猜测；猜", synonyms: ["suppose","estimate"], antonyms: [], example: "Can you guess how old she is?" },
+  { word: "aim", pos: "n./v.", phonetic: "/eɪm/", meaningEn: "a goal you want to achieve; to try to achieve it", meaningCn: "目标；旨在；瞄准", synonyms: ["goal","target","purpose"], antonyms: [], example: "Our aim is to finish the project by June." },
+  { word: "value", pos: "n./v.", phonetic: "/ˈvæljuː/", meaningEn: "the importance or worth of something", meaningCn: "价值；重视", synonyms: ["worth","importance"], antonyms: [], example: "This old painting has great value." },
+  { word: "message", pos: "n.", phonetic: "/ˈmesɪdʒ/", meaningEn: "a piece of written or spoken information", meaningCn: "消息；信息；留言", synonyms: ["note","information"], antonyms: [], example: "I left a message for you on the table." },
+  { word: "dead", pos: "adj.", phonetic: "/ded/", meaningEn: "no longer alive", meaningCn: "死的；去世的", synonyms: [], antonyms: ["alive","living"], example: "The plant is dead because I forgot to water it." },
+  { word: "remain", pos: "v.", phonetic: "/rɪˈmeɪn/", meaningEn: "to stay in the same place or state", meaningCn: "保持；留下；仍然是", synonyms: ["stay","continue"], antonyms: ["leave","depart"], example: "Please remain seated until the bus stops." },
+  { word: "disappear", pos: "v.", phonetic: "/ˌdɪsəˈpɪə/", meaningEn: "to go out of sight; to vanish", meaningCn: "消失；不见", synonyms: ["vanish","fade"], antonyms: ["appear"], example: "The sun disappeared behind the clouds." },
+  { word: "mystery", pos: "n.", phonetic: "/ˈmɪstri/", meaningEn: "something that is difficult to explain or understand", meaningCn: "谜；神秘事物", synonyms: ["puzzle","secret"], antonyms: [], example: "The police could not solve the mystery." },
+  { word: "contain", pos: "v.", phonetic: "/kənˈteɪn/", meaningEn: "to have something inside", meaningCn: "包含；装有", synonyms: ["include","hold"], antonyms: [], example: "This box contains all my old photos." },
+  { word: "seem", pos: "v.", phonetic: "/siːm/", meaningEn: "to give the impression of being something", meaningCn: "似乎；好像", synonyms: ["appear","look"], antonyms: [], example: "You seem tired today." },
+  { word: "flavour", pos: "n.", phonetic: "/ˈfleɪvə/", meaningEn: "the taste of food or drink", meaningCn: "味道；风味", synonyms: ["taste"], antonyms: [], example: "This ice cream has a strange flavour." },
+  { word: "vote", pos: "v./n.", phonetic: "/vəʊt/", meaningEn: "to choose someone or something in an election", meaningCn: "投票；选举；选票", synonyms: ["choose","elect"], antonyms: [], example: "We will vote for a new class leader tomorrow." },
+  { word: "gallery", pos: "n.", phonetic: "/ˈɡæləri/", meaningEn: "a place where works of art are shown", meaningCn: "画廊；美术馆", synonyms: ["museum"], antonyms: [], example: "We visited an art gallery at the weekend." },
+  { word: "tidy", pos: "adj./v.", phonetic: "/ˈtaɪdi/", meaningEn: "arranged neatly; to make something neat", meaningCn: "整洁的；整理", synonyms: ["neat","orderly"], antonyms: ["messy","untidy"], example: "Please keep your room tidy." },
+  { word: "race", pos: "n./v.", phonetic: "/reɪs/", meaningEn: "a competition to see who is fastest", meaningCn: "比赛；赛跑；种族", synonyms: ["contest","competition"], antonyms: [], example: "He won the 100-metre race at school." },
+  { word: "admire", pos: "v.", phonetic: "/ədˈmaɪə/", meaningEn: "to respect and like someone or something", meaningCn: "钦佩；欣赏", synonyms: ["respect","appreciate"], antonyms: ["despise"], example: "I admire her courage and honesty." }
 ];
 
 /* =========================================================
@@ -1679,7 +2031,7 @@ const STORE_NAME   = 'kv';
 /* 应用版本与「下载到本地 / 检查更新」配置
    APP_VERSION 是本地副本判断自己是否过期的唯一依据：
    **每次发布新版本都必须手动改这一行**，格式 YYYY.MM.DD.N */
-const APP_VERSION     = '2026.09.18.1';
+const APP_VERSION     = '2026.09.19.1';
 const APP_ORIGIN      = 'https://geek-xin.github.io';
 const APP_UPDATE_URL  = APP_ORIGIN + '/vocabulary-notebook/index.html';
 const APP_FILE_NAME   = 'vocabulary-notebook.html';
@@ -1987,7 +2339,7 @@ function renderHome() {
     const strong = document.createElement('strong');
     strong.textContent = '还没有词汇本';
     const span = document.createElement('span');
-    span.textContent = '点击上方「导入词汇本」选择 .docx 或 .pdf 文件（可多选）；数据保存在本机，重新打开依然可见。';
+    span.textContent = '点击上方「导入词汇本」选择 .docx、.pdf 或 .txt 文件（可多选）；数据保存在本机，重新打开依然可见。';
     empty.appendChild(strong);
     empty.appendChild(span);
     bookGrid.appendChild(empty);
@@ -2814,9 +3166,10 @@ function showToast(msg, ms) {
 }
 
 /* =========================================================
-   7. 导入（.docx / .pdf）
+   7. 导入（.docx / .pdf / .txt）
    ---------------------------------------------------------
-   导入：从 .docx / .pdf 中提取英文词条，与内置词库匹配
+   导入：从 .docx / .pdf / .txt 中提取英文词条，与内置词库匹配
+        - .docx / .pdf 需要 CDN 解析库；.txt 只需解码，离线可用
         - 命中内置词库 → 使用完整数据（音标、释义、例句等）
         - 未命中 → 生成简略卡片（仅英文单词）
    ========================================================= */
@@ -2891,7 +3244,7 @@ importFile.addEventListener('change', function (e) {
   importFiles(files);
 });
 
-// 一批文件（.docx / .pdf）：每个文件生成一个独立词汇本
+// 一批文件（.docx / .pdf / .txt）：每个文件生成一个独立词汇本
 async function importFiles(fileList) {
   const files = Array.prototype.slice.call(fileList || []);
 
@@ -2931,8 +3284,11 @@ async function importFiles(fileList) {
       } else if (kind === 'docx') {
         if (!await ensureLib('mammoth', 'mammoth')) throw new Error('Word 解析库加载失败（网络受限）');
         parsed = await parseDocxBuffer(buf);
+      } else if (kind === 'txt') {
+        // 纯文本词表：不需要任何 CDN 库，网络受限 / file:// 下同样可用
+        parsed = parseWordList(decodeTextBuffer(buf), { plain: true });
       } else {
-        throw new Error('不是 .docx / .pdf 文件');
+        throw new Error('不是 .docx / .pdf / .txt 文件');
       }
 
       const st = parseWordList.lastStats;
@@ -2946,7 +3302,7 @@ async function importFiles(fileList) {
       }
       if (!parsed.length) { failed++; continue; }
       parsedTotal += parsed.length;
-      const base = file.name.replace(/\.(docx|pdf)$/i, '').trim() || '未命名词汇本';
+      const base = file.name.replace(/\.(docx|pdf|txt)$/i, '').trim() || '未命名词汇本';
       const book = {
         id: makeId(),
         title: uniqueTitle(pending, base),
@@ -3002,14 +3358,68 @@ function readArrayBuffer(file) {
   });
 }
 
+/* 纯文本词表解码。文本文件可能是 UTF-8 / UTF-16 / GBK，必须显式判定：
+   顺序 BOM -> 含 NUL（无 BOM 的 UTF-16）-> 严格 UTF-8 -> GBK -> 非严格 UTF-8。
+   第 4 步是 GBK 词表（如 PET 2.txt）能正确打开的关键。 */
+function decodeTextBuffer(buf) {
+  if (typeof TextDecoder === 'undefined') {
+    throw new Error('当前浏览器不支持文本解码（TextDecoder），无法导入 .txt');
+  }
+  const bytes = new Uint8Array(buf);
+
+  // 1) BOM 直接给出编码
+  if (bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF) {
+    return decodeWith('utf-8', bytes.subarray(3), false);
+  }
+  if (bytes[0] === 0xFF && bytes[1] === 0xFE) return decodeWith('utf-16le', bytes.subarray(2), false);
+  if (bytes[0] === 0xFE && bytes[1] === 0xFF) return decodeWith('utf-16be', bytes.subarray(2), false);
+
+  // 2) 无 BOM 的 UTF-16：纯文本里 NUL 字节没有正当用途，而 NUL 本身是合法 UTF-8，
+  //    放着不管会「成功」解出一串夹着 NUL 的垃圾，属于静默出错
+  if (hasNulByte(bytes)) {
+    const wide = decodeWith('utf-16le', bytes, true);
+    if (wide && wide.indexOf('\u0000') < 0) return wide;
+  }
+
+  // 3) 严格 UTF-8：解不通就说明不是 UTF-8
+  const strict = decodeWith('utf-8', bytes, true);
+  if (strict) return strict;
+
+  // 4) GBK
+  const gbk = decodeWith('gbk', bytes, true);
+  if (gbk) return gbk;
+
+  // 5) 兜底：非严格 UTF-8，用替换字符保证导入不直接失败
+  return decodeWith('utf-8', bytes, false);
+}
+
+// fatal=true 时编码不合法会抛错，这里统一转成空串表示「解不了」
+function decodeWith(label, bytes, fatal) {
+  try {
+    return new TextDecoder(label, fatal ? { fatal: true } : undefined).decode(bytes);
+  } catch (e) {
+    return '';
+  }
+}
+
+function hasNulByte(bytes) {
+  const end = Math.min(bytes.length, 4096);
+  for (let i = 0; i < end; i++) {
+    if (bytes[i] === 0x00) return true;
+  }
+  return false;
+}
+
 // 先按扩展名 / MIME 判断；都判断不出来时按文件头判断
 function fileKind(file) {
   const name = (file.name || '').toLowerCase();
   if (name.length >= 4 && name.slice(-4) === '.pdf') return 'pdf';
   if (name.length >= 5 && name.slice(-5) === '.docx') return 'docx';
+  if (name.length >= 4 && name.slice(-4) === '.txt') return 'txt';
   const type = (file.type || '').toLowerCase();
   if (type.indexOf('pdf') >= 0) return 'pdf';
   if (type.indexOf('wordprocessingml') >= 0 || type.indexOf('msword') >= 0) return 'docx';
+  if (type.indexOf('text/plain') >= 0) return 'txt';
   return '';
 }
 
@@ -3108,7 +3518,9 @@ const PARSE_LOOSE = /^[A-Za-z][A-Za-z0-9'’./\-& ]*$/;
 
 // 解析 Word 内容：同时用「整篇扫描」和「逐段解析」两种方式，取条数更多的那个
 // 逐段能处理 Word 自动编号（<li> 无序号）；整篇扫描对跨段落 / 表格更宽容
-function parseWordList(html) {
+// opts.plain = true 时按「纯文本词表」语义解析（.txt 导入）：一行即一个词条
+function parseWordList(html, opts) {
+  const plain = !!(opts && opts.plain);
   const blocks = htmlToBlocks(html)
     .split('\n')
     .map(function (s) { return s.trim(); })
@@ -3198,12 +3610,18 @@ function parseWordList(html) {
     } else {
       let english = block.split(PARSE_CJK)[0].replace(/^[\s"'\`*※·•●○◆◇\-–—,.、;:：]+/, '').trim();
       english = english.replace(/^\d{1,4}[\s\u3000]+/, '').trim();  // “1 word”这种空格分隔的序号
-      const wordCount = english.split(/\s+/).length;
-      const looksLikeEntry = PARSE_CJK.test(block)
-        || (wordCount <= 2 && english.length <= 20)
-        || (wordCount <= 4 && english.length <= 30);
-      if (english && block.length <= 80 && PARSE_LOOSE.test(english) && looksLikeEntry) {
-        used = runB.pushEntry(english, '');
+      if (plain) {
+        // 纯文本词表没有「这段是正文还是词条」的歧义：去掉编号/标点后以字母开头就整行收下。
+        // 不限词数、不限长度，否则 “be keen on (doing sth)” 这类带括号或偏长的短语会被丢掉。
+        used = runB.pushEntry(english, block);
+      } else {
+        const wordCount = english.split(/\s+/).length;
+        const looksLikeEntry = PARSE_CJK.test(block)
+          || (wordCount <= 2 && english.length <= 20)
+          || (wordCount <= 4 && english.length <= 30);
+        if (english && block.length <= 80 && PARSE_LOOSE.test(english) && looksLikeEntry) {
+          used = runB.pushEntry(english, '');
+        }
       }
     }
     if (!used) runB.stats.unused.push(block.slice(0, 60));
