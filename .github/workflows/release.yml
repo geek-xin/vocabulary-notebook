@@ -47,7 +47,9 @@ jobs:
           # versionCode 用 YYYYMMDD + 第 4 段，保证单调递增
           IFS='.' read -r Y M D N <<< "$VERSION"
           N="${N:-0}"
-          CODE=$(( Y * 10000 + M * 100 + D ))
+          # 10# 前缀是必须的：bash 会把前导 0 当八进制，月份 "09" 会直接报
+          # "value too great for base" 让整个 job 挂掉（首次发版真实踩到）。
+          CODE=$(( 10#$Y * 10000 + 10#$M * 100 + 10#$D ))
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "version_code=$CODE" >> "$GITHUB_OUTPUT"
           echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
