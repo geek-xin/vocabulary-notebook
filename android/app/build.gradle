@@ -9,8 +9,8 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         // 下面两行由 scripts/set-version.mjs 用正则覆盖（版本码 = YYYYMMDD），
         // 必须保持「标识符 + 空格 + 数字/带引号字符串」的字面形式，不要改写或加内联注释。
-        versionCode 20260930
-        versionName "2026.09.30.1"
+        versionCode 20261001
+        versionName "2026.10.01.1"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
