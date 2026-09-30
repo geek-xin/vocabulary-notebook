@@ -6,6 +6,8 @@
 
 支持 **Web / PWA**、**Android**、**iOS**、**HarmonyOS**（旧版鸿蒙 + NEXT）四种形态，安装包全部由 GitHub Actions 自动构建并发布到 [Releases](https://github.com/geek-xin/vocabulary-notebook/releases)。应用启动时会**自动检查更新**。
 
+最新版本：[v2026.09.30.1](https://github.com/geek-xin/vocabulary-notebook/releases/latest)
+
 | 形态 | 获取方式 |
 | --- | --- |
 | Web / PWA | 打开上面的网址；手机浏览器「添加到主屏幕」即可当 App 用（离线可用） |

@@ -74,10 +74,13 @@ CI 会校验 `APP_VERSION` 与 tag 一致，不一致直接失败。
 | Service Worker 行为 | `node scripts/test-sw.mjs`（Node 里跑假 SW 作用域） | 22 项断言全通过 |
 | PWA 装配 | 本地 http + 真实浏览器 | manifest 被解析、SW `activated`、8 个外壳资源入缓存、离线可开 |
 | Android APK | `./gradlew assembleDebug` / `assembleRelease` | 均 BUILD SUCCESSFUL；`aapt2` 实测包名/版本/权限/label 正确 |
-| iOS 工程 | `plutil -lint` + 假 `xcodebuild` 演练打包 | 通过；**无 Xcode，未做真实编译** |
-| 鸿蒙工程 | JSON5 解析 + 字段与官方文档比对 | 通过；**无 DevEco，未做真实编译** |
+| iOS / 鸿蒙工程结构 | `plutil -lint` + JSON5 解析 + 字段比对 | 通过（本机无 Xcode / DevEco，仅静态校验） |
 | 版本脚本 | `set-version.mjs` 实跑五处写入 | 五处全部命中 |
-| Release 流程 | 首次真实 tag 推送后由 Actions 验证 | 尚未触发 |
+| 更新回退通道 | 线上 API 恰好 403 限流 | 静默回退到抓线上页面，仍正确识别新版本 |
+| **iOS 未签名 ipa** | **CI macos runner 真实编译** | ✅ 528,905 字节 |
+| **HarmonyOS HAP** | **CI + 华为命令行工具真实编译** | ✅ 403,012 字节 |
+| **Release 流程** | 打 tag `v2026.09.30.1` 真实触发 | ✅ 四端产物全部发布 |
+| **应用内自动检查更新** | 真实旧副本 + 线上 Release | ✅ 弹提示条并下载到 337,853 字节新版本 |
 
 ### 已知边界
 
@@ -85,6 +88,7 @@ CI 会校验 `APP_VERSION` 与 tag 一致，不一致直接失败。
   各一份，互不同步。这是浏览器安全模型的必然结果，不是缺陷。
 - iOS 与鸿蒙产物**均未签名**，仓库不保存任何证书；需用户自行签名后才能装机。
 - 真机安装与运行时行为（WebView 加载、发音、联网补全）**未验证**，本机无设备也无 Xcode / DevEco。
+  iOS 与鸿蒙的「可编译」结论来自 CI 真实构建，不是本地静态检查。
 - Android 图标与 iOS 图标由 `icons/` 派生，改动品牌图形时需重跑生成脚本。
 
 ---

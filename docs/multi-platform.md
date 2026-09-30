@@ -109,12 +109,44 @@ git tag v2026.10.01.1 && git push origin main --tags
 `release.yml` 会并行构建 Android APK、iOS 未签名 ipa、HarmonyOS HAP，
 汇总到同一个 Release 的 assets 里，并把 `index.html` 一并附上。
 
-## 8. 验证边界（诚实说明）
+## 8. 验证边界
 
-| 项目 | 本机能否验证 | 验证方式 |
+本节区分**已经真实跑通的**与**仍未验证的**，两者不要混为一谈。
+
+### 8.1 已实测通过
+
+| 项目 | 方式 | 结果 |
 | --- | --- | --- |
-| Web / PWA | ✅ | `node scripts/serve.mjs` + 浏览器 |
-| Android APK | ✅ | 本地装 Android SDK 后 `./gradlew assembleDebug` |
-| iOS 工程 | ❌ 无 Xcode | 只能静态校验工程结构；真编译在 CI 的 macos runner |
-| HarmonyOS HAP | ❌ 无 DevEco | 只能静态校验工程结构；真编译在 CI 的 ubuntu runner + 华为命令行工具 |
-| Release 流程 | ⚠️ | 首次真实 tag 推送后由 Actions 验证 |
+| Web / PWA | 本地 http + 真实浏览器 | manifest 被解析、SW `activated`、8 个外壳资源入缓存、离线可开 |
+| Service Worker 行为 | `node scripts/test-sw.mjs` | 22 项断言全过（预缓存、network-first、跨域放行、更新通道） |
+| Android APK | 本机 `./gradlew assembleDebug` / `assembleRelease` | BUILD SUCCESSFUL；`aapt2` 实测包名、版本、权限、label 正确 |
+| **iOS 未签名 ipa** | **GitHub Actions macos runner 真实编译** | ✅ 产出 528,905 字节 ipa |
+| **HarmonyOS HAP** | **GitHub Actions + 华为命令行工具真实编译** | ✅ 产出 403,012 字节 HAP |
+| Release 流程 | 打 tag `v2026.09.30.1` 真实触发 | ✅ 四端产物全部发布到 Release |
+| 应用内自动检查更新 | 真实旧版本副本 + 线上 Release | ✅ 弹提示条、按钮下载到 337,853 字节新版本 |
+
+> iOS 与 HarmonyOS 两端在本机**无法编译**（无 Xcode / 无 DevEco），
+> 因此它们的「可编译」结论完全来自 CI 的真实构建，而不是本地静态检查。
+
+### 8.2 更新通道的实测细节
+
+验证时 GitHub API 恰好返回 **403（未认证限流，60 次/小时/IP）**，
+这反而验证了最关键的一条：应用**静默回退**到抓线上 `index.html` 读 `APP_VERSION`，
+仍然正确识别出新版本并弹出提示条。两条通道都真实走过。
+
+### 8.3 仍未验证
+
+| 项目 | 原因 |
+| --- | --- |
+| 真机安装与运行 | 本机无 Android/iOS/鸿蒙设备，`adb install`、真机 WebView 行为、发音与联网补全未验证 |
+| 旧版鸿蒙实机安装 APK | 无设备 |
+| 未签名 ipa / HAP 的重签名与装机 | 需真实证书与设备 |
+| iOS「添加到主屏幕」 | 需真机 Safari |
+| 鸿蒙 `deviceTypes` 的 `phone` 取值 | 若 CI 报非法，改成 `default` 即可 |
+
+### 8.4 发版时若 CI 失败，优先看这几处
+
+1. `APP_VERSION` 与 tag 不一致 —— CI 会直接失败，跑 `node scripts/set-version.mjs <版本>` 修正。
+2. 鸿蒙 `modelVersion` —— `hvigor/hvigor-config.json5` 与工程级 `oh-package.json5` 两处必须**完全相等**。
+3. 依赖清单变更 —— 新增需要进包的文件时，记得同时改 `scripts/sync-web.mjs` 的 `ENTRIES`
+   和 `release.yml` 里的资源校验列表（首次发版就漏过 `manifest.json`）。
