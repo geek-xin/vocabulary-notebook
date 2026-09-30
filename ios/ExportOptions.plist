@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	  xcodebuild -exportArchive 的配置，给「手上有 Apple 开发者证书」的用户用。
+
+	  打包方式 method（按需改这一项）：
+	    development  开发证书 + 已注册设备，自己装机最快（默认值）
+	    ad-hoc       发布证书 + 已注册设备（每年最多 100 台），适合小范围分发
+	    app-store    上架 App Store
+	    enterprise   企业证书内部分发（需 Apple Developer Enterprise Program）
+
+	  前提：
+	    1. 钥匙串里已有对应证书（Xcode > Settings > Accounts 登录后自动生成）；
+	    2. 本文件里的 teamID 需要补上你自己的 10 位 Team ID（见 README 的示例命令）；
+	    3. 描述文件已包含目标设备的 UDID（development / ad-hoc）。
+
+	  注意：CI 产出的 ipa 是**未签名**的（ios/build-unsigned-ipa.sh），
+	       本文件与那条流水线无关，只在你自己签名导出时使用。
+	-->
+	<key>method</key>
+	<string>development</string>
+
+	<!-- automatic：让 Xcode 按证书自动选描述文件；也可以改成 manual 并补 provisioningProfiles 映射 -->
+	<key>signingStyle</key>
+	<string>automatic</string>
+
+	<!-- 导出目录由 -exportPath 指定 -->
+	<key>destination</key>
+	<string>export</string>
+
+	<!-- 不要用 Xcode 自动改版本号，版本号由 scripts/set-version.mjs / CI 统一管理 -->
+	<key>manageAppVersionAndBuildNumber</key>
+	<false/>
+
+	<key>compileBitcode</key>
+	<false/>
+
+	<!-- 去掉 Swift 符号，减小包体 -->
+	<key>stripSwiftSymbols</key>
+	<true/>
+</dict>
+</plist>

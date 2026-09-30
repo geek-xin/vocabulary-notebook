@@ -7,10 +7,12 @@
 | 文件 | 覆盖内容 |
 | --- | --- |
 | `docs/design.md` | 当前整份应用的架构与设计取舍：总览、数据模型与三级存储、导入与解码、`parseWordList` 双路解析、内置词典与匹配策略（含**联网词典兜底**）、深浅色主题、学习页与发音、首页与查询、分享、下载与更新，以及「边界与不做的事」 |
+| `docs/multi-platform.md` | 多端交付设计：PWA / Android / iOS / HarmonyOS 四端形态、Release 自动更新通道、各端数据隔离、发版流程，以及**各端验证边界** |
 | `docs/history.md` | 版本历史，最新在上；每个版本写清改了什么、为什么（含诊断结论）、如何验证 |
 | `docs/README.md` | 本索引与维护约定 |
 
 产品本体只有 `index.html` 一个文件；仓库根的 `README.md` 面向使用者，本目录面向维护者。
+多端外壳（`android/`、`ios/`、`harmony/`）与构建脚本（`scripts/`、`.github/workflows/`）属于**分发层**，不改变产品本体的单文件形态。
 
 ## 维护约定
 

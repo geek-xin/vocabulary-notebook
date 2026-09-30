@@ -1,0 +1,53 @@
+{
+  // 工程级 build-profile.json5 —— 字段名依据华为官方文档《工程级 build-profile.json5 文件》
+  // https://developer.huawei.com/consumer/cn/doc/doccenter-deveco-studio/ide-hvigor-build-profile-app
+  //
+  // 关于 compileSdkVersion：官方文档说明「运行环境是 HarmonyOS 时，该字段不需要显性配置，
+  // 编译时默认使用 DevEco Studio / 命令行工具内置的 SDK 版本。如果配置，只能配置为当前配套的
+  // SDK 版本，不允许配置为其他 SDK 版本」。CI 上的命令行工具版本由 setup-ohos 决定，
+  // 写死会导致 "配置为其他 SDK 版本" 的校验失败，因此这里**刻意不配置** compileSdkVersion，
+  // 只保留 compatibleSdkVersion（必选）。
+  "app": {
+    // 仓库内不保存任何证书：signingConfigs 留空，product 不配置 signingConfig，
+    // 因此产物是**未签名 HAP**（entry-default-unsigned.hap）。
+    // 用户拿到 DevEco Studio 后，通过 File > Project Structure > Signing Configs 自动签名，
+    // DevEco 会自动填充这里的 signingConfigs 与 products[0].signingConfig。
+    "signingConfigs": [],
+    "products": [
+      {
+        "name": "default",
+        "bundleName": "com.geekxin.vocabularynotebook",
+        "compatibleSdkVersion": "5.0.0(12)",
+        "runtimeOS": "HarmonyOS",
+        "buildOption": {
+          "strictMode": {
+            "caseSensitiveCheck": true,
+            "useNormalizedOHMUrl": true
+          }
+        }
+      }
+    ],
+    "buildModeSet": [
+      {
+        "name": "debug"
+      },
+      {
+        "name": "release"
+      }
+    ]
+  },
+  "modules": [
+    {
+      "name": "entry",
+      "srcPath": "./entry",
+      "targets": [
+        {
+          "name": "default",
+          "applyToProducts": [
+            "default"
+          ]
+        }
+      ]
+    }
+  ]
+}

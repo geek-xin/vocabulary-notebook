@@ -1,0 +1,26 @@
+{
+  "name": "vocabulary-notebook",
+  "version": "2026.9.30",
+  "private": true,
+  "description": "词汇本 · 多词库学习 —— 单文件 Web 应用 + iOS / Android / HarmonyOS 原生壳",
+  "license": "CC-BY-NC-4.0",
+  "scripts": {
+    "icons": "python3 scripts/gen-icons.py",
+    "sync:web": "node scripts/sync-web.mjs",
+    "serve": "node scripts/serve.mjs",
+    "version": "node scripts/set-version.mjs",
+    "test": "node scripts/check-inline-js.mjs && node scripts/test-sw.mjs && python3 scripts/check-harmony-json5.py",
+    "check:js": "node scripts/check-inline-js.mjs",
+    "test:sw": "node scripts/test-sw.mjs",
+    "cap:sync": "node scripts/sync-web.mjs && cap sync",
+    "android:build": "cd android && ./gradlew assembleDebug"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/core": "^8.5.2",
+    "@capacitor/ios": "^8.5.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.2"
+  }
+}

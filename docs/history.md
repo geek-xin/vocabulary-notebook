@@ -4,6 +4,91 @@
 
 ---
 
+## 2026.09.30.1 —— 多端交付：PWA + iOS / Android / HarmonyOS + Release 自动更新
+
+### 背景
+
+应用此前只有一种分发形态：浏览器访问线上页面，或把 `index.html` 下载成单文件离线用。
+用户提出要「增加 app，支持 iOS、Android、鸿蒙，也支持当前 HTML 部署，将编译好的包提交 GitHub Release，
+程序需要自动检查更新」。
+
+关键约束：**产品本体的单文件、零构建形态不能破坏**。因此所有原生端都做成「壳」——
+原生工程只负责承载同一个 `index.html`，不复制业务逻辑。
+
+### 方案：一份本体，四种壳
+
+| 形态 | 承载方式 | 产物 |
+| --- | --- | --- |
+| Web / PWA | 浏览器 + manifest + Service Worker | GitHub Pages（沿用 legacy 构建，未改动） |
+| Android | Capacitor 8 壳（`androidScheme: https`） | `*-android.apk` |
+| iOS | Capacitor 8 壳（SPM） | `*-ios-unsigned.ipa` |
+| HarmonyOS NEXT | ArkTS `Web` 组件加载 `$rawfile(index.html)` | `*-harmony-unsigned.hap` |
+
+旧版鸿蒙（HarmonyOS 4 及以前）兼容 Android APK，直接复用 Android 产物，不额外维护一套工程。
+
+**派生而非复制**：`www/`（Capacitor webDir）与 `harmony/**/rawfile/index.html` 都由脚本从根
+`index.html` 生成，并列入 `.gitignore`。仓库里永远只有一份应用本体，不存在「两份 HTML 漂移」的问题。
+
+### 更新通道：两条，Release 优先
+
+1. **首选** `GET /repos/geek-xin/vocabulary-notebook/releases/latest`，读 `tag_name` 与 `assets`；
+2. **回退** 抓线上 `index.html` 读 `APP_VERSION`。
+
+必须回退的场景：GitHub API 未认证限流（60 次/小时/IP，返回 403）、仓库尚无 Release（404）、离线、8 秒超时。
+回退再失败时，只有**手动**检查才提示失败，自动检查全程静默。
+
+自动检查的覆盖范围是本次的一个关键决策点：`isLocalCopy()` 在原生壳内返回 `false`（壳确实不是「本地副本」），
+若直接沿用它做门槛，**壳内会永远收不到更新提示**——而壳正是移动端的主要分发形态。
+因此单独引入 `shouldAutoCheck() { return isNativeShell() || isLocalCopy(); }`，
+线上 Web 端仍然跳过（那里由 Service Worker 负责更新）。
+
+壳内的忽略策略也与 Web 端不同：**不落盘** `APP_IGNORED_KEY`，忽略只对当次会话生效。
+理由是壳内用户既不能刷新页面也不能替换文件，提示条是唯一的更新入口；持久化忽略会让用户随手一关就永久失联。
+
+### 发版：打 tag 即发布
+
+`node scripts/set-version.mjs 2026.10.01.1` 一处写入五处（`index.html` / `package.json` /
+Android `build.gradle` / iOS `pbxproj` / 鸿蒙 `app.json5`），随后打 tag 触发
+`.github/workflows/release.yml`：并行构建三端 + 汇总 Web 产物 → 发布同一个 Release。
+CI 会校验 `APP_VERSION` 与 tag 一致，不一致直接失败。
+
+### 踩过的坑
+
+- **`.gitignore` 行尾注释不生效**：`www/   # 说明` 会被当成包含空格和 `#` 的模式，导致 `www/` 根本没被忽略。改为注释单独成行。
+- **`sdkmanager` 的缓存路径**：它把缓存写 `~/.android/cache`，在受限沙箱下写不进去，报出的却是
+  「Failed to download any source lists / IO exception while downloading manifest」这种指向网络的假故障。
+  必须显式设 `ANDROID_USER_HOME`。Gradle 同理需要 `GRADLE_USER_HOME`。
+- **JSON5 引号键**：鸿蒙 `app.json5` 里是 `"versionCode": 1`（键带引号），最初的正则匹配不到，
+  发版时会**静默失配**。已改为容忍两种写法。
+- **`@capacitor/assets` 拖入 sharp**：安装时要下载 libvips 二进制，超时即整包失败。
+  图标改用 Python + Pillow 生成（`scripts/gen-icons.py`），去掉该依赖。
+- **manifest 文件名**：`manifest.webmanifest` 在 legacy Pages 上的 MIME 没有保证，统一用 `manifest.json`。
+  但 `scripts/sync-web.mjs` 的 `ENTRIES` 一度没跟着改，导致 manifest 没进 Android 包——
+  这类「两处清单」是跨模块集成的典型漏点。
+
+### 验证
+
+| 项目 | 方式 | 结果 |
+| --- | --- | --- |
+| 内联 JS 语法 | `node scripts/check-inline-js.mjs` | 2 个内联脚本通过 |
+| Service Worker 行为 | `node scripts/test-sw.mjs`（Node 里跑假 SW 作用域） | 22 项断言全通过 |
+| PWA 装配 | 本地 http + 真实浏览器 | manifest 被解析、SW `activated`、8 个外壳资源入缓存、离线可开 |
+| Android APK | `./gradlew assembleDebug` / `assembleRelease` | 均 BUILD SUCCESSFUL；`aapt2` 实测包名/版本/权限/label 正确 |
+| iOS 工程 | `plutil -lint` + 假 `xcodebuild` 演练打包 | 通过；**无 Xcode，未做真实编译** |
+| 鸿蒙工程 | JSON5 解析 + 字段与官方文档比对 | 通过；**无 DevEco，未做真实编译** |
+| 版本脚本 | `set-version.mjs` 实跑五处写入 | 五处全部命中 |
+| Release 流程 | 首次真实 tag 推送后由 Actions 验证 | 尚未触发 |
+
+### 已知边界
+
+- **各端数据互相独立**：词汇本存在按 origin 划分的本地存储里，网页版 / 单文件 / Android / iOS / 鸿蒙
+  各一份，互不同步。这是浏览器安全模型的必然结果，不是缺陷。
+- iOS 与鸿蒙产物**均未签名**，仓库不保存任何证书；需用户自行签名后才能装机。
+- 真机安装与运行时行为（WebView 加载、发音、联网补全）**未验证**，本机无设备也无 Xcode / DevEco。
+- Android 图标与 iOS 图标由 `icons/` 派生，改动品牌图形时需重跑生成脚本。
+
+---
+
 ## 2026.09.19.3 —— 联网词典兜底
 
 ### 背景

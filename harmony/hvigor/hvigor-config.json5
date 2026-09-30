@@ -1,0 +1,17 @@
+{
+  // 字段名依据 hvigor 6.24.5 随包发布的官方 JSON Schema
+  // （@ohos/hvigor/res/hvigor-config-schema.json，propertyNames.enum 限定顶层键，
+  //   required = ["modelVersion", "dependencies"]；旧字段 hvigorVersion 已不被接受）。
+  //
+  // modelVersion 取值约束（来自 @ohos/hvigor-ohos-plugin 的 VersionConst 与 ValidateUtil.modelVersionCheck）：
+  //   - 必须 >= "5.0.0"（MINIMUM_MODEL_VERSION）
+  //   - 必须 <= 当前命令行工具配套版本（CURRENT_MODEL_VERSION）
+  //   - 必须与工程级 oh-package.json5 的 modelVersion 完全相等，否则直接报错退出
+  // 这里取 "5.0.0" 以对应 HarmonyOS NEXT / API 12 的最低基线。
+  "modelVersion": "5.0.0",
+  "dependencies": {},
+  "execution": {},
+  "logging": {},
+  "debugging": {},
+  "nodeOptions": {}
+}

@@ -5,7 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
 <meta name="format-detection" content="telephone=no">
 <meta name="theme-color" content="#0f1724">
+<!-- PWA：可安装 + iOS 添加到主屏。manifest.json 与 icons/ 都在仓库根目录，
+     站点根即仓库根，所以这里用相对路径，file:// 下也照样能打开（不会报错） -->
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="词汇本">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="application-name" content="词汇本">
 <title>词汇本 · 多词库学习</title>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -889,6 +898,12 @@ body.home-mode #homeView .book-grid::-webkit-scrollbar-thumb {
   align-self: flex-end;
   gap: 8px;
   margin-top: 8px;
+  /* 刘海屏 / 底部小横条：悬浮按钮组与更新提示条都贴在这一块上，
+     必须留出安全区，否则会顶到 iOS 状态栏或 Home 指示条 */
+  padding-top: env(safe-area-inset-top);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
 }
 body.home-mode .fab-stack { display: flex; }
 
@@ -2344,12 +2359,28 @@ const STORE_NAME   = 'kv';
 
 /* 应用版本与「下载到本地 / 检查更新」配置
    APP_VERSION 是本地副本判断自己是否过期的唯一依据：
-   **每次发布新版本都必须手动改这一行**，格式 YYYY.MM.DD.N */
-const APP_VERSION     = '2026.09.19.3';
+   **每次发布新版本都必须手动改这一行**，格式 YYYY.MM.DD.N。
+
+   与 git tag 的对应关系（发布时必须同步）：
+     1. 改版本号：node scripts/set-version.mjs 2026.10.01.1
+        （该脚本会把 APP_VERSION 与各原生端版本号一起写入）
+     2. 提交：    git commit -am "chore(release): v2026.10.01.1"
+     3. 打 tag：  git tag v2026.10.01.1 && git push origin main --tags
+   即 APP_VERSION === git tag 去掉前导 'v'。Release 流程据此产出安装包与 Release 页。 */
+const APP_VERSION     = '2026.09.30.1';
 const APP_ORIGIN      = 'https://geek-xin.github.io';
 const APP_UPDATE_URL  = APP_ORIGIN + '/vocabulary-notebook/index.html';
 const APP_FILE_NAME   = 'vocabulary-notebook.html';
 const APP_IGNORED_KEY = 'vn_update_ignored_version';
+
+/* GitHub Release 通道（首选更新来源，失败静默回退到 APP_UPDATE_URL 方案） */
+const APP_REPO        = 'geek-xin/vocabulary-notebook';
+const APP_RELEASES_API = 'https://api.github.com/repos/' + APP_REPO + '/releases/latest';
+const APP_RELEASE_PAGE = 'https://github.com/' + APP_REPO + '/releases/latest';
+/* Release 里附带的「应用本体」文件名；Release 流程会把根目录 index.html 一并附上 */
+const APP_RELEASE_ASSET = APP_FILE_NAME;
+/* 更新检查的超时（毫秒）。Release API 与回退方案共用同一个上限。 */
+const APP_UPDATE_TIMEOUT = 8000;
 
 let books = [];
 let currentBookId = null;
@@ -3174,10 +3205,50 @@ function downloadAppHtml() {
 const REMOTE_VERSION_RE = /APP_VERSION\s*=\s*['"]([^'"]+)['"]/;
 
 let pendingUpdateVersion = '';  // 检测到的更高版本号，空串表示没有更新
+let pendingReleaseAsset  = '';  // Release 里 vocabulary-notebook.html 的下载地址
+let releaseHtmlText      = '';  // 该附件已抓到的正文（按需取，避免每次检查都下载整包）
+
+/* ---------------------------------------------------------------
+   运行环境判定
+   ---------------------------------------------------------------
+   isNativeShell() 认出 Capacitor / 鸿蒙 Web 组件这类「原生壳」：
+   壳内由安装包升级，不该走 HTML 下载，也不该被 isLocalCopy() 判成
+   「本地副本需要检查更新」而反复弹提示条。
+   isLocalCopy() 只认「下载到本地的单文件」：file://，或不是本站的普通 http(s) 页面。
+   --------------------------------------------------------------- */
+function isNativeShell() {
+  try {
+    // Capacitor 会往 window 注入 Capacitor（androidScheme=https 时这是唯一可靠信号）
+    if (window.Capacitor && typeof window.Capacitor === 'object') return true;
+    const p = String(location.protocol || '');
+    if (p === 'file:') return false;                      // 纯 file:// 是本地单文件，不是原生壳
+    if (p === 'capacitor:' || p === 'resource:' || p === 'ionic:' || p === 'app:') return true;
+    const h = String(location.hostname || '');
+    // Capacitor iOS 是 capacitor://localhost；鸿蒙 Web 组件是 resource://rawfile
+    if ((h === 'localhost' || h === '127.0.0.1') && p !== 'https:' && p !== 'http:') return true;
+    if (p.indexOf('http') !== 0) return true;             // 其它非 http(s) scheme：WebView 内置页面
+    return false;
+  } catch (e) { return false; }
+}
 
 // 本地副本才需要检查更新：线上访问时用户已经在最新版上
 function isLocalCopy() {
-  return location.protocol === 'file:' || location.origin !== APP_ORIGIN;
+  const p = String(location.protocol || '');
+  if (p === 'file:') return true;                         // 下载的单文件 HTML
+  if (isNativeShell()) return false;                      // 原生壳随安装包升级
+  if (p !== 'http:' && p !== 'https:') return false;      // resource:// / blob: 等不参与
+  return location.origin !== APP_ORIGIN;
+}
+
+/* 启动时要不要自动检查更新（manual=false）：
+     - 本地副本（file:// / 非同站 http(s)）：要。用户手上的文件可能已经过期。
+     - 原生壳（Capacitor / 鸿蒙 Web 组件）：**要**。壳内用户没有任何其它渠道
+       知道出了新安装包，静默跳过等于永远不提示。
+     - 线上 Web 端：不要。Service Worker 负责把新版本送上来，再弹提示条是打扰。
+   isLocalCopy() 在原生壳内返回 false（壳不是「本地副本」），所以这里必须
+   单独把 isNativeShell() 并进来，否则三端安装包会彻底收不到更新通知。 */
+function shouldAutoCheck() {
+  return isNativeShell() || isLocalCopy();
 }
 
 function parseVersion(v) {
@@ -3206,6 +3277,13 @@ function ignoredVersion() {
 }
 
 function ignoreVersion(v) {
+  /* 原生壳内**不落盘**，忽略只对当次会话生效（showUpdatePill 的关闭按钮
+     本来就会置 updatePillMute，所以本次会话照样静音）。
+     理由：壳内用户无法靠「刷新页面」或「替换文件」消除提示，唯一的更新入口
+     就是这条提示条。若把忽略的版本持久化，用户随手一关就再也收不到通知，
+     只能等下次手动点「检查更新」——那正是「自动检查」要避免的。
+     本地副本（file://）与线上则照旧持久化，因为用户确实能自己换文件。 */
+  if (isNativeShell()) return;
   // file:// 下 localStorage 可能不可用，失败就只在本次会话内不提示
   try { localStorage.setItem(APP_IGNORED_KEY, v); } catch (e) {}
 }
@@ -3215,8 +3293,18 @@ function clearUpdatePill() {
   updatePillEl = null;
 }
 
-function showUpdatePill(version, force) {
-  if (!fabStack || updatePillEl) return;
+/* opts（可选）：
+     text        自定义文案；默认「发现新版本 X」
+     actionLabel 按钮文字；默认 Web 端「更新」、原生壳内「去下载」
+     onAction    按钮回调；默认 updateToLatest
+     replace     true 时允许顶掉已有的提示条（SW 更新优先于版本更新）
+   不传 opts 时行为与改造前完全一致。 */
+function showUpdatePill(version, force, opts) {
+  if (!fabStack) return;
+  if (updatePillEl) {
+    if (!(opts && opts.replace)) return;
+    clearUpdatePill();
+  }
   if (updatePillMute && !force) return;
   if (force) updatePillMute = false;   // 用户主动查过了，解除本次会话的静音
 
@@ -3229,9 +3317,13 @@ function showUpdatePill(version, force) {
     '<button class="update-pill-btn" type="button">更新</button>' +
     '<button class="update-pill-close" type="button" aria-label="关闭更新提示">×</button>';
   // 版本号来自远端页面，必须用 textContent 写入，不能拼进 innerHTML
-  pill.querySelector('.update-pill-text').textContent = '发现新版本 ' + version;
+  const text = (opts && opts.text) ? opts.text : ('发现新版本 ' + version);
+  pill.querySelector('.update-pill-text').textContent = text;
 
-  pill.querySelector('.update-pill-btn').addEventListener('click', updateToLatest);
+  // 按钮语义按运行形态区分：Web 端下载新 HTML；原生壳内只能去 Release 页
+  const actBtn = pill.querySelector('.update-pill-btn');
+  actBtn.textContent = (opts && opts.actionLabel) ? opts.actionLabel : (isNativeShell() ? '去下载' : '更新');
+  actBtn.addEventListener('click', (opts && opts.onAction) ? opts.onAction : updateToLatest);
   pill.querySelector('.update-pill-close').addEventListener('click', function () {
     ignoreVersion(version);
     updatePillMute = true;
@@ -3243,6 +3335,32 @@ function showUpdatePill(version, force) {
   updatePillEl = pill;
 }
 
+/* 打开 Release 页：原生壳里没有「下载 HTML」这条路，只能引导去 Release 页取安装包 */
+function openReleasePage() {
+  try {
+    if (!window.open(APP_RELEASE_PAGE, '_blank', 'noopener')) location.href = APP_RELEASE_PAGE;
+  } catch (e) {
+    try { location.href = APP_RELEASE_PAGE; } catch (e2) {}
+  }
+  updatePillMute = true;
+  clearUpdatePill();
+}
+
+/* 从 Release 的 assets 里挑出应用本体（index.html 在 Release 里叫 vocabulary-notebook.html）。
+   找不到就返回空串，交给调用方走 remoteHtmlText / APP_UPDATE_URL 兜底。 */
+function pickReleaseAsset(release) {
+  const assets = (release && release.assets) || [];
+  for (let i = 0; i < assets.length; i++) {
+    const a = assets[i] || {};
+    const name = String(a.name || '');
+    if (name === APP_RELEASE_ASSET || /\.html?$/i.test(name)) {
+      const url = String(a.browser_download_url || '');
+      if (url) return url;
+    }
+  }
+  return '';
+}
+
 // 用检查时已抓到的原文直接下载，不重复请求；做了缓存丢失的兜底
 function updateToLatest() {
   const finish = function (text) {
@@ -3251,51 +3369,113 @@ function updateToLatest() {
     updatePillMute = true;
     clearUpdatePill();
   };
+
+  // 原生壳（Capacitor / 鸿蒙）：安装包升级，不能下载 HTML 覆盖自身
+  if (isNativeShell()) { openReleasePage(); return; }
+
   if (remoteHtmlText) { finish(remoteHtmlText); return; }
 
-  fetch(APP_UPDATE_URL).then(function (res) {
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    return res.text();
-  }).then(finish).catch(function (e) {
+  // Release 附件优先：先看检查时是否已经抓到，没有就现取（带超时）
+  const assetUrl = pendingReleaseAsset;
+  const useAsset = function () {
+    if (releaseHtmlText) { finish(releaseHtmlText); return Promise.resolve(); }
+    if (!assetUrl) return Promise.reject(new Error('没有 Release 附件'));
+    return fetchText(assetUrl, APP_UPDATE_TIMEOUT).then(function (text) {
+      releaseHtmlText = text;
+      finish(text);
+    });
+  };
+
+  useAsset().catch(function (e) {
+    if (assetUrl) console.warn('Release 附件下载失败，回退线上页面:', e);
+    // 回退：抓线上 index.html（APP_UPDATE_URL）
+    return fetchText(APP_UPDATE_URL, APP_UPDATE_TIMEOUT).then(finish);
+  }).catch(function (e) {
     console.warn('下载新版本失败:', e);
     showToast('下载新版本失败，请检查网络后重试', 5000);
   });
 }
 
+/* 统一的带超时取文本。失败一律 reject，由调用方决定是回退还是提示。
+   ctrl 为 null（老浏览器没有 AbortController）时退化为「无超时」。 */
+function fetchText(url, timeoutMs, opts) {
+  const ctrl = (typeof AbortController === 'function') ? new AbortController() : null;
+  const timer = ctrl ? setTimeout(function () { ctrl.abort(); }, timeoutMs || APP_UPDATE_TIMEOUT) : null;
+  const init = { signal: ctrl ? ctrl.signal : undefined };
+  if (opts && opts.headers) init.headers = opts.headers;
+  return fetch(url, init).then(function (res) {
+    if (timer) clearTimeout(timer);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.text();
+  }, function (e) {
+    if (timer) clearTimeout(timer);
+    throw e;
+  });
+}
+
+/* 首选通道：GitHub Releases API。
+   成功 → { version, assetUrl, text }；任何异常都 reject，由 checkUpdate 静默回退。 */
+function fetchReleaseInfo() {
+  return fetchText(APP_RELEASES_API, APP_UPDATE_TIMEOUT, {
+    // GitHub API 不接受 text/html，显式声明；未认证请求受 60 次/小时/IP 限流，超限返回 403
+    headers: { 'Accept': 'application/vnd.github+json' }
+  }).then(function (body) {
+    let data;
+    try { data = JSON.parse(body); } catch (e) { throw new Error('Release 响应不是合法 JSON'); }
+    const tag = String((data && data.tag_name) || '').trim();
+    const version = tag.replace(/^v/i, '');
+    if (!/^\d{4}\.\d{2}\.\d{2}(\.\d+)?$/.test(version)) {
+      throw new Error('tag_name 不是 YYYY.MM.DD[.N] 格式: ' + tag);
+    }
+    return { version: version, assetUrl: pickReleaseAsset(data), text: '' };
+  });
+}
+
+/* 回退通道：抓线上 index.html，正则取 APP_VERSION（GitHub API 限流 / 离线 / 接口异常时用） */
+function fetchOnlineVersion() {
+  return fetchText(APP_UPDATE_URL, APP_UPDATE_TIMEOUT).then(function (text) {
+    const m = text.match(REMOTE_VERSION_RE);
+    if (!m) throw new Error('读不到版本号');
+    return { version: m[1], assetUrl: '', text: text };
+  });
+}
+
+/* 按已确认的更新信息落地：记状态 → 提示条 → 手动时再给一条 toast */
+function applyUpdate(info, manual) {
+  pendingUpdateVersion = info.version;
+  pendingReleaseAsset  = info.assetUrl || '';
+  remoteHtmlText       = info.text || '';
+  releaseHtmlText      = '';
+  // manual 时 force：用户刚主动查过，即使之前关掉过提示条也要重新提示
+  showUpdatePill(info.version, manual);
+  if (manual) showToast('发现新版本 ' + info.version);
+}
+
 /* manual=true 是用户主动点「检查更新」：任何打开方式下都执行，且结果必须明确反馈；
-   manual=false 是打开本地副本时的自动检查：只在本地副本跑，全程静默。 */
+   manual=false 是打开本地副本时的自动检查：只在本地副本跑，全程静默。
+   顺序：GitHub Release（首选） → 线上 index.html（回退）；两条都失败才在手动时提示失败。 */
 function checkUpdate(manual) {
   if (!manual) {
-    if (!isLocalCopy()) return Promise.resolve();
+    if (!shouldAutoCheck()) return Promise.resolve();
     if (navigator.onLine === false) return Promise.resolve();  // 离线时省掉必然失败的请求
   }
 
-  const ctrl = (typeof AbortController === 'function') ? new AbortController() : null;
-  const timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 8000) : null;
-
-  return fetch(APP_UPDATE_URL, ctrl ? { signal: ctrl.signal } : undefined).then(function (res) {
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    return res.text();
-  }).then(function (text) {
-    if (timer) clearTimeout(timer);
-    const m = text.match(REMOTE_VERSION_RE);
-    if (!m) throw new Error('读不到版本号');          // 视为检查失败
-    const remote = m[1];
-    if (compareVersion(remote, APP_VERSION) <= 0) {
+  return fetchReleaseInfo().catch(function (e) {
+    // 网络错误 / HTTP 非 2xx（403 限流最常见）/ tag_name 解析不出 / 8 秒超时，全部走这里
+    console.warn('Release 通道不可用，回退到线上页面版本:', e && e.message ? e.message : e);
+    return fetchOnlineVersion();
+  }).then(function (info) {
+    if (compareVersion(info.version, APP_VERSION) <= 0) {
       if (manual) showToast('已是最新版本（v' + APP_VERSION + '）');
       return;
     }
     if (!manual) {
       const ignored = ignoredVersion();
-      if (ignored && compareVersion(remote, ignored) <= 0) return;  // 用户已忽略这个版本
+      if (ignored && compareVersion(info.version, ignored) <= 0) return;  // 用户已忽略这个版本
     }
-    pendingUpdateVersion = remote;
-    remoteHtmlText = text;
-    // manual 时 force：用户刚主动查过，即使之前关掉过提示条也要重新提示
-    showUpdatePill(remote, manual);
-    if (manual) showToast('发现新版本 ' + remote);
+    applyUpdate(info, manual);
   }).catch(function (e) {
-    if (timer) clearTimeout(timer);
+    // 两条通道都失败：自动检查完全静默，手动检查必须给明确反馈
     console.warn('检查更新失败:', e);
     if (manual) showToast('检查失败，请检查网络后重试', 5000);
   });
@@ -3314,14 +3494,94 @@ function manualCheckUpdate() {
 }
 
 if (appVersionEl) appVersionEl.textContent = 'v' + APP_VERSION;   // 版本号常驻显示
-if (downloadFab) {
+
+if (isNativeShell()) {
+  /* 原生壳（Capacitor / 鸿蒙 Web 组件）里「下载应用 HTML」没有意义：
+     应用就在安装包里，覆盖不了自身。语义改成「去 Release 页下载安装包」，
+     按钮不隐藏，位置与图标保持不变，只换行为与说明文字。 */
+  if (downloadFab) {
+    downloadFab.title = '打开 Release 页下载安装包（当前 v' + APP_VERSION + '）';
+    downloadFab.setAttribute('aria-label', '打开 Release 页下载安装包');
+    downloadFab.addEventListener('click', openReleasePage);
+  }
+} else if (downloadFab) {
   // 版本号是脚本常量，title 由 JS 写入，避免静态 HTML 里写死后与常量脱节
   downloadFab.title = '下载应用 HTML（当前 ' + APP_VERSION + '）';
   downloadFab.addEventListener('click', downloadAppHtml);
 }
+
 if (checkUpdateBtn) checkUpdateBtn.addEventListener('click', manualCheckUpdate);
 prefetchSelfHtml();
 setTimeout(function () { checkUpdate(false); }, 1500);
+
+/* =========================================================
+   2.9.1 Service Worker：离线外壳 + 版本更新
+   ---------------------------------------------------------
+   - 只在 https:（或 localhost / 127.0.0.1 的 http）下注册。
+     file:// 无法注册 SW；Capacitor（capacitor://localhost、https://localhost）
+     与鸿蒙 Web 组件（resource://rawfile）也不注册，避免无谓报错。
+   - 新 SW 装好后不立刻接管：页面弹「有新版本」提示条，用户点了才
+     skipWaiting + 重载。这样正在学习时不会被强制刷新。
+   ========================================================= */
+function swSupported() {
+  if (!('serviceWorker' in navigator)) return false;
+  const p = String(location.protocol || '');
+  if (p === 'file:') return false;                       // 单文件直开：没有 SW
+  if (isNativeShell()) return false;                     // 原生壳内由安装包升级
+  if (p === 'https:') return true;
+  const h = String(location.hostname || '');
+  return p === 'http:' && (h === 'localhost' || h === '127.0.0.1' || h === '[::1]');
+}
+
+let swReloading = false;
+
+function offerSwUpdate(reg) {
+  if (!reg || !reg.waiting) return;
+  showUpdatePill('', true, {
+    replace: true,   // SW 更新比版本号提示更该被看到，允许顶掉它
+    text: '应用已更新到新版本',
+    actionLabel: '刷新',
+    onAction: function () {
+      updatePillMute = true;
+      clearUpdatePill();
+      const waiting = reg.waiting;
+      if (!waiting) { location.reload(); return; }
+      swReloading = true;
+      // 兜底：万一 controllerchange 没触发（例如页面此前没有 controller），也要刷新
+      setTimeout(function () { if (swReloading) location.reload(); }, 1200);
+      waiting.postMessage({ type: 'SKIP_WAITING' });
+    }
+  });
+}
+
+if (swSupported()) {
+  navigator.serviceWorker.addEventListener('controllerchange', function () {
+    if (!swReloading) return;
+    swReloading = false;
+    location.reload();
+  });
+
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js', { scope: './' }).then(function (reg) {
+      // 已经有一个装好、在等接管的新 SW（例如上次没点刷新）
+      if (reg.waiting && navigator.serviceWorker.controller) offerSwUpdate(reg);
+
+      reg.addEventListener('updatefound', function () {
+        const installing = reg.installing;
+        if (!installing) return;
+        installing.addEventListener('statechange', function () {
+          if (installing.state !== 'installed') return;
+          // 首次安装（页面还没有 controller）不需要打扰用户
+          if (!navigator.serviceWorker.controller) return;
+          offerSwUpdate(reg);
+        });
+      });
+    }).catch(function (e) {
+      // 注册失败不能影响应用本体：静默记一条日志即可
+      console.warn('Service Worker 注册失败:', e);
+    });
+  });
+}
 
 /* =========================================================
    2.10 深 / 浅色主题

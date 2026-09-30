@@ -1,0 +1,259 @@
+name: Release
+
+# 打 tag 即发版：构建 Web / Android / iOS / HarmonyOS 四端产物，汇总到一个 GitHub Release。
+# 应用内的「检查更新」会读这个 Release 的 tag_name 与 assets。
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '版本号（如 2026.09.30.1）；留空则用 package.json 的版本'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+env:
+  NODE_VERSION: '22'
+
+jobs:
+  # ---------------------------------------------------------------- 元信息
+  meta:
+    name: 解析版本
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      version_code: ${{ steps.v.outputs.version_code }}
+      tag: ${{ steps.v.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: 解析版本号
+        id: v
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "push" ]; then
+            RAW="${{ github.ref_name }}"
+          elif [ -n "${{ inputs.version }}" ]; then
+            RAW="${{ inputs.version }}"
+          else
+            RAW="$(node -p "require('./package.json').version")"
+          fi
+          VERSION="${RAW#v}"
+          # versionCode 用 YYYYMMDD + 第 4 段，保证单调递增
+          IFS='.' read -r Y M D N <<< "$VERSION"
+          N="${N:-0}"
+          CODE=$(( Y * 10000 + M * 100 + D ))
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "version_code=$CODE" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+          echo "版本：$VERSION（tag v$VERSION，versionCode $CODE）"
+
+  # ------------------------------------------------------------------- Web
+  web:
+    name: Web / PWA
+    needs: meta
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 校验 index.html 版本号与 tag 一致
+        run: |
+          set -euo pipefail
+          APP_VERSION="$(grep -oE "APP_VERSION[[:space:]]*=[[:space:]]*'[^']+'" index.html | head -1 | sed -E "s/.*'([^']+)'/\1/")"
+          echo "index.html APP_VERSION = $APP_VERSION"
+          echo "tag 版本            = ${{ needs.meta.outputs.version }}"
+          if [ "$APP_VERSION" != "${{ needs.meta.outputs.version }}" ]; then
+            echo "::error::index.html 的 APP_VERSION（$APP_VERSION）与 tag（${{ needs.meta.outputs.version }}）不一致。请先跑 node scripts/set-version.mjs ${{ needs.meta.outputs.version }} 再打 tag。"
+            exit 1
+          fi
+      - name: 校验 PWA 资源齐全
+        run: |
+          set -euo pipefail
+          for f in manifest.webmanifest sw.js icons/icon-192.png icons/icon-512.png icons/apple-touch-icon.png; do
+            test -f "$f" || { echo "::error::缺少 PWA 资源 $f"; exit 1; }
+          done
+      - name: 校验内联脚本语法与 Service Worker 行为
+        run: |
+          node scripts/check-inline-js.mjs
+          node scripts/test-sw.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web-pwa
+          path: |
+            index.html
+            manifest.webmanifest
+            sw.js
+            icons/**
+
+  # --------------------------------------------------------------- Android
+  android:
+    name: Android APK
+    needs: meta
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+      - name: 同步 Web 资源到 www/
+        run: |
+          npm install --no-audit --no-fund
+          node scripts/sync-web.mjs
+      - name: 同步到 Android 工程
+        run: npx cap sync android
+      - name: 构建 APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon --stacktrace
+      - name: 收集产物
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          find android/app/build/outputs/apk -name '*.apk' -print
+          cp android/app/build/outputs/apk/debug/app-debug.apk "out/vocabulary-notebook-${{ needs.meta.outputs.version }}-android.apk"
+          ls -lh out/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: out/*.apk
+
+  # ------------------------------------------------------------------- iOS
+  ios:
+    name: iOS 未签名 ipa
+    needs: meta
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: 同步 Web 资源
+        run: |
+          npm install --no-audit --no-fund
+          node scripts/sync-web.mjs
+          npx cap sync ios
+      - name: 构建未签名 ipa
+        run: |
+          set -euo pipefail
+          chmod +x ios/build-unsigned-ipa.sh
+          # 脚本自身的环境变量契约：MARKETING_VERSION / CURRENT_PROJECT_VERSION / OUTPUT_DIR
+          # 产物名为 vocabulary-notebook-<版本>-unsigned.ipa
+          MARKETING_VERSION="${{ needs.meta.outputs.version }}" \
+          CURRENT_PROJECT_VERSION="${{ needs.meta.outputs.version_code }}" \
+          OUTPUT_DIR="$PWD/out" \
+          ./ios/build-unsigned-ipa.sh
+      - name: 收集产物
+        run: |
+          set -euo pipefail
+          ls -lh out/
+          test -n "$(find out -name '*.ipa' -print -quit)" || { echo "::error::没有找到 ipa 产物"; exit 1; }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ios-ipa
+          path: out/*.ipa
+
+  # -------------------------------------------------------------- HarmonyOS
+  harmony:
+    name: HarmonyOS HAP
+    needs: meta
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 安装系统依赖
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dev
+      - name: 安装 HarmonyOS 命令行工具
+        uses: ErBWs/setup-ohos@4dbb63025116eb6165ceac58a4bf47cbdc5ac721 # v2
+        with:
+          cache: true
+      - name: 校验 JSON5 配置
+        run: python3 scripts/check-harmony-json5.py
+      - name: 校验并同步 rawfile
+        run: |
+          set -euo pipefail
+          chmod +x harmony/scripts/sync-rawfile.sh
+          ./harmony/scripts/sync-rawfile.sh
+          test -f harmony/entry/src/main/resources/rawfile/index.html
+      - name: 安装依赖
+        working-directory: harmony
+        run: ohpm install --all
+      - name: 构建 HAP
+        working-directory: harmony
+        run: |
+          hvigorw clean --no-daemon
+          hvigorw assembleHap --mode module -p product=default -p buildMode=debug --no-daemon
+      - name: 收集产物
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          find harmony/entry/build -name '*.hap' -print || true
+          HAP="$(find harmony/entry/build -name '*.hap' | head -1)"
+          test -n "$HAP" || { echo "::error::没有找到 HAP 产物"; exit 1; }
+          cp "$HAP" "out/vocabulary-notebook-${{ needs.meta.outputs.version }}-harmony-unsigned.hap"
+          ls -lh out/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: harmony-hap
+          path: out/*.hap
+
+  # ---------------------------------------------------------------- Release
+  release:
+    name: 发布 Release
+    needs: [meta, web, android, ios, harmony]
+    runs-on: ubuntu-latest
+    # 三端里任何一端失败都仍然发布，避免一个平台拖住其余平台的可用产物
+    if: always() && needs.meta.result == 'success' && needs.web.result == 'success'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+      - name: 整理产物
+        run: |
+          set -euo pipefail
+          mkdir -p assets
+          cp index.html assets/vocabulary-notebook.html
+          find dist -type f \( -name '*.apk' -o -name '*.ipa' -o -name '*.hap' \) -exec cp {} assets/ \;
+          ls -lh assets/
+      - name: 生成 Release 说明
+        run: |
+          set -euo pipefail
+          cat > notes.md <<'EOF'
+          ## 词汇本 ${{ needs.meta.outputs.tag }}
+
+          各端产物见下方 Assets。
+
+          | 平台 | 文件 | 安装说明 |
+          | --- | --- | --- |
+          | Web / PWA | `vocabulary-notebook.html` | 直接打开；或访问 https://geek-xin.github.io/vocabulary-notebook/ 后「添加到主屏幕」 |
+          | Android | `*-android.apk` | 允许安装未知来源后安装；**旧版鸿蒙（HarmonyOS 4 及以前）同样可装** |
+          | iOS | `*-ios-unsigned.ipa` | 未签名，需用 Xcode / AltStore / Sideloadly 自签后安装 |
+          | HarmonyOS NEXT | `*-harmony-unsigned.hap` | 未签名，需在 DevEco Studio 配置签名后安装 |
+
+          > iOS 与 HarmonyOS 的产物均未签名，仓库不保存任何证书。
+          > 各端数据独立存储，安装新版本不会丢失词汇本。
+
+          **应用内自动检查更新**：启动时会读取本 Release 的版本号，发现新版本会提示。
+          EOF
+          echo "--- notes.md ---"; cat notes.md
+      - name: 发布
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.meta.outputs.tag }}
+          name: 词汇本 ${{ needs.meta.outputs.tag }}
+          body_path: notes.md
+          files: assets/*
+          draft: false
+          prerelease: false
+          fail_on_unmatched_files: false

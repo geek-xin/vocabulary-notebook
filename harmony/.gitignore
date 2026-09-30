@@ -1,0 +1,23 @@
+# HarmonyOS 工程内忽略项（根 .gitignore 已有同名规则，这里再放一份更稳：
+# 单独把 harmony/ 拷出去用 DevEco 打开时也不会带进构建垃圾）
+build/
+.hvigor/
+oh_modules/
+node_modules/
+.cxx/
+.clangd
+.clang-format
+local.properties
+*.hap
+*.har
+*.hsp
+*.app
+
+# 派生产物：由 harmony/scripts/sync-rawfile.sh 从仓库根 index.html 复制而来
+entry/src/main/resources/rawfile/index.html
+
+# 签名材料（仓库不保存任何证书）
+*.p12
+*.cer
+*.p7b
+material/
