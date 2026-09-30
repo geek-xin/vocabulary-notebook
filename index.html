@@ -1632,7 +1632,7 @@ const STORE_NAME   = 'kv';
      2. 提交：    git commit -am "chore(release): v2026.10.01.1"
      3. 打 tag：  git tag v2026.10.01.1 && git push origin main --tags
    即 APP_VERSION === git tag 去掉前导 'v'。Release 流程据此产出安装包与 Release 页。 */
-const APP_VERSION     = '2026.10.01.1';
+const APP_VERSION     = '2026.10.01.2';
 const APP_ORIGIN      = 'https://geek-xin.github.io';
 const APP_UPDATE_URL  = APP_ORIGIN + '/vocabulary-notebook/index.html';
 const APP_FILE_NAME   = 'vocabulary-notebook.html';
@@ -3076,10 +3076,10 @@ function showToast(msg, ms) {
 /* =========================================================
    7. 导入（.docx / .pdf / .txt）
    ---------------------------------------------------------
-   导入：从 .docx / .pdf / .txt 中提取英文词条，与内置词库匹配
-        - .docx / .pdf 需要 CDN 解析库；.txt 只需解码，离线可用
-        - 命中内置词库 → 使用完整数据（音标、释义、例句等）
-        - 未命中 → 生成简略卡片（仅英文单词）
+   从 .docx / .pdf / .txt 中提取英文词条。
+        - .docx / .pdf 需要 CDN 解析库；.txt 只需解码，无需联网
+        - 提取出的每个词条都先建成空卡（释义 '—'）
+        - 释义由 7.5 节的在线词典在导入完成后补齐
    ========================================================= */
 /* =========================================================
    解析库按需加载：多 CDN 依次重试
