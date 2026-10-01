@@ -8,6 +8,42 @@
 
 ---
 
+## 2026.10.01.6 —— 发布名改用程序名，产物名去掉版本号
+
+### 改动
+
+- **Release 名称**：`词汇本 v<版本>` → `词汇本`。版本号改由 tag 与 Release 正文承载。
+- **产物文件名去掉版本号**：
+
+  | 之前 | 现在 |
+  | --- | --- |
+  | `vocabulary-notebook-<版本>-android.apk` | `vocabulary-notebook.apk` |
+  | `vocabulary-notebook-<版本>-unsigned.ipa` | `vocabulary-notebook.ipa` |
+  | `vocabulary-notebook.html` | 不变 |
+
+  好处是下载地址固定，可以直接引用最新 Release 的直链，不必每次改文件名。
+- **删除全部历史 Release**（v2026.10.01.1 ~ v2026.10.01.5）。
+  已发布的 tag 保留 —— 版本记录与 `APP_VERSION` 的对应关系仍可追溯。
+
+### 影响评估
+
+应用内更新检查读的是 Release 的 **`tag_name`**（`v2026.10.01.6` → `2026.10.01.6`），
+与 Release 名称、产物文件名都无关，因此改名不影响自动更新。
+`pickReleaseAsset()` 匹配 `vocabulary-notebook.html` 或任意 `.html` 附件，同样不受影响。
+
+### 验证
+
+| 项目 | 结果 |
+| --- | --- |
+| `release.yml` 可解析 | ✅ |
+| 产物命名 | ✅ Android/iOS/Web 三者均不带版本号 |
+| Release 名称 | ✅ 固定为「词汇本」 |
+| 历史 Release | ✅ 已全部删除，tag 保留 |
+| `npm test` | ✅ 通过 |
+| 三端发布 | ⏳ 由本次 tag 的 CI 验证 |
+
+---
+
 ## 2026.10.01.5 —— 移除鸿蒙端，只保留 Web / Android / iOS
 
 ### 背景

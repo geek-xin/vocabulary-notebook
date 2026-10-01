@@ -139,7 +139,7 @@ jobs:
           set -euo pipefail
           mkdir -p out
           find android/app/build/outputs/apk -name '*.apk' -print
-          cp android/app/build/outputs/apk/debug/app-debug.apk "out/vocabulary-notebook-${{ needs.meta.outputs.version }}-android.apk"
+          cp android/app/build/outputs/apk/debug/app-debug.apk "out/vocabulary-notebook.apk"
           ls -lh out/
       - uses: actions/upload-artifact@v4
         with:
@@ -166,11 +166,13 @@ jobs:
           set -euo pipefail
           chmod +x ios/build-unsigned-ipa.sh
           # 脚本自身的环境变量契约：MARKETING_VERSION / CURRENT_PROJECT_VERSION / OUTPUT_DIR
-          # 产物名为 vocabulary-notebook-<版本>-unsigned.ipa
           MARKETING_VERSION="${{ needs.meta.outputs.version }}" \
           CURRENT_PROJECT_VERSION="${{ needs.meta.outputs.version_code }}" \
           OUTPUT_DIR="$PWD/out" \
           ./ios/build-unsigned-ipa.sh
+          # 脚本默认产出 vocabulary-notebook-<版本>-unsigned.ipa；
+          # 发布产物统一不带版本号，这里改名（版本信息由 tag 与 Release 正文承载）。
+          mv "$(find out -name '*.ipa' -print -quit)" out/vocabulary-notebook.ipa
       - name: 收集产物
         run: |
           set -euo pipefail
@@ -204,27 +206,27 @@ jobs:
         run: |
           set -euo pipefail
           cat > notes.md <<'EOF'
-          ## 词汇本 ${{ needs.meta.outputs.tag }}
+          **版本 ${{ needs.meta.outputs.version }}**
 
-          各端产物见下方 Assets。
+          各端产物见下方 Assets，文件名固定不带版本号，方便直接引用下载地址。
 
           | 平台 | 文件 | 安装说明 |
           | --- | --- | --- |
           | Web / PWA | `vocabulary-notebook.html` | 直接打开；或访问 https://geek-xin.github.io/vocabulary-notebook/ 后「添加到主屏幕」 |
-          | Android | `*-android.apk` | 允许安装未知来源后安装 |
-          | iOS | `*-ios-unsigned.ipa` | 未签名，需用 Xcode / AltStore / Sideloadly 自签后安装 |
+          | Android | `vocabulary-notebook.apk` | 允许安装未知来源后安装 |
+          | iOS | `vocabulary-notebook.ipa` | 未签名，需用 Xcode / AltStore / Sideloadly 自签后安装 |
 
           > iOS 产物未签名，仓库不保存任何证书。
           > 各端数据独立存储，安装新版本不会丢失词汇本。
 
-          **应用内自动检查更新**：启动时会读取本 Release 的版本号，发现新版本会提示。
+          **应用内自动检查更新**：启动时会读取本 Release 的 tag 判断版本，发现新版本会提示。
           EOF
           echo "--- notes.md ---"; cat notes.md
       - name: 发布
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.meta.outputs.tag }}
-          name: 词汇本 ${{ needs.meta.outputs.tag }}
+          name: 词汇本
           body_path: notes.md
           files: assets/*
           draft: false
