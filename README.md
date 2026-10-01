@@ -1,49 +1,62 @@
+<div align="center">
+
+<img src="icons/icon-192.png" width="96" height="96" alt="词汇本">
+
 # 词汇本 · 多词库学习
 
-> 一个**单文件、零构建**的英语词汇学习应用。导入 `.docx` / `.pdf` / `.txt` 词表，自动联网补全释义，卡片式记忆；数据只存在本机。
+**一个单文件、零构建的英语词汇学习应用。**
+导入 `.docx` / `.pdf` / `.txt` 词表，自动联网补全释义，卡片式记忆；数据只存在本机。
 
-在线使用：**https://geek-xin.github.io/vocabulary-notebook/**
+[![Release](https://img.shields.io/github/v/release/geek-xin/vocabulary-notebook?label=release&color=ffd966)](https://github.com/geek-xin/vocabulary-notebook/releases/latest)
+[![Release workflow](https://github.com/geek-xin/vocabulary-notebook/actions/workflows/release.yml/badge.svg)](https://github.com/geek-xin/vocabulary-notebook/actions/workflows/release.yml)
+[![License](https://img.shields.io/github/license/geek-xin/vocabulary-notebook?color=blue)](LICENSE)
+[![Platform](https://img.shields.io/badge/platform-Web%20%C2%B7%20Android%20%C2%B7%20iOS-2ea44f)](#-下载与安装)
 
-最新版本：[v2026.10.01.4](https://github.com/geek-xin/vocabulary-notebook/releases/latest)
+[在线使用](https://geek-xin.github.io/vocabulary-notebook/) · [下载安装包](https://github.com/geek-xin/vocabulary-notebook/releases/latest) · [设计文档](docs/design.md) · [版本历史](docs/history.md)
 
-支持 **Web / PWA**、**Android**、**iOS** 三种形态，安装包由 GitHub Actions 自动构建并发布到 [Releases](https://github.com/geek-xin/vocabulary-notebook/releases)。应用启动时会**自动检查更新**。
+</div>
 
-| 形态 | 获取方式 |
-| --- | --- |
-| Web / PWA | 打开上面的网址；手机浏览器「添加到主屏幕」即可当 App 用 |
-| Android | [Releases](https://github.com/geek-xin/vocabulary-notebook/releases) 下载 `*-android.apk`，允许安装未知来源后安装 |
-| iOS | Releases 下载 `*-ios-unsigned.ipa`，用 Xcode / AltStore / Sideloadly **自行签名**后安装 |
+![书架与学习卡片](docs/images/home-dark.png)
 
-> **各端数据相互独立。** 词汇本存在浏览器/WebView 的本地存储里，按来源隔离：网页版、下载的单文件、Android 包、iOS 包各有一份数据，互不同步。升级安装包不会丢数据，但换端需要自行导出。详见 [docs/multi-platform.md](docs/multi-platform.md)。
+<div align="center">
+
+*深色 / 浅色主题，数据全部保存在本机浏览器*
+
+</div>
 
 ---
 
-## 特性
+## ✨ 为什么是「单文件」
 
-| 特性 | 说明 |
-| --- | --- |
-| 多词库书架 | 每个导入的文件生成一个独立词汇本，卡片网格展示，支持删除、分享 |
-| 卡片式学习 | 点击卡片翻面查看释义；左右方向键切换上一张 / 下一张；点击页码可跳转 |
-| 全在线释义 | **不内置词库**，从文档提取英文词条后全部联网补全音标、词性、中英释义与近反义词 |
-| 离线不阻塞 | 没网或接口失败时保持空卡，导入照常完成；下次联网自动回填 |
-| 深浅色主题 | 一键切换深色 / 浅色外观；没手动选过时跟随系统，选过就记住 |
-| 文档导入 | 支持 `.docx`（mammoth）、`.pdf`（pdf.js）与 `.txt` 纯文本词表，可一次多选批量导入；`.txt` 自动识别 GBK 等编码且无需联网 |
-| 英式发音 | 接入有道发音接口，点击喇叭播放英式读音 |
-| 学习进度 | 每个词汇本独立记忆上次阅读到的页码，重新打开自动回到原位 |
-| 页码跳转 | 点击计数器直接输入页码跳转 |
-| 纯本地存储 | 词汇本数据只保存在你的浏览器里，不上传任何服务器 |
-| 可安装 PWA | 带 manifest 与 Service Worker，可「添加到主屏幕」；断网也能打开，已补全的释义仍可查看 |
-| 本地副本与更新 | 首页右下角常驻显示版本号，可下载应用本体成单个 HTML 使用，也可手动检查更新 |
-| 自动检查更新 | 启动时自动查 GitHub Releases；本地副本与原生壳内都会检查并提示新版本 |
-| 应用内升级 | Android 端在应用内直接下载新版并拉起系统安装器，无需跳浏览器 |
+整个应用就是**一个 `index.html`**（约 156 KB，gzip 后 45 KB），内含全部 HTML / CSS / JavaScript：
 
-## 快速开始
+- **没有构建步骤** —— 没有打包器、没有转译、不用 `npm install`
+- **双击即用** —— `file://` 直接打开，不需要起本地服务器
+- **下载一个文件就是完整应用** —— 应用内的「下载」按钮把它存成单个 HTML，离线可用
+- **没有后端** —— 数据只存在你自己的浏览器里，不上传任何服务器
 
-**方式一：在线使用**
+## 📸 界面预览
 
-打开 https://geek-xin.github.io/vocabulary-notebook/ 即可，手机浏览器同样适用，可「添加到主屏幕」当 App 用。
+| 学习卡片（正面） | 卡片背面（近反义词） |
+| :---: | :---: |
+| ![卡片正面](docs/images/card-front.png) | ![卡片背面](docs/images/card-back.png) |
 
-**方式二：本地打开**
+| 书架（深色） | 书架（浅色） |
+| :---: | :---: |
+| ![深色主题](docs/images/home-dark.png) | ![浅色主题](docs/images/home-light.png) |
+
+## 🚀 快速开始
+
+### 方式一：在线使用（推荐）
+
+打开 **<https://geek-xin.github.io/vocabulary-notebook/>** 即可。手机浏览器同样适用，
+可「添加到主屏幕」当 App 用，支持离线打开。
+
+### 方式二：下载单文件
+
+从 [Releases](https://github.com/geek-xin/vocabulary-notebook/releases/latest) 下载 `vocabulary-notebook.html`，双击打开。
+
+### 方式三：克隆仓库
 
 ```bash
 git clone https://github.com/geek-xin/vocabulary-notebook.git
@@ -51,147 +64,233 @@ cd vocabulary-notebook
 open index.html        # macOS；Windows 直接双击 index.html
 ```
 
-无需 `npm install`，无需构建步骤。
+无需任何安装或构建。
 
-## 导入词表
+## 📦 下载与安装
 
-点击首页「导入词汇本」按钮，选择一个或多个 `.docx` / `.pdf` / `.txt` 文件，每个文件会生成一个独立词汇本。
+| 平台 | 文件 | 说明 |
+| --- | --- | --- |
+| **Web / PWA** | 打开[在线地址](https://geek-xin.github.io/vocabulary-notebook/) | 手机可「添加到主屏幕」 |
+| **Android** | [`vocabulary-notebook.apk`](https://github.com/geek-xin/vocabulary-notebook/releases/latest/download/vocabulary-notebook.apk) | 允许安装未知来源后安装；**支持应用内无感升级** |
+| **iOS** | [`vocabulary-notebook.ipa`](https://github.com/geek-xin/vocabulary-notebook/releases/latest/download/vocabulary-notebook.ipa) | 未签名，需用 Xcode / AltStore / Sideloadly **自行签名** |
+| **单文件** | [`vocabulary-notebook.html`](https://github.com/geek-xin/vocabulary-notebook/releases/latest/download/vocabulary-notebook.html) | 直接双击打开 |
 
-- `.docx` / `.pdf`：从文档里提取英文词条
-- `.txt`：纯文本词表，一行一个词条；自动识别 UTF-8 / UTF-8 BOM / UTF-16 / **GBK** 编码，且不需要联网加载解析库
+> 产物文件名固定不带版本号，上面的链接始终指向最新版。
 
-导入时应用会从文档中提取英文词条，然后**全部联网补全**释义（应用不内置任何词库）：
+**Android 应用内升级**：发现新版本后在应用内直接下载并拉起系统安装器，无需跳浏览器。
+首次使用需授予一次「安装未知应用」权限（Android 8.0+ 的系统要求）。
 
-- **中文释义与词性**来自有道词典的联想接口（JSONP）；
-- **英文释义、近反义词与音标**来自 Datamuse API（CORS）。
+> 💡 **各端数据相互独立。** 词汇本按来源隔离存储，网页版 / 单文件 / Android / iOS 各有一份，
+> 互不同步。升级安装包不会丢数据，换端需用应用内「分享」导出导入。
 
-刚导入时所有卡片都是空的（释义显示 `—`），联网补全完成后自动填上。结果按词缓存，二次打开不再请求；**没网或接口失败时保持空卡，不影响导入**，下次联网会自动回填。补全只填空白字段，不会覆盖已有内容。
+## 🎯 特性
 
-想彻底关闭联网补全，在浏览器控制台执行 `localStorage.setItem('vn_online_dict_v1', '0')` 后刷新即可（改回 `'1'` 重新开启）。
+| | 特性 | 说明 |
+| --- | --- | --- |
+| 📚 | **多词库书架** | 每个导入的文件生成独立词汇本，卡片网格展示，支持删除与分享 |
+| 🃏 | **卡片式学习** | 点击翻面；方向键切换；点页码直接跳转 |
+| 🌐 | **全在线释义** | 不内置词库，联网补全音标、词性、中英释义与近反义词 |
+| 🔊 | **英式发音** | 点击喇叭播放 |
+| 🌗 | **深浅色主题** | 跟随系统，也可手动切换并记住 |
+| 📄 | **三种词表格式** | `.docx`（mammoth）/ `.pdf`（pdf.js）/ `.txt`（自动识别 GBK 等编码，无需联网） |
+| 💾 | **三级存储降级** | IndexedDB → localStorage → 内存，尽可能不丢数据 |
+| 📈 | **学习进度** | 每个词汇本独立记忆上次位置 |
+| 📤 | **分享** | 把词汇本打包成独立 HTML，接收方离线可看 |
+| 📲 | **PWA** | 可安装，离线可开，已补全的释义仍可查看 |
+| 🔄 | **自动检查更新** | 启动时查 GitHub Releases，发现新版本提示 |
 
-> ⚠️ **关闭后没有任何本地兜底**：因为释义全部来自在线词典，关掉它意味着**所有卡片都是空的**。这个开关只适合在受限网络下临时禁用外部请求。
+## 📥 导入词表
 
-### 音标与例句的现状
+点击首页「导入词汇本」，可一次多选批量导入：
 
-| 字段 | 现状 |
+| 格式 | 解析方式 | 是否需要联网 |
+| --- | --- | --- |
+| `.docx` | mammoth（CDN 按需加载） | 首次需要 |
+| `.pdf` | pdf.js（CDN 按需加载） | 首次需要 |
+| `.txt` | 内置解码，识别 UTF-8 / BOM / UTF-16 / **GBK** | **不需要** |
+
+导入后应用会从文档中提取英文词条，然后**全部联网补全**释义：
+
+- **中文释义与词性** —— 有道词典 suggest 接口（JSONP）
+- **英文释义、近反义词、音标** —— Datamuse API（CORS）
+
+刚导入时卡片是空的（释义显示 `—`），补全完成后自动填上。结果按词缓存，二次打开零请求；
+没网或接口失败时保持空卡，不影响导入，下次联网自动回填。
+
+### 支持什么格式的词表
+
+解析器同时用「整篇扫描」和「逐段解析」两种方式，取词条更多的那一路，因此对下列写法都宽容：
+
+```
+1. price            2) reduce           ① career
+1．successful       3、furniture        • competition
+```
+
+## ❓ 常见问题
+
+<details>
+<summary><b>为什么卡片没有例句？</b></summary>
+
+目前没有可用的免费跨域例句来源。数据最全的有道 `jsonapi`（含 IPA 音标与双语例句）
+**既没有 CORS 头、加 `callback` 还返回 403**，浏览器无法调用；`api.dictionaryapi.dev`
+在目标网络不可达；Tatoeba 返回 HTML 而非 JSON API。
+
+因此例句区块在无值时**整块隐藏**，而不是挂一个永远显示 `—` 的空框。
+将来若接上可用来源会自动恢复显示。
+</details>
+
+<details>
+<summary><b>音标为什么有时看起来是美音？</b></summary>
+
+音标来自 Datamuse 的 ARPAbet 音素（`P R AY1 S`），由应用内的转换器转成 IPA（`/ˈpraɪs/`）。
+这是**美式**发音的机械转换结果，未经人工校对。发音音频则是英式（有道 `type=1`），两者口音并不一致。
+</details>
+
+<details>
+<summary><b>没网还能用吗？</b></summary>
+
+界面可以离线打开（PWA 外壳已缓存），已补全的释义也在本地。但**新词的释义补不上** ——
+因为释义全部来自在线词典。导入本身不联网也能完成，卡片会保持空白，联网后自动回填。
+</details>
+
+<details>
+<summary><b>换手机 / 换浏览器，数据会同步吗？</b></summary>
+
+不会。词汇本存在浏览器按**来源（origin）**划分的本地存储里，不上传任何服务器。
+换设备、换浏览器、清理浏览器数据都会导致数据不互通或不复存在。
+
+需要搬运时用应用内的「分享」导出成 HTML 带走。
+</details>
+
+<details>
+<summary><b>Android 安装时提示「签名不一致」怎么办？</b></summary>
+
+这是 **2026.10.01.7 之前**的旧版本才有的问题：早期 CI 每次都用新生成的调试密钥签名，
+导致每次发版签名都不同，系统拒绝覆盖安装。
+
+新版已改为固定密钥签名，此后的版本可以正常覆盖升级。
+旧版用户需要先用「分享」导出词汇本 → 卸载旧版 → 安装新版 → 重新导入。
+</details>
+
+<details>
+<summary><b>导入的词表词条数不对 / 有漏词？</b></summary>
+
+导入完成后的报告会列出解析条数、重复合并数与**未识别行**（最多列 40 行），
+而不是静默少词。如有未识别行，可据此调整源文件格式后重新导入。
+</details>
+
+## 🏗️ 技术说明
+
+### 架构
+
+```
+index.html                 应用本体（唯一事实来源，含全部逻辑与样式）
+├── manifest.json          PWA 清单
+├── sw.js                  Service Worker（离线外壳 + 更新通道）
+├── icons/                 图标
+└── 分发层（不改变本体形态）
+    ├── android/           Capacitor 壳 → APK
+    ├── ios/               Capacitor 壳 → 未签名 ipa
+    ├── scripts/           图标生成 / 资源同步 / 版本写入 / 测试
+    └── .github/workflows/ 打 tag 自动构建并发布
+```
+
+`www/` 是 `scripts/sync-web.mjs` 从根 `index.html` 生成的派生产物，不进版本库 ——
+仓库里始终只有**一份**应用本体，不存在多份 HTML 漂移的问题。
+
+### 外部依赖
+
+全部按需从 CDN 加载，并按序回退（jsDelivr → BootCDN → staticfile → cdnjs），不影响离线使用：
+
+| 用途 | 来源 |
 | --- | --- |
-| 音标 | 由 Datamuse 的 ARPAbet 音素转成 IPA，是**美式**发音的机械转换结果，未经人工校对 |
-| 例句 | **没有来源，卡片上不显示例句区块** |
+| 解析 `.docx` | mammoth |
+| 解析 `.pdf` | pdf.js |
+| 中文释义与词性 | 有道 suggest（JSONP） |
+| 英文释义、近反义词、音标 | Datamuse（CORS） |
+| 英式发音 | 有道 dictvoice |
 
-例句确实没有可用的免费跨域来源：数据最全的有道 `jsonapi`（含 IPA 音标与双语例句）既没有 CORS 头、加 `callback` 还返回 403，浏览器无法调用；`api.dictionaryapi.dev` 在目标网络不可达。将来若接上可用来源，例句区块会自动恢复显示。
+### 数据存储
 
-## 数据存储
-
-采用三级降级策略，尽可能保证数据不丢：
+三级降级，尽可能保证数据不丢：
 
 1. **IndexedDB** —— 首选，配额远大于 localStorage，移动端 WebView 更稳
 2. **localStorage** —— IndexedDB 不可用时自动降级
-3. **内存模式** —— 前两者都不可用时启用，此模式下刷新页面数据会丢失，应用会弹出提示
+3. **内存** —— 前两者都不可用时的最后手段（刷新即丢，应用会提示）
 
-旧版本存在 `localStorage` 中的词汇本会在首次打开时**自动迁移**到 IndexedDB。
+旧版本存在 `localStorage` 的词汇本会在首次打开时自动迁移。
 
-联网补全的释义按词缓存在同一套存储里（键 `vn_dict_cache_v1`），缓存上限 4000 条、有效期 180 天，二次补全零请求。
+## 🔧 开发与构建
 
-> 数据完全保存在本机浏览器，换设备或清理浏览器数据不会同步，请注意自行备份。
-
-## 技术说明
-
-整个应用是**一个 `index.html` 文件**，内含全部 HTML / CSS / JavaScript，无框架、无打包器、无依赖安装。
-
-外部依赖仅在需要时从 CDN 按序回退加载（jsDelivr → BootCDN → staticfile → cdnjs）：
-
-- `mammoth` —— 解析 `.docx`
-- `pdf.js` —— 解析 `.pdf`
-- 有道词典发音接口 —— 提供英式读音
-- 有道词典 suggest 接口 —— 提供中文释义与词性（JSONP）
-- Datamuse API —— 提供英文释义、近反义词与音标（CORS）
-
-音频与联网补全都只在对应操作发生时请求，**不联网时应用照常导入、翻卡、查看已有释义**，只是新词的释义补不上。
-
-音频播放前会做一次「音频解锁」，以兼容夸克、微信等对自动播放限制较严的环境。
-
-### 更新检查
-
-首页右下角常驻版本号，旁边是主题切换、检查更新、下载三个按钮：
-
-- **下载**：把**应用本体**（不含词汇本数据）存成 `vocabulary-notebook.html`。用 `file://` 直接打开这份副本即可使用（释义同样来自联网补全），但**本地副本的书架是空的**——词汇本存在原站点的浏览器存储里，不会随文件走。原生壳内该按钮改为打开 Release 页（应用在安装包里，覆盖不了自身）。
-- **检查更新**：手动查有没有新版本，结果会明确告知（已是最新 / 发现新版本 / 检查失败）。
-
-更新检查走**两条通道**：
-
-1. **首选** GitHub Releases API —— 读最新 Release 的 tag 与附件；
-2. **回退** 抓线上 `index.html` 读 `APP_VERSION` —— GitHub API 限流（未登录 60 次/小时/IP）、离线或接口异常时自动启用。
-
-**Android 端支持应用内升级**：发现新版本后，点提示条上的按钮会直接在应用内下载 APK 并拉起系统安装器，数据不会丢失。
-
-首次使用会需要授予一次「安装未知应用」权限（Android 8.0+ 的系统要求，无法绕过），应用会引导你去设置页开启。
-
-> 之所以能做到覆盖安装，是因为安装包用**固定密钥**签名。Android 只允许同签名的应用互相覆盖，
-> 签名不一致时系统会直接拒绝安装，用户只能卸载重装——而卸载会连词汇本数据一起清掉。
-**自动检查**在启动 1.5 秒后静默执行，覆盖本地副本（`file://`）与原生壳（Android / iOS）；线上 Web 端由 Service Worker 接管更新。失败不打扰；只有手动检查才会明确报错。
-
-**更新不会丢词汇本。** 词汇本存在按来源划分的本地存储里，替换 HTML 文件本身动不到它。本地副本请**始终用 `file://` 双击打开**：本地文件的来源统一是 `file://`，换文件名、换目录都读得到同一份数据；但如果改用本地 http 服务打开，来源变了，书架就会是空的。
-
-### 发版提醒
-
-`index.html` 里的 `APP_VERSION`（格式 `YYYY.MM.DD.N`）是判断版本新旧**唯一依据**，必须与 git tag 对应。发版时不要手改多处，用统一脚本：
+Web 端无需构建，其余各端：
 
 ```bash
-node scripts/set-version.mjs 2026.10.02.1   # 同步 index.html / package.json / Android / iOS
+npm install
+
+# 测试（内联脚本语法 + Service Worker 行为）
+npm test
+
+# 本地起服务，验证 PWA（Service Worker 需要 http/https）
+node scripts/serve.mjs
+
+# Android
+node scripts/sync-web.mjs && npx cap sync android
+cd android && ./gradlew assembleDebug      # 或 assembleRelease
+
+# iOS（需 macOS + Xcode）
+npx cap sync ios && ./ios/build-unsigned-ipa.sh
+```
+
+### 发版
+
+```bash
+node scripts/set-version.mjs 2026.10.02.1   # 一处写入 index.html / package.json / Android / iOS
 git commit -am "chore(release): v2026.10.02.1"
-git tag v2026.10.02.1 && git push origin main --tags   # 打 tag 触发三端构建 + Release
+git tag v2026.10.02.1 && git push origin main --tags   # 触发构建与发布
 ```
 
 CI 会校验 `APP_VERSION` 与 tag 一致，不一致直接失败，避免发出对不上的版本。
 
-## 目录结构
+各端详细的构建、签名与验证边界见 [docs/multi-platform.md](docs/multi-platform.md)。
 
-```
-vocabulary-notebook/
-├── index.html              # ★ 应用本体（单文件，含全部逻辑与样式，唯一事实来源）
-├── manifest.json           # PWA 清单
-├── sw.js                   # Service Worker：离线外壳 + 更新通道
-├── icons/                  # 图标（由 scripts/gen-icons.py 生成）
-├── capacitor.config.json   # Android / iOS 共用壳配置
-├── package.json            # Capacitor 工具链（仅构建期依赖，不影响 Web 使用）
-├── scripts/                # 图标生成 / 资源同步 / 本地服务 / 版本写入 / 语法与 SW 测试
-├── android/                # Android 工程（产出 APK）
-├── ios/                    # iOS 工程（产出未签名 ipa）
-├── .github/workflows/      # release.yml：打 tag 自动构建三端并发布
-├── README.md
-├── LICENSE                 # CC BY-NC 4.0
-└── docs/
-    ├── README.md             # 文档索引与维护约定
-    ├── design.md             # 当前架构与关键设计决策
-    ├── multi-platform.md     # 多端交付设计
-    └── history.md            # 按版本记录的变更与验证
-```
+## 📋 已知限制
 
-`www/` 是**派生产物**，由 `scripts/sync-web.mjs` 从根 `index.html` 生成，不进版本库。
+| 限制 | 说明 |
+| --- | --- |
+| 没有例句 | 见 [常见问题](#-常见问题) |
+| 音标是美音近似值 | 机械转换，未经人工校对 |
+| 释义需要联网 | 不内置词库，首次导入后需联网补全 |
+| 各端数据独立 | 按 origin 隔离，不会自动同步 |
+| iOS 产物未签名 | 仓库不保存证书，需自行签名 |
+| 真机行为未验证 | 无测试设备，WebView 运行时行为未在真机确认 |
 
-## 自行构建安装包
+## 📚 文档
 
-Web 端无需构建，其余各端命令见各自 README：
+| 文档 | 内容 |
+| --- | --- |
+| [docs/design.md](docs/design.md) | 当前架构与关键设计取舍、边界与不做的事 |
+| [docs/multi-platform.md](docs/multi-platform.md) | 多端交付方式、发版流程、各端验证边界 |
+| [docs/history.md](docs/history.md) | 版本历史，含踩过的坑与诊断结论 |
+| [android/README.md](android/README.md) | Android 构建、签名（**固定密钥，勿更换**）、应用内升级 |
+| [ios/README.md](ios/README.md) | iOS 构建与三种安装方式 |
 
-```bash
-npm install
-node scripts/sync-web.mjs            # index.html → www/
-npx cap sync android                 # 同步到 Android 工程
-cd android && ./gradlew assembleDebug   # 产出 APK
+## 🤝 贡献
 
-npx cap sync ios                     # iOS 需 macOS + Xcode
-./ios/build-unsigned-ipa.sh          # 产出未签名 ipa
+欢迎提 Issue 反馈问题或建议。提交代码前请注意：
 
-```
+1. **应用本体只有 `index.html` 一个文件** —— 不要拆分，也不要引入构建步骤；
+2. **改完跑一遍 `npm test`**；
+3. 涉及设计取舍的改动，请同步更新 [docs/design.md](docs/design.md)；
+4. 每次发版在 [docs/history.md](docs/history.md) 顶部加一条，写清「改了什么、为什么、如何验证」。
 
-详细的工程说明、签名方式与**各端验证边界**见 [docs/multi-platform.md](docs/multi-platform.md)、[android/README.md](android/README.md)、[ios/README.md](ios/README.md)。
-
-## 浏览器兼容
-
-面向现代浏览器（Chrome / Safari / Edge / Firefox 及主流移动端 WebView）。使用到 IndexedDB、Web Audio、`speechSynthesis` 等特性，IE 不支持。
-
-## 许可证
+## 📄 许可证
 
 [CC BY-NC 4.0](LICENSE) © 2026 geek-xin
 
-允许署名前提下的非商业性分享与演绎，**禁止商业用途**。完整法律条款见 [LICENSE](LICENSE)。
+允许署名前提下的非商业性分享与演绎，**禁止商业用途**。完整条款见 [LICENSE](LICENSE)。
+
+<div align="center">
+
+如果这个项目对你有帮助，欢迎点个 ⭐
+
+</div>
