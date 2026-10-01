@@ -9,8 +9,6 @@
  *   package.json                       "version": "2026.10.1"（npm semver 只允许三段，第 4 段会丢）
  *   android/app/build.gradle           versionName / versionCode
  *   ios/App/App.xcodeproj/project.pbxproj   MARKETING_VERSION / CURRENT_PROJECT_VERSION
- *   harmony/AppScope/app.json5         versionName / versionCode
- *   harmony/entry/src/main/module.json5 若有版本字段
  *
  * versionCode 取 "20261001"（YYYYMMDD）+ 第 4 段，保证单调递增。
  *
@@ -81,13 +79,6 @@ await patch('android/app/build.gradle', [
 await patch('ios/App/App.xcodeproj/project.pbxproj', [
   [/MARKETING_VERSION = [^;]+;/g, `MARKETING_VERSION = ${version};`, 'MARKETING_VERSION'],
   [/CURRENT_PROJECT_VERSION = [^;]+;/g, `CURRENT_PROJECT_VERSION = ${versionCode};`, 'CURRENT_PROJECT_VERSION'],
-]);
-
-/* JSON5 允许给键加引号（"versionCode": 1），两种写法都要能匹配，
-   否则发版时会静默失配 —— 这个坑在首次实测中真实踩到过。 */
-await patch('harmony/AppScope/app.json5', [
-  [/("?versionCode"?\s*:\s*)\d+/, `$1${versionCode}`, 'versionCode'],
-  [/("?versionName"?\s*:\s*)"[^"]*"/, `$1"${version}"`, 'versionName'],
 ]);
 
 console.log(`版本 -> ${version}（tag ${tag}，versionCode ${versionCode}）`);

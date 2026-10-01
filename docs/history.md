@@ -8,6 +8,47 @@
 
 ---
 
+## 2026.10.01.5 —— 移除鸿蒙端，只保留 Web / Android / iOS
+
+### 背景
+
+鸿蒙端是 2026.09.30.1 加入的，代价一直不低：
+
+- HarmonyOS NEXT 不兼容 Android APK，必须维护一套**独立的 ArkTS 工程**（`harmony/`，29 个文件）
+  和**另一套工具链**（DevEco / hvigor / ohpm）；
+- CI 侧依赖第三方 2.1 GB SDK，链路长且脆弱 —— 2026.10.01.3 就因上游 500 导致发版缺产物；
+- 维护成本与收益不成比例。
+
+### 改动
+
+- 删除 `harmony/` 整个工程目录；
+- 删除 `scripts/check-harmony-json5.py`，并从 `npm test` 中移除；
+- `scripts/set-version.mjs` 去掉鸿蒙的写入规则（现在只写 index.html / package.json / Android / iOS）；
+- `release.yml` 删除 `harmony` job 与 `OHOS_CLI_VERSION`，`needs` 改为 `[meta, web, android, ios]`，
+  产物收集与 Release 说明表格同步去掉 HAP；
+- `.gitignore` 清掉 harmony 与 `*.hap` 规则；
+- 文档同步：README、design.md、multi-platform.md、docs/README.md、android/README.md；
+  multi-platform.md 新增 §4.4 记录「为什么没有鸿蒙端」，避免以后被重新提出。
+
+### 仍然成立的部分
+
+旧版鸿蒙（HarmonyOS 4 及以前）**兼容 Android APK**，所以那份 APK 在旧鸿蒙上照样能装，
+只是不再作为独立目标承诺。这一点在 android/README.md 里保留了说明。
+
+### 验证
+
+| 项目 | 结果 |
+| --- | --- |
+| `harmony/` 与 `check-harmony-json5.py` 已删除 | ✅ |
+| `set-version.mjs` 实跑 | ✅ 只更新 index.html / Android / iOS，无失配告警 |
+| `release.yml` 可解析 | ✅ `jobs: meta, web, android, ios, release`，`env` 只剩 `NODE_VERSION` |
+| workflow 内无鸿蒙残留 | ✅ 含产物收集与 Release 说明 |
+| `npm test` | ✅ 内联 JS 语法 + SW 22 项断言 |
+| Android 构建 | ✅ `assembleDebug` BUILD SUCCESSFUL |
+| 三端发布 | ⏳ 由本次 tag 的 CI 验证 |
+
+---
+
 ## 2026.10.01.4 —— 修复鸿蒙构建的第三方依赖脆弱性
 
 ### 问题

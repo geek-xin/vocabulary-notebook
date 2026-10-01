@@ -19,6 +19,7 @@ npm-debug.log*
 
 # ---- 多端构建 ----
 node_modules/
+
 # Capacitor webDir，由 scripts/sync-web.mjs 从 index.html 派生
 www/
 
@@ -45,21 +46,7 @@ ios/App/DerivedData/
 *.mobileprovision
 *.p12
 
-# HarmonyOS
-harmony/**/build/
-harmony/**/.hvigor/
-harmony/**/oh_modules/
-harmony/**/.cxx/
-harmony/**/node_modules/
-harmony/**/local.properties
-harmony/**/.clangd
-harmony/**/.clang-format
-# 由 index.html 派生
-harmony/entry/src/main/resources/rawfile/index.html
-*.hap
-*.har
-
-# ---- 本地工具链缓存（Lead/CI 用，不进仓库）----
+# ---- 本地工具链缓存（不进仓库）----
 .android-sdk/
 .android-user/
 .gradle-home/

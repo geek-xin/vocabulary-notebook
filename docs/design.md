@@ -24,7 +24,7 @@
 | --- | --- |
 | 在线 | `https://geek-xin.github.io/vocabulary-notebook/`；手机可「添加到主屏幕」 |
 | 本地单文件 | `file://` 双击打开；来源统一是 `file://`，换文件名/目录仍读同一份数据 |
-| 原生壳 | Android（`https://localhost`）、iOS（`capacitor://localhost`）、鸿蒙（`resource://rawfile`） |
+| 原生壳 | Android（`https://localhost`）、iOS（`capacitor://localhost`） |
 
 ### 版本号纪律
 
@@ -298,6 +298,9 @@ function shouldAutoCheck() { return isNativeShell() || isLocalCopy(); }
   这不是解析失败。判定「解析是否成功」看导入报告里的解析条数与未识别数，而不是卡片是否有释义。
 - **在线补全只补空字段**：离线或接口失败时完全跳过，不阻塞导入，下次联网自动回填。
 - **各端数据互相独立**：按 origin 隔离，升级安装包不丢数据，但换端不会自动同步。
+- **只做 Web / Android / iOS 三端**：鸿蒙端曾在 2026.09.30.1 加入、2026.10.01.5 移除，
+  原因是它需要独立的 ArkTS 工程与另一套工具链（CI 依赖第三方 2.1 GB SDK），
+  维护成本与收益不成比例。旧版鸿蒙仍可直接安装 Android APK。
 
 ## 12. 验证约定
 
@@ -308,7 +311,6 @@ function shouldAutoCheck() { return isNativeShell() || isLocalCopy(); }
 | --- | --- |
 | `check-inline-js.mjs` | 抽取 `index.html` 内联脚本做语法检查（用 `vm.Script`，能正确拒绝顶层 return/import） |
 | `test-sw.mjs` | 在 Node 里用假 ServiceWorker 作用域跑 `sw.js`，断言预缓存与拦截策略 |
-| `check-harmony-json5.py` | 校验 `harmony/` 下所有 JSON5 可解析（允许注释、尾逗号、无引号 key） |
 
 - **真机行为无法在本机验证**，各端验证边界见 [multi-platform.md](multi-platform.md) §8。
 - **子智能体的自检不能当验证**：自检只是「我以为对了」，必须用独立校验器或真实运行核对。

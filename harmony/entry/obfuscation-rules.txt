@@ -1,3 +1,0 @@
-# 混淆规则（release 构建使用）。
-# 本工程只有一个 Web 壳页面，没有需要保留反射入口的 ArkTS 代码，
-# 且 release 构建里 obfuscation.ruleOptions.enable 为 false，因此这里保持为空。

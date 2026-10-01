@@ -6,17 +6,15 @@
 
 最新版本：[v2026.10.01.4](https://github.com/geek-xin/vocabulary-notebook/releases/latest)
 
-支持 **Web / PWA**、**Android**、**iOS**、**HarmonyOS**（旧版鸿蒙 + NEXT）四种形态，安装包由 GitHub Actions 自动构建并发布到 [Releases](https://github.com/geek-xin/vocabulary-notebook/releases)。应用启动时会**自动检查更新**。
+支持 **Web / PWA**、**Android**、**iOS** 三种形态，安装包由 GitHub Actions 自动构建并发布到 [Releases](https://github.com/geek-xin/vocabulary-notebook/releases)。应用启动时会**自动检查更新**。
 
 | 形态 | 获取方式 |
 | --- | --- |
 | Web / PWA | 打开上面的网址；手机浏览器「添加到主屏幕」即可当 App 用 |
 | Android | [Releases](https://github.com/geek-xin/vocabulary-notebook/releases) 下载 `*-android.apk`，允许安装未知来源后安装 |
-| 旧版鸿蒙（HarmonyOS 4 及以前） | 同上，直接安装 Android APK |
 | iOS | Releases 下载 `*-ios-unsigned.ipa`，用 Xcode / AltStore / Sideloadly **自行签名**后安装 |
-| HarmonyOS NEXT | Releases 下载 `*-harmony-unsigned.hap`，需在 DevEco Studio 配置签名后安装 |
 
-> **各端数据相互独立。** 词汇本存在浏览器/WebView 的本地存储里，按来源隔离：网页版、下载的单文件、Android 包、iOS 包、鸿蒙包各有一份数据，互不同步。升级安装包不会丢数据，但换端需要自行导出。详见 [docs/multi-platform.md](docs/multi-platform.md)。
+> **各端数据相互独立。** 词汇本存在浏览器/WebView 的本地存储里，按来源隔离：网页版、下载的单文件、Android 包、iOS 包各有一份数据，互不同步。升级安装包不会丢数据，但换端需要自行导出。详见 [docs/multi-platform.md](docs/multi-platform.md)。
 
 ---
 
@@ -123,7 +121,7 @@ open index.html        # macOS；Windows 直接双击 index.html
 1. **首选** GitHub Releases API —— 读最新 Release 的 tag 与附件；
 2. **回退** 抓线上 `index.html` 读 `APP_VERSION` —— GitHub API 限流（未登录 60 次/小时/IP）、离线或接口异常时自动启用。
 
-**自动检查**在启动 1.5 秒后静默执行，覆盖本地副本（`file://`）与原生壳（Android / iOS / 鸿蒙）；线上 Web 端由 Service Worker 接管更新。失败不打扰；只有手动检查才会明确报错。
+**自动检查**在启动 1.5 秒后静默执行，覆盖本地副本（`file://`）与原生壳（Android / iOS）；线上 Web 端由 Service Worker 接管更新。失败不打扰；只有手动检查才会明确报错。
 
 **更新不会丢词汇本。** 词汇本存在按来源划分的本地存储里，替换 HTML 文件本身动不到它。本地副本请**始终用 `file://` 双击打开**：本地文件的来源统一是 `file://`，换文件名、换目录都读得到同一份数据；但如果改用本地 http 服务打开，来源变了，书架就会是空的。
 
@@ -132,7 +130,7 @@ open index.html        # macOS；Windows 直接双击 index.html
 `index.html` 里的 `APP_VERSION`（格式 `YYYY.MM.DD.N`）是判断版本新旧**唯一依据**，必须与 git tag 对应。发版时不要手改多处，用统一脚本：
 
 ```bash
-node scripts/set-version.mjs 2026.10.02.1   # 同步 index.html / package.json / Android / iOS / 鸿蒙
+node scripts/set-version.mjs 2026.10.02.1   # 同步 index.html / package.json / Android / iOS
 git commit -am "chore(release): v2026.10.02.1"
 git tag v2026.10.02.1 && git push origin main --tags   # 打 tag 触发三端构建 + Release
 ```
@@ -150,9 +148,8 @@ vocabulary-notebook/
 ├── capacitor.config.json   # Android / iOS 共用壳配置
 ├── package.json            # Capacitor 工具链（仅构建期依赖，不影响 Web 使用）
 ├── scripts/                # 图标生成 / 资源同步 / 本地服务 / 版本写入 / 语法与 SW 测试
-├── android/                # Android 工程（旧版鸿蒙亦可安装）
+├── android/                # Android 工程（产出 APK）
 ├── ios/                    # iOS 工程（产出未签名 ipa）
-├── harmony/                # HarmonyOS NEXT 工程（Web 组件套壳）
 ├── .github/workflows/      # release.yml：打 tag 自动构建三端并发布
 ├── README.md
 ├── LICENSE                 # CC BY-NC 4.0
@@ -163,7 +160,7 @@ vocabulary-notebook/
     └── history.md            # 按版本记录的变更与验证
 ```
 
-`www/` 与 `harmony/**/rawfile/index.html` 都是**派生产物**，由脚本从根 `index.html` 生成，不进版本库。
+`www/` 是**派生产物**，由 `scripts/sync-web.mjs` 从根 `index.html` 生成，不进版本库。
 
 ## 自行构建安装包
 
@@ -178,11 +175,9 @@ cd android && ./gradlew assembleDebug   # 产出 APK
 npx cap sync ios                     # iOS 需 macOS + Xcode
 ./ios/build-unsigned-ipa.sh          # 产出未签名 ipa
 
-./harmony/scripts/sync-rawfile.sh    # 同步到鸿蒙工程
-cd harmony && hvigorw assembleHap    # 需 DevEco 命令行工具
 ```
 
-详细的工程说明、签名方式与**各端验证边界**见 [docs/multi-platform.md](docs/multi-platform.md)、[android/README.md](android/README.md)、[ios/README.md](ios/README.md)、[harmony/README.md](harmony/README.md)。
+详细的工程说明、签名方式与**各端验证边界**见 [docs/multi-platform.md](docs/multi-platform.md)、[android/README.md](android/README.md)、[ios/README.md](ios/README.md)。
 
 ## 浏览器兼容
 
