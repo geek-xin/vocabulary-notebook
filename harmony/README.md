@@ -108,7 +108,7 @@ DevEco 会自动填充 `build-profile.json5` 里的 `signingConfigs` 与 `produc
 
 ```json5
 versionCode: 20261001,
-versionName: "2026.10.01.2",
+versionName: "2026.10.01.3",
 ```
 
 `set-version.mjs` 的正则要求冒号紧跟 key。写成 `"versionCode":` 会**匹配不上且只 warn 不报错**，

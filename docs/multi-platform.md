@@ -18,7 +18,7 @@
 | --- | --- |
 | 单一事实来源 | 应用本体始终是根目录的 `index.html`。`www/`、`harmony/**/rawfile/index.html` 都是**派生产物**，由脚本同步，不进版本库 |
 | 不引入前端构建 | 仍然没有打包器、没有转译。`index.html` 双击即用（`file://`） |
-| 版本号唯一 | `index.html` 的 `APP_VERSION`（`YYYY.MM.DD.N`）与 git tag（`v2026.10.01.2`）必须对应 |
+| 版本号唯一 | `index.html` 的 `APP_VERSION`（`YYYY.MM.DD.N`）与 git tag（`v2026.10.01.3`）必须对应 |
 | 数据不随包走 | 词汇本存在浏览器/WebView 的本地存储里。换安装包不丢数据，但**换包名或换 origin 会丢**（见 §6） |
 
 ## 3. 总体结构
@@ -76,7 +76,7 @@ CI 产出**未签名 HAP**，需在 DevEco Studio 中配置签名后才能装机
 应用启动后（延迟 1.5s）与用户点击「检查更新」时执行：
 
 1. **首选** `GET https://api.github.com/repos/geek-xin/vocabulary-notebook/releases/latest`
-   读取 `tag_name`（`v2026.10.01.2` → `2026.10.01.2`）与 `assets`。
+   读取 `tag_name`（`v2026.10.01.3` → `2026.10.01.3`）与 `assets`。
 2. **回退** 原方案：抓线上 `index.html`，正则取 `APP_VERSION`。
    在 GitHub API 限流（未认证 60 次/小时/IP）、离线、或接口异常时启用。
 3. 版本比较按 `.` 分段数值比较。
@@ -127,7 +127,7 @@ git tag v2026.10.02.1 && git push origin main --tags
 | Android APK | 本机 `./gradlew assembleDebug` / `assembleRelease` | BUILD SUCCESSFUL；`aapt2` 实测包名、版本、权限、label 正确 |
 | **iOS 未签名 ipa** | **GitHub Actions macos runner 真实编译** | ✅ 产出 463 KB ipa |
 | **HarmonyOS HAP** | **GitHub Actions + 华为命令行工具真实编译** | ✅ 产出 215 KB HAP |
-| Release 流程 | 打 tag `v2026.10.01.2` 真实触发 | ✅ 四端产物全部发布 |
+| Release 流程 | 打 tag `v2026.10.01.3` 真实触发 | ✅ 四端产物全部发布 |
 | 应用内自动检查更新 | 真实旧版本副本 + 线上 Release | ✅ 弹提示条并下载到新版本 |
 
 > iOS 与 HarmonyOS 两端在本机**无法编译**（无 Xcode / 无 DevEco），
