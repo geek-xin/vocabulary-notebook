@@ -4,7 +4,7 @@
 
 在线使用：**https://geek-xin.github.io/vocabulary-notebook/**
 
-最新版本：[v2026.10.01.3](https://github.com/geek-xin/vocabulary-notebook/releases/latest)
+最新版本：[v2026.10.01.4](https://github.com/geek-xin/vocabulary-notebook/releases/latest)
 
 支持 **Web / PWA**、**Android**、**iOS**、**HarmonyOS**（旧版鸿蒙 + NEXT）四种形态，安装包由 GitHub Actions 自动构建并发布到 [Releases](https://github.com/geek-xin/vocabulary-notebook/releases)。应用启动时会**自动检查更新**。
 
@@ -113,7 +113,7 @@ open index.html        # macOS；Windows 直接双击 index.html
 
 ### 更新检查
 
-首页右下角常驻版本号，旁边是主题切换、检查更新、下载三个按钮（`v2026.10.01.3`）：
+首页右下角常驻版本号，旁边是主题切换、检查更新、下载三个按钮（`v2026.10.01.4`）：
 
 - **下载**：把**应用本体**（不含词汇本数据）存成 `vocabulary-notebook.html`。用 `file://` 直接打开这份副本即可使用（释义同样来自联网补全），但**本地副本的书架是空的**——词汇本存在原站点的浏览器存储里，不会随文件走。原生壳内该按钮改为打开 Release 页（应用在安装包里，覆盖不了自身）。
 - **检查更新**：手动查有没有新版本，结果会明确告知（已是最新 / 发现新版本 / 检查失败）。

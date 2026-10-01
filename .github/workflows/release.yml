@@ -18,6 +18,9 @@ permissions:
 
 env:
   NODE_VERSION: '22'
+  # 固定鸿蒙命令行工具版本：既让 actions/cache 的键稳定（缓存才能真正命中），
+  # 也避免上游发新版导致构建行为漂移。升级时改这一处即可。
+  OHOS_CLI_VERSION: '26.0.0.821'
 
 jobs:
   # ---------------------------------------------------------------- 元信息
@@ -192,10 +195,42 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libgl1-mesa-dev
-      - name: 安装 HarmonyOS 命令行工具
-        uses: ErBWs/setup-ohos@4dbb63025116eb6165ceac58a4bf47cbdc5ac721 # v2
+      # 不用 ErBWs/setup-ohos：它不固定版本时缓存键是 ohos-sdk-Linux-X64-（版本为空），
+      # 缓存永不命中，而 SDK 有 2.1 GB，每次发版全量重下极易偶发失败；
+      # 且单次下载失败没有重试，一次瞬时 500 就会让整个鸿蒙 job 挂掉（真实发生过）。
+      # 改为自己下载：固定版本让缓存生效、带重试、并校验 sha256。
+      - name: 缓存 HarmonyOS 命令行工具
+        uses: actions/cache@v4
         with:
-          cache: true
+          path: ${{ github.workspace }}/ohos-sdk
+          key: ohos-sdk-${{ runner.os }}-${{ runner.arch }}-${{ env.OHOS_CLI_VERSION }}
+      - name: 安装 HarmonyOS 命令行工具
+        run: |
+          set -euo pipefail
+          DEST="$GITHUB_WORKSPACE/ohos-sdk"
+          if [ -x "$DEST/command-line-tools/bin/hvigorw" ]; then
+            echo "命中缓存，跳过下载"
+          else
+            mkdir -p "$DEST" && cd "$DEST"
+            BASE="https://github.com/ErBWs/ohos-sdk/releases/download/$OHOS_CLI_VERSION"
+            # --retry 应对瞬时 5xx 与连接中断
+            CURL="curl -fL --retry 5 --retry-delay 15 --retry-all-errors --connect-timeout 30 --max-time 3600"
+            $CURL -o sdk.tar.gz.aa "$BASE/ohos-sdk-linux-amd64.tar.gz.aa"
+            $CURL -o sdk.tar.gz.ab "$BASE/ohos-sdk-linux-amd64.tar.gz.ab"
+            $CURL -o sdk.tar.gz.sha256 "$BASE/ohos-sdk-linux-amd64.tar.gz.sha256"
+            cat sdk.tar.gz.aa sdk.tar.gz.ab > ohos-sdk-linux-amd64.tar.gz
+            rm -f sdk.tar.gz.aa sdk.tar.gz.ab
+            # 校验完整性：下载损坏时立刻失败，而不是在编译阶段报莫名其妙的错
+            sha256sum -c sdk.tar.gz.sha256
+            tar -xzf ohos-sdk-linux-amd64.tar.gz
+            rm -f ohos-sdk-linux-amd64.tar.gz sdk.tar.gz.sha256
+          fi
+          echo "$DEST/command-line-tools/tool/node/bin" >> "$GITHUB_PATH"
+          echo "$DEST/command-line-tools/bin" >> "$GITHUB_PATH"
+      - name: 校验 hvigorw 可用
+        run: |
+          set -euo pipefail
+          command -v hvigorw || { echo "::error::hvigorw 不在 PATH 中"; exit 1; }
       - name: 校验 JSON5 配置
         run: python3 scripts/check-harmony-json5.py
       - name: 校验并同步 rawfile

@@ -8,6 +8,53 @@
 
 ---
 
+## 2026.10.01.4 —— 修复鸿蒙构建的第三方依赖脆弱性
+
+### 问题
+
+v2026.10.01.3 发版时 **HarmonyOS HAP 构建失败**，Release 里因此缺了这一端产物：
+
+```
+HTTP 500 (https://api.github.com/repos/ErBWs/ohos-sdk/releases/assets/540521089)
+##[error]Process completed with exit code 1.
+```
+
+失败发生在 `ErBWs/setup-ohos` 这个第三方 action 下载 SDK 的步骤，不是我们的代码。
+但排查后发现两个**我们这边的真实问题**，让这次失败从「偶发」变成了「大概率」：
+
+1. **没有固定版本**。action 的缓存键是 `ohos-sdk-${os}-${arch}-${version}`，
+   不传 `version` 时键就是 `ohos-sdk-Linux-X64-`（版本为空）。
+   日志里明确写着 `Cache not found for input keys: ohos-sdk-Linux-X64-` ——
+   **缓存从未命中过**。而这份 SDK 有 **2.1 GB**（1500 MB + 667 MB 两个分片），
+   等于每次发版都要全量重下一次，失败概率自然高。
+2. **单次下载没有重试**。一次瞬时 500 就让整个鸿蒙 job 挂掉。
+
+### 改动
+
+不再用 `ErBWs/setup-ohos`，改为自己下载，一次解决三个问题：
+
+| 改动 | 解决什么 |
+| --- | --- |
+| 在 workflow `env` 里固定 `OHOS_CLI_VERSION: 26.0.0.821` | 缓存键变稳定，`actions/cache` 真正生效；同时避免上游发新版导致构建行为漂移 |
+| 用 `curl --retry 5 --retry-delay 15 --retry-all-errors` 下载 | 瞬时 5xx / 连接中断可自动恢复 |
+| `sha256sum -c` 校验后再解压 | 下载损坏时立刻失败，而不是在编译阶段报莫名其妙的错 |
+| 命中缓存则跳过下载 | 后续发版不再重复下 2.1 GB |
+| 新增「校验 hvigorw 可用」步骤 | 工具链没装好时立即失败，而不是拖到编译阶段 |
+
+顺带把第三方 action 从供应链里去掉了。
+
+### 验证
+
+| 项目 | 结果 |
+| --- | --- |
+| workflow YAML 可解析 | ✅ `jobs` 与 `env` 均正常 |
+| 鸿蒙 job 步骤结构 | ✅ 11 步，缓存 → 下载 → 校验 hvigorw → 构建 |
+| 下载地址可达 | ✅ `.aa` / `.ab` / `.sha256` 三个 URL 均返回 200 |
+| 校验文件格式 | ✅ `sha256sum -c` 能识别（拼接后可正常校验） |
+| 真实构建 | ⏳ 由本次 tag 的 CI 验证 |
+
+---
+
 ## 2026.10.01.3 —— 修分享页遗漏与 CI 版本号兜底
 
 本轮没有新功能，只修了两处**真实缺陷**，都是前几轮改动留下的尾巴。

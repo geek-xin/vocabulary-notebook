@@ -27,7 +27,7 @@ npx cap sync ios
 ./ios/build-unsigned-ipa.sh
 
 # 或显式指定版本（CI 用这种方式）
-MARKETING_VERSION=2026.10.01.3 CURRENT_PROJECT_VERSION=20261001 \
+MARKETING_VERSION=2026.10.01.4 CURRENT_PROJECT_VERSION=20261001 \
   OUTPUT_DIR="$PWD/out" ./ios/build-unsigned-ipa.sh
 ```
 

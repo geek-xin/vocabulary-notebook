@@ -10,7 +10,7 @@
     bundleName: "com.geekxin.vocabularynotebook",
     vendor: "geekxin",
     versionCode: 20261001,
-    versionName: "2026.10.01.3",
+    versionName: "2026.10.01.4",
     icon: "$media:app_icon",
     label: "$string:app_name",
   },
