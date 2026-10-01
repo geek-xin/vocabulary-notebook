@@ -41,7 +41,14 @@ jobs:
           elif [ -n "${{ inputs.version }}" ]; then
             RAW="${{ inputs.version }}"
           else
-            RAW="$(node -p "require('./package.json').version")"
+            # 兜底读 index.html 的 APP_VERSION —— 它才是版本号的唯一事实来源。
+            # 不能读 package.json：npm 的 semver 只允许三段，四段的 .N 会被丢掉，
+            # 手动触发时会构建出 2026.10.1 这种与 APP_VERSION 对不上的版本。
+            RAW="$(grep -oE "APP_VERSION[[:space:]]*=[[:space:]]*'[^']+'" index.html | head -1 | sed -E "s/.*'([^']+)'/\1/")"
+            if [ -z "$RAW" ]; then
+              echo "::error::读不到 index.html 的 APP_VERSION"
+              exit 1
+            fi
           fi
           VERSION="${RAW#v}"
           # versionCode 用 YYYYMMDD + 第 4 段，保证单调递增

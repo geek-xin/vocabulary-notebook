@@ -6,13 +6,17 @@
  *
  * 写入位置（不存在的文件自动跳过）：
  *   index.html                         APP_VERSION = '2026.10.01.1'
- *   package.json                       "version": "2026.10.01"
+ *   package.json                       "version": "2026.10.1"（npm semver 只允许三段，第 4 段会丢）
  *   android/app/build.gradle           versionName / versionCode
  *   ios/App/App.xcodeproj/project.pbxproj   MARKETING_VERSION / CURRENT_PROJECT_VERSION
  *   harmony/AppScope/app.json5         versionName / versionCode
  *   harmony/entry/src/main/module.json5 若有版本字段
  *
  * versionCode 取 "20261001"（YYYYMMDD）+ 第 4 段，保证单调递增。
+ *
+ * ⚠️ package.json 的 version 只是构建工具链的元数据，**不是版本号的事实来源**：
+ *    npm 的 semver 规定只能有三段，所以 2026.10.01.2 写进去会变成 2026.10.1。
+ *    事实来源始终是 index.html 的 APP_VERSION（CI 也读它，见 release.yml）。
  */
 import { readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
