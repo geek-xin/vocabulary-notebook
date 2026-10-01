@@ -129,17 +129,29 @@ jobs:
           node scripts/sync-web.mjs
       - name: 同步到 Android 工程
         run: npx cap sync android
-      - name: 构建 APK
+      - name: 构建已签名 APK
         working-directory: android
-        run: |
-          chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon --stacktrace
-      - name: 收集产物
+        env:
+          # 固定密钥签名。不这样做的话每次 CI 都会生成新的 debug.keystore，
+          # 用户升级时会因签名不一致被系统拒绝（只能卸载重装，数据一起丢）。
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           set -euo pipefail
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon --stacktrace
+      - name: 校验签名并收集产物
+        run: |
+          set -euo pipefail
+          APK=android/app/build/outputs/apk/release/app-release.apk
+          test -f "$APK" || { echo "::error::未找到 release APK：$APK"; ls -R android/app/build/outputs/apk | head -30; exit 1; }
+          APKSIGNER="$(find "$ANDROID_HOME/build-tools" -name apksigner -type f | sort -V | tail -1)"
+          echo "用 $APKSIGNER 校验签名"
+          "$APKSIGNER" verify --print-certs "$APK" || { echo "::error::APK 未正确签名"; exit 1; }
           mkdir -p out
-          find android/app/build/outputs/apk -name '*.apk' -print
-          cp android/app/build/outputs/apk/debug/app-debug.apk "out/vocabulary-notebook.apk"
+          cp "$APK" out/vocabulary-notebook.apk
           ls -lh out/
       - uses: actions/upload-artifact@v4
         with:

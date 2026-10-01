@@ -71,20 +71,58 @@ adb install -r android/app/build/outputs/apk/debug/app-debug.apk
 
 > HarmonyOS NEXT（5.0 及以后）**不兼容 Android APK**，本项目也不再提供对应产物。
 
-## 签名
+## 签名（固定密钥，务必不要换）
 
-仓库内**不保存任何签名材料**。CI 产出的 release APK 是**未签名**的：
+**Android 只允许同签名的 APK 互相覆盖安装。** 签名不一致时系统直接拒绝
+（`INSTALL_FAILED_UPDATE_INCOMPATIBLE`），用户只能卸载重装 —— 而卸载会连词汇本数据一起清掉。
+
+因此 CI 用**固定密钥**签名，密钥存在仓库 Secrets 里：
+
+| Secret | 内容 |
+| --- | --- |
+| `ANDROID_KEYSTORE_BASE64` | PKCS12 密钥库的 base64 |
+| `ANDROID_KEYSTORE_PASSWORD` | 密钥库口令 |
+| `ANDROID_KEY_ALIAS` | 密钥别名 |
+| `ANDROID_KEY_PASSWORD` | 密钥口令（PKCS12 下**必须与库口令相同**） |
+
+`app/build.gradle` 读取这些环境变量还原密钥并配置 `signingConfigs.release`。
+本机没有这些变量时自动跳过签名，`assembleDebug` 照常可用。
 
 ```bash
-# 验证未签名状态（会报 DOES NOT VERIFY / Missing META-INF/MANIFEST.MF）
-apksigner verify --print-certs app-release-unsigned.apk
+# 本机做一次「和 CI 一样」的签名构建
+export ANDROID_KEYSTORE_BASE64="$(base64 -i release.p12)"
+export ANDROID_KEYSTORE_PASSWORD=...
+export ANDROID_KEY_ALIAS=vocabulary-notebook
+export ANDROID_KEY_PASSWORD=...   # 与 store 口令相同
+./gradlew assembleRelease
 
-# 自行签名
-keytool -genkey -v -keystore my.jks -keyalg RSA -keysize 2048 -validity 10000 -alias mykey
-zipalign -v 4 app-release-unsigned.apk aligned.apk
-apksigner sign --ks my.jks --out signed.apk aligned.apk
+# 校验签名
+apksigner verify --print-certs app/build/outputs/apk/release/app-release.apk
 ```
 
+> ⚠️ **不要更换密钥库**，否则已安装用户无法升级。若确实必须更换，需提前通知用户导出数据后重装。
+>
+> ⚠️ PKCS12 不支持「库口令」与「密钥口令」不同：`keytool` 转换时会忽略 `-destkeypass`，
+> 若两个 Secret 填了不同的值，Gradle 会报 `Given final block not properly padded`。
+
+### 历史遗留问题
+
+2026.10.01.6 及更早的版本用 `assembleDebug` 出包，每次 CI 在全新 runner 上生成新的
+`debug.keystore`，**每次发版签名都不同**，用户根本无法升级（问题即由此暴露）。
+这类旧包与新包签名不兼容，需要卸载重装。
+
+## 应用内升级
+
+原生插件 `AppUpdaterPlugin` 负责「下载新版 APK → 拉起系统安装器」，让用户不必跳浏览器：
+
+1. JS 侧从 Release 的 assets 里挑出 `.apk`（`pickApkAsset`）；
+2. 调 `getStatus` 检查是否已授予「安装未知应用」权限；
+3. 未授权 → `openInstallPermissionSettings` 引导去设置页（Android 8.0+ 的硬性要求）；
+4. 已授权 → `downloadAndInstall` 下载到 cache，经 FileProvider 拉起安装界面。
+
+插件只在 Android 壳内存在；Web 与 iOS 上 `nativeUpdater()` 返回 null，自动走原有逻辑。
+
+相关权限：`REQUEST_INSTALL_PACKAGES`。
 ## 图标
 
 mipmap 各密度图标由根 `icons/` 派生：

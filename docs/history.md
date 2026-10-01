@@ -8,6 +8,75 @@
 
 ---
 
+## 2026.10.01.7 —— 固定签名密钥 + Android 应用内升级
+
+### 问题：用户根本无法升级
+
+用户反馈「自动更新提示签名不一致」。排查确认属实，而且比预想严重：
+
+| APK 来源 | 证书 SHA-256 |
+| --- | --- |
+| 本机构建 | `718e70fc…` |
+| CI 发布 | `0291ccd9…` |
+
+**两者不同。** 根因是 CI 一直用 `assembleDebug` 出包：debug.keystore 由 AGP 在首次
+构建时随机生成，而 GitHub runner 每次都是全新环境 —— 于是**每次发版的签名都不一样**。
+Android 只允许同签名的 APK 互相覆盖安装，签名不一致会直接拒绝
+（`INSTALL_FAILED_UPDATE_INCOMPATIBLE`），用户只能卸载重装，而卸载会连词汇本数据一起清掉。
+
+### 修复：固定 release 密钥
+
+1. 生成 4096 位 RSA 密钥（有效期 30 年），转成 PKCS12；
+2. 存入 GitHub Secrets：`ANDROID_KEYSTORE_BASE64` / `ANDROID_KEYSTORE_PASSWORD` /
+   `ANDROID_KEY_ALIAS` / `ANDROID_KEY_PASSWORD`；
+3. `android/app/build.gradle` 读取这些环境变量还原密钥并配置 `signingConfigs.release`，
+   开启 v1 + v2 签名；
+4. CI 改跑 `assembleRelease`，并在收集产物前用 `apksigner verify` 校验签名。
+
+本机没有这些环境变量时自动跳过签名配置，`assembleDebug` 调试不受影响。
+
+**踩到的坑**：PKCS12 不支持「存储口令」与「密钥口令」不同，
+`keytool` 转换时会警告并忽略 `-destkeypass`，若两个 Secret 填了不同的值，
+Gradle 会报 `Given final block not properly padded`。已把两者设为同一口令。
+
+验证：连续两次 `clean assembleRelease`，证书指纹完全一致（`bc3d2322…`）。
+
+### 新增：Android 应用内升级（无感）
+
+以前原生壳里点更新只会跳浏览器打开 Release 页，用户还得自己找包、下载、再点安装。
+现在改为应用内完成：
+
+- 新增原生插件 `AppUpdaterPlugin`（约 180 行 Java，无第三方依赖）：
+  下载 APK 到 cache → 经 FileProvider 交给系统安装器 → 拉起安装界面；
+- 带「已下载则复用」判断与下载进度事件，避免重复下载 4 MB；
+- 新增 `REQUEST_INSTALL_PACKAGES` 权限；
+- 请求下载前先查「安装未知应用」权限，未授权则引导去设置页，而不是失败后才发现；
+- Web / iOS 上插件不存在，自动降级为原有行为（Web 下载 HTML、iOS 跳 Release 页）。
+
+> 说明：Android 8.0+ 强制要求用户手动授予「安装未知应用」权限，且安装确认框必须用户点击，
+> 所以这是「无感」而非「静默」—— 但已经省掉了跳浏览器、找包、选文件等全部中间步骤。
+
+### 迁移说明（重要）
+
+**已安装旧版本的用户无法直接升级到本版**：旧包用的是每次随机构建的 debug 密钥，
+与新固定密钥不同。需要先导出词汇本（应用内「分享」），卸载后装新版，再重新导入。
+这是修复历史问题的必要代价 —— 在此之前，旧版本之间同样无法互相覆盖安装。
+
+### 验证
+
+| 项目 | 结果 |
+| --- | --- |
+| 签名稳定性 | ✅ `clean assembleRelease` 两次，指纹均为 `bc3d2322…` |
+| APK 权限 | ✅ `aapt2` 确认含 `REQUEST_INSTALL_PACKAGES` |
+| 插件已打进包 | ✅ `classes.dex` 中可检出 `AppUpdaterPlugin` |
+| 应用内更新 JS 链路 | ✅ 壳内调用 `getStatus` → `downloadAndInstall(正确 URL)` |
+| 权限未授予分支 | ✅ 走 `openInstallPermissionSettings`，且不触发下载 |
+| 纯 Web 降级 | ✅ `nativeUpdater()` 返回 null，行为不变 |
+| 密钥未进仓库 | ✅ `.gitignore` 覆盖 `*.jks` / `*.p12` / `*.keystore` |
+| 真机安装与升级 | ❌ 无设备，未验证 |
+
+---
+
 ## 2026.10.01.6 —— 发布名改用程序名，产物名去掉版本号
 
 ### 改动

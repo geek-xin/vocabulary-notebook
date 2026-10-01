@@ -1632,7 +1632,7 @@ const STORE_NAME   = 'kv';
      2. 提交：    git commit -am "chore(release): v2026.10.01.1"
      3. 打 tag：  git tag v2026.10.01.1 && git push origin main --tags
    即 APP_VERSION === git tag 去掉前导 'v'。Release 流程据此产出安装包与 Release 页。 */
-const APP_VERSION     = '2026.10.01.6';
+const APP_VERSION     = '2026.10.01.7';
 const APP_ORIGIN      = 'https://geek-xin.github.io';
 const APP_UPDATE_URL  = APP_ORIGIN + '/vocabulary-notebook/index.html';
 const APP_FILE_NAME   = 'vocabulary-notebook.html';
@@ -2471,6 +2471,7 @@ const REMOTE_VERSION_RE = /APP_VERSION\s*=\s*['"]([^'"]+)['"]/;
 
 let pendingUpdateVersion = '';  // 检测到的更高版本号，空串表示没有更新
 let pendingReleaseAsset  = '';  // Release 里 vocabulary-notebook.html 的下载地址
+let pendingApkUrl        = '';  // Release 里 Android APK 的下载地址（应用内自更新用）
 let releaseHtmlText      = '';  // 该附件已抓到的正文（按需取，避免每次检查都下载整包）
 
 /* ---------------------------------------------------------------
@@ -2600,6 +2601,66 @@ function showUpdatePill(version, force, opts) {
   updatePillEl = pill;
 }
 
+/* ---------------------------------------------------------------
+   应用内自更新（Android）
+   ---------------------------------------------------------------
+   Android 不允许应用静默自装，唯一的「无感」路径是：
+     下载 APK → 通过 FileProvider 交给系统安装器 → 用户点一次「安装」
+   —— 相比跳到浏览器再手动找包，省掉了全部中间步骤。
+
+   前提是 CI 端用**固定密钥**签名：Android 只允许同签名的包互相覆盖，
+   签名不一致会直接拒绝安装（早期每次 CI 换一把 debug 密钥，根本升级不了）。
+
+   插件在原生壳里不存在（Web/iOS）时自动降级回原来的行为。
+   --------------------------------------------------------------- */
+function nativeUpdater() {
+  try {
+    const C = window.Capacitor;
+    if (!C || !C.Plugins || !C.Plugins.AppUpdater) return null;
+    return C.Plugins.AppUpdater;
+  } catch (e) { return null; }
+}
+
+// 从 Release 的 assets 里挑 Android 安装包
+function pickApkAsset(release) {
+  const assets = (release && release.assets) || [];
+  for (let i = 0; i < assets.length; i++) {
+    const a = assets[i] || {};
+    if (/\.apk$/i.test(String(a.name || ''))) {
+      const url = String(a.browser_download_url || '');
+      if (url) return url;
+    }
+  }
+  return '';
+}
+
+/* 在 Android 壳内执行应用内更新。返回 Promise；不可用时 reject，由调用方降级。 */
+function installApkInApp(apkUrl) {
+  const updater = nativeUpdater();
+  if (!updater || !apkUrl) return Promise.reject(new Error('不可用'));
+
+  showToast('正在下载新版本…', 6000);
+  return updater.getStatus().then(function (st) {
+    const go = function () {
+      return updater.downloadAndInstall({ url: apkUrl });
+    };
+    // 没有「安装未知应用」权限时，先引导用户授权再重试
+    if (st && st.canInstall === false) {
+      showToast('请先允许本应用安装未知来源应用', 6000);
+      return updater.openInstallPermissionSettings().then(function () {
+        return { needsPermission: true };
+      });
+    }
+    return go();
+  }).then(function (res) {
+    if (res && res.needsPermission) return res;
+    showToast('已开始安装，请按提示完成', 6000);
+    updatePillMute = true;
+    clearUpdatePill();
+    return res;
+  });
+}
+
 /* 打开 Release 页：原生壳里没有「下载 HTML」这条路，只能引导去 Release 页取安装包 */
 function openReleasePage() {
   try {
@@ -2635,8 +2696,20 @@ function updateToLatest() {
     clearUpdatePill();
   };
 
-  // 原生壳（Capacitor / 鸿蒙）：安装包升级，不能下载 HTML 覆盖自身
-  if (isNativeShell()) { openReleasePage(); return; }
+  // 原生壳：安装包升级，不能下载 HTML 覆盖自身。
+  // Android 优先走「应用内下载 + 拉起安装器」的无感路径；插件不可用（或 iOS）时退回 Release 页。
+  if (isNativeShell()) {
+    const apk = pendingApkUrl || '';
+    if (apk && nativeUpdater()) {
+      installApkInApp(apk).catch(function (e) {
+        console.warn('应用内更新失败，退回 Release 页:', e);
+        openReleasePage();
+      });
+      return;
+    }
+    openReleasePage();
+    return;
+  }
 
   if (remoteHtmlText) { finish(remoteHtmlText); return; }
 
@@ -2692,7 +2765,7 @@ function fetchReleaseInfo() {
     if (!/^\d{4}\.\d{2}\.\d{2}(\.\d+)?$/.test(version)) {
       throw new Error('tag_name 不是 YYYY.MM.DD[.N] 格式: ' + tag);
     }
-    return { version: version, assetUrl: pickReleaseAsset(data), text: '' };
+    return { version: version, assetUrl: pickReleaseAsset(data), apkUrl: pickApkAsset(data), text: '' };
   });
 }
 
@@ -2701,7 +2774,7 @@ function fetchOnlineVersion() {
   return fetchText(APP_UPDATE_URL, APP_UPDATE_TIMEOUT).then(function (text) {
     const m = text.match(REMOTE_VERSION_RE);
     if (!m) throw new Error('读不到版本号');
-    return { version: m[1], assetUrl: '', text: text };
+    return { version: m[1], assetUrl: '', apkUrl: '', text: text };
   });
 }
 
@@ -2709,6 +2782,7 @@ function fetchOnlineVersion() {
 function applyUpdate(info, manual) {
   pendingUpdateVersion = info.version;
   pendingReleaseAsset  = info.assetUrl || '';
+  pendingApkUrl        = info.apkUrl || '';
   remoteHtmlText       = info.text || '';
   releaseHtmlText      = '';
   // manual 时 force：用户刚主动查过，即使之前关掉过提示条也要重新提示

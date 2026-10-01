@@ -10,7 +10,7 @@ android {
         // 下面两行由 scripts/set-version.mjs 用正则覆盖（版本码 = YYYYMMDD），
         // 必须保持「标识符 + 空格 + 数字/带引号字符串」的字面形式，不要改写或加内联注释。
         versionCode 20261001
-        versionName "2026.10.01.6"
+        versionName "2026.10.01.7"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -18,13 +18,46 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
-    // 仓库内不含签名材料：release 不配置 signingConfig，
-    // assembleRelease 产出 app-release-unsigned.apk，由用户/CI 用 apksigner 自签。
-    // 需要本机调试安装 release 包时，可临时把 signingConfig 指向 signingConfigs.debug。
+    /* 签名配置。
+       ------------------------------------------------------------------
+       ⚠️ 必须是**固定密钥**。Android 只允许「同签名的 APK」互相覆盖安装，
+       签名不一致会直接拒绝（INSTALL_FAILED_UPDATE_INCOMPATIBLE），
+       用户只能卸载重装 —— 而卸载会连词汇本数据一起清掉。
+
+       早期版本用 assembleDebug 出包，每次 CI 都在全新的 runner 上生成一份新的
+       debug.keystore，导致**每次发版的签名都不一样**，用户根本无法升级。
+       现在改为：CI 用仓库 Secrets 里的固定 release 密钥签名。
+
+       本机没有这些环境变量时自动跳过签名配置，assembleDebug 仍可正常调试。 */
+    def ksB64 = System.getenv("ANDROID_KEYSTORE_BASE64")
+    def ksFile = null
+    if (ksB64) {
+        ksFile = file("${rootProject.projectDir}/release-keystore.jks")
+        ksFile.parentFile.mkdirs()
+        ksFile.bytes = ksB64.decodeBase64()
+    }
+
+    signingConfigs {
+        release {
+            if (ksFile) {
+                storeFile ksFile
+                storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                keyAlias System.getenv("ANDROID_KEY_ALIAS")
+                keyPassword System.getenv("ANDROID_KEY_PASSWORD")
+                // v1 + v2 都开：v1 兼容旧设备，v2 是 Android 7+ 的推荐方案
+                enableV1Signing true
+                enableV2Signing true
+            }
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if (ksFile) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 }
