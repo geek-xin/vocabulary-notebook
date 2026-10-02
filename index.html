@@ -700,6 +700,52 @@ h1 .logo svg { width: 100%; height: 100%; display: block; }
 .book-share:active { background: rgba(80, 160, 220, 0.35); color: #ffffff; }
 .book-del:active { background: rgba(224, 90, 70, 0.32); color: #ffffff; }
 
+/* 等待联网补全的骨架卡：不可进入学习页，只展示进度 */
+.book-card.is-pending { cursor: default; }
+.book-card.is-pending:active { transform: none; }
+
+.book-pending-status {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: #8fd0ff;
+  font-size: 11px;
+}
+
+.book-pending-bar {
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+.book-pending-fill {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #4aa3d8, #8fd0ff);
+  transition: width 0.25s ease;
+}
+
+.book-pending-btn {
+  padding: 5px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #dbe8f3;
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: background 0.15s, border-color 0.15s;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.book-pending-btn:active { background: rgba(255, 255, 255, 0.2); }
+
 .book-empty {
   grid-column: 1 / -1;
   display: flex;
@@ -1156,6 +1202,14 @@ html[data-theme="light"] .book-share { color: #1e6f9f; }
 html[data-theme="light"] .book-del { color: #c0492f; }
 html[data-theme="light"] .book-share:active { background: rgba(30, 111, 159, 0.22); color: #ffffff; }
 html[data-theme="light"] .book-del:active { background: rgba(192, 73, 47, 0.22); color: #ffffff; }
+html[data-theme="light"] .book-pending-bar { background: rgba(20, 50, 80, 0.12); }
+html[data-theme="light"] .book-pending-status { color: #1e6f9f; }
+html[data-theme="light"] .book-pending-btn {
+  border-color: rgba(20, 50, 80, 0.16);
+  background: rgba(20, 50, 80, 0.06);
+  color: #1b3b57;
+}
+html[data-theme="light"] .book-pending-btn:active { background: rgba(20, 50, 80, 0.16); }
 html[data-theme="light"] .book-empty {
   border-color: rgba(20, 50, 80, 0.2);
   background: rgba(255, 255, 255, 0.5);
