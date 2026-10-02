@@ -150,6 +150,12 @@ h1 .logo svg { width: 100%; height: 100%; display: block; }
 
 .card.flipped { transform: rotateY(180deg); }
 
+/* 切换卡片期间：临时关掉翻面过渡。
+   切换动画由 Web Animations API 驱动，而 CSS 里 animation 会整体接管
+   该属性的过渡；若不关掉，上面的 0.6s transition 会与动画抢
+   transform，出现拖尾。动画结束后由 JS 摘掉这个 class。 */
+.card.switching { transition: none; }
+
 .card-face {
   position: absolute;
   top: 0; right: 0; bottom: 0; left: 0;
@@ -3203,6 +3209,108 @@ function renderWord(index) {
   }
 
   setLastIndex(currentBookId, index);
+}
+
+/* =========================================================
+   3.5 切换卡片的过渡动画
+   ---------------------------------------------------------
+   四个切换入口（随机 / 顺序 / ← → 方向键 / 页码跳转）走 switchTo；
+   进入学习页、联网补全后刷新、启动回填后刷新仍直接调 renderWord ——
+   那三处不是用户主动切换，瞬间替换才是对的。
+
+   两拍动画：退出（卡片不可见）→ 换内容 → 进入。
+   换内容发生在卡片不可见的那一瞬间，所以看不到文字跳变。
+   ========================================================= */
+const SWITCH_OUT_MS = 130;   // 退出拍
+const SWITCH_IN_MS  = 220;   // 进入拍
+const SWITCH_SHIFT  = 8;     // 位移量：卡片宽度的 8%
+
+const DIR_NEXT = 1;    // 向前：旧卡向左滑出，新卡从右侧滑入
+const DIR_PREV = -1;   // 向后：旧卡向右滑出，新卡从左侧滑入
+
+let switching = false;       // 是否正在播切换动画
+let switchAnim = null;       // 当前动画对象，用于连按时取消
+
+/* Web Animations API 不受 CSS 的 prefers-reduced-motion 媒体查询管辖，
+   必须在 JS 里自行判定（文件别处已用 matchMedia，用法一致）。 */
+function prefersReducedMotion() {
+  return !!(window.matchMedia &&
+            window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+}
+
+/* 收尾：取消动画、摘掉 .switching、恢复翻面过渡可用。
+   先 cancel 再摘 class —— 让 transform 在过渡被禁用时就落回原位，避免回弹。
+   回调先置 null，防止 cancel 触发 onfinish/oncancel 重入。 */
+function cancelSwitch() {
+  if (switchAnim) {
+    const anim = switchAnim;
+    switchAnim = null;
+    anim.onfinish = null;
+    try { anim.cancel(); } catch (e) {}
+  }
+  flashcard.classList.remove('switching');
+  switching = false;
+}
+
+/* 切换到 index。
+   direction 取 DIR_NEXT / DIR_PREV；传 0 表示不播动画。 */
+function switchTo(index, direction) {
+  const data = wordsData[index];
+  if (!data) return;
+
+  // 先算「要不要播动画」：目标页即当前页（如单张卡上绕回自身）、无方向、减弱动效 → 不播
+  const animated = index !== currentIndex && !!direction && !prefersReducedMotion();
+
+  // 上一次还没播完：直接作废它，本次瞬间替换（连按不卡顿、不重叠）
+  const wasSwitching = switching;
+  if (wasSwitching) cancelSwitch();
+
+  currentIndex = index;
+
+  if (!animated || wasSwitching) {
+    renderWord(currentIndex);
+    return;
+  }
+
+  switching = true;
+  flashcard.classList.add('switching');
+
+  const out = direction === DIR_NEXT ? -1 : 1;    // 退出方向（向左为负）
+  const fromRotate = isFlipped ? 180 : 0;         // 在背面时，退出拍顺带转回正面
+
+  const outAnim = flashcard.animate(
+    [
+      { transform: 'translateX(0%) rotateY(' + fromRotate + 'deg)', opacity: 1 },
+      { transform: 'translateX(' + (out * SWITCH_SHIFT) + '%) rotateY(0deg)', opacity: 0 }
+    ],
+    { duration: SWITCH_OUT_MS, easing: 'ease-in', fill: 'forwards' }
+  );
+  switchAnim = outAnim;
+
+  outAnim.onfinish = function () {
+    if (switchAnim !== outAnim) return;   // 已被取消或被新的切换取代
+
+    // 卡片此刻完全不可见：换内容，并把翻转态归零
+    if (isFlipped) {
+      flashcard.classList.remove('flipped');
+      isFlipped = false;
+    }
+    renderWord(currentIndex);
+
+    const inAnim = flashcard.animate(
+      [
+        { transform: 'translateX(' + (-out * SWITCH_SHIFT) + '%) rotateY(0deg)', opacity: 0 },
+        { transform: 'translateX(0%) rotateY(0deg)', opacity: 1 }
+      ],
+      { duration: SWITCH_IN_MS, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'forwards' }
+    );
+    switchAnim = inAnim;
+
+    inAnim.onfinish = function () {
+      if (switchAnim !== inAnim) return;
+      cancelSwitch();
+    };
+  };
 }
 
 /* =========================================================
