@@ -3479,18 +3479,19 @@ async function importFiles(fileList) {
   }
   if (!await saveBooks(pending)) return;
   books = pending;
-  renderHome();
 
-  // 所有词条的释义都来自在线词典：导入完成后静默联网补全（不阻塞导入，失败保持空卡）
-  // 推迟一点，先让「已导入」提示显示出来，别被进度提示立刻顶掉
-  setTimeout(function () { enrichBooks(added); }, 800);
+  /* 数据在这一刻已经落盘；骨架卡只是同一个 book 的临时呈现形态。
+     新词汇本先以「联网补全中」的骨架卡出现，补全成功后才换成真实卡片。 */
+  added.forEach(function (b) { markPendingLoading(b.id, b.words.length); });
+  renderHome();
+  runEnrichForNewBooks(added);
 
   const skipped = rejTotal + unusedTotal;
   let msg = '已导入 ' + added.length + ' 个词汇本 · ' + parsedTotal + ' 词';
   if (failed) msg += ' · ' + failed + ' 个文件失败';
   if (dupTotal) msg += ' · 合并重复 ' + dupTotal;
   if (skipped) msg += ' · 未识别 ' + skipped + ' 行';
-  showToast(msg + (skipped ? '（见报告）' : ''), skipped ? 6000 : 2400);
+  showToast(msg + (skipped ? '（见报告）' : '') + ' · 联网补全中…', skipped ? 6000 : 3200);
 
   if (dupTotal || skipped || errors.length) {
     showReport(formatImportReport({
@@ -4245,32 +4246,101 @@ async function enrichWords(words, limit, onProgress) {
   return { total: targets.length, filled: filled, remaining: remaining, answered: answered };
 }
 
-// 导入后：后台补全新词汇本并落盘；不阻塞导入，失败保持空卡
+/* 导入后：联网补全新词汇本，成功才把骨架卡换成真实卡片。
+   判定见 spec：有任一来源应答即算成功；离线或零应答算失败，交给用户重试或放行。 */
 async function enrichBooks(list) {
-  if (!onlineDictAvailable() || !list || !list.length) return;
+  if (!list || !list.length) return { ok: false, filled: 0, remaining: 0 };
+
+  // 联网开关关闭 / navigator.onLine === false：直接判失败，不空跑一轮超时。
+  // 必须重绘：否则骨架卡会永远停在「联网补全中 0 / N」，看起来像卡死
+  if (!onlineDictAvailable()) {
+    list.forEach(function (b) { markPendingFailed(b.id); });
+    renderHome();
+    return { ok: false, filled: 0, remaining: 0 };
+  }
+
   let total = 0;
   let filled = 0;
   let remaining = 0;
-  let lastToast = 0;
+  let answered = 0;
+
   for (let i = 0; i < list.length; i++) {
-    const res = await enrichWords(list[i].words, 0, function (done, tot) {
-      const now = Date.now();
-      if (now - lastToast > 700) {
-        lastToast = now;
-        showToast('联网补全中 ' + done + ' / ' + tot + ' …', 1000);
-      }
+    const book = list[i];
+    const res = await enrichWords(book.words, 0, function (done, tot) {
+      updatePendingProgress(book.id, done, tot);
     });
     total += res.total;
     filled += res.filled;
     remaining += res.remaining;
+    answered += res.answered;
   }
-  if (!total) return;
-  if (!await saveBooks(books)) return;
+
+  // total === 0 表示没有需要联网的词（全部命中新鲜缓存或本就不缺释义），也算成功
+  const ok = answered > 0 || total === 0;
+
+  /* 部分补到的内容同样要落盘，失败也不例外；落盘失败同样不算成功，
+     否则用户看到的是「已就绪」但重开应用后内容不见了。 */
+  const saved = await saveBooks(books);
+  const success = ok && saved;
+
+  list.forEach(function (b) {
+    if (success) delete pendingBooks[b.id];
+    else markPendingFailed(b.id);
+  });
+
   renderHome();
   if (!studyView.hidden) renderWord(currentIndex);
-  showToast(filled
-    ? ('已联网补全 ' + filled + ' 词' + (remaining ? '，仍缺 ' + remaining + ' 词' : ''))
-    : ('联网词典未能补全这 ' + remaining + ' 词'), 4000);
+  return { ok: success, filled: filled, remaining: remaining };
+}
+
+// 新导入词汇本的补全入口：跑完后按结果给出明确提示，绝不静默
+async function runEnrichForNewBooks(list) {
+  const res = await enrichBooks(list);
+  if (!res.ok) {
+    showToast('联网补全失败，词汇本已保存，可重试或先查看空卡', 5000);
+    return res;
+  }
+  if (res.filled) {
+    showToast('已联网补全 ' + res.filled + ' 词' +
+      (res.remaining ? '，仍缺 ' + res.remaining + ' 词' : ''), 4000);
+  } else if (res.remaining) {
+    showToast('联网词典未收录这 ' + res.remaining + ' 词，卡片保持空白', 4000);
+  } else {
+    showToast('词汇本已就绪', 2400);
+  }
+  return res;
+}
+
+function markPendingLoading(id, total) {
+  pendingBooks[id] = { status: 'loading', done: 0, total: total || 0 };
+}
+
+function markPendingFailed(id) {
+  const st = pendingBooks[id];
+  pendingBooks[id] = { status: 'failed', done: st ? st.done : 0, total: st ? st.total : 0 };
+}
+
+function updatePendingProgress(id, done, total) {
+  const st = pendingBooks[id];
+  if (!st || st.status !== 'loading') return;
+  st.done = done;
+  st.total = total;
+  refreshPendingCard(id);
+}
+
+// 失败后重试：重新回到「联网补全中」
+async function retryPendingBook(id) {
+  const book = books.find(function (b) { return b.id === id; });
+  if (!book) return;
+  markPendingLoading(id, book.words.length);
+  renderHome();
+  await runEnrichForNewBooks([book]);
+}
+
+// 用户主动放行：接受空卡，正常呈现
+function dismissPendingBook(id) {
+  delete pendingBooks[id];
+  renderHome();
 }
 
 // 启动后：后台回填已有词汇本里仍缺释义的词，每次启动设上限
