@@ -2350,6 +2350,7 @@ async function deleteBook(id) {
   const next = books.filter(function (b) { return b.id !== id; });
   if (!await saveBooks(next)) return;
   books = next;
+  delete pendingBooks[id];
 
   if (Object.prototype.hasOwnProperty.call(progressCache, id)) {
     delete progressCache[id];
@@ -2374,7 +2375,10 @@ bookGrid.addEventListener('click', function (e) {
     return;
   }
   const card = closestEl(e.target, '.book-card');
-  if (card) openBook(card.dataset.id);
+  if (!card) return;
+  // 等待联网补全的骨架卡不可进入：补全前点进去只有一屏空卡
+  if (card.dataset.pending === '1') return;
+  openBook(card.dataset.id);
 });
 
 bookGrid.addEventListener('keydown', function (e) {
@@ -2382,6 +2386,7 @@ bookGrid.addEventListener('keydown', function (e) {
   if (closestEl(e.target, '.book-del') || closestEl(e.target, '.book-share')) return;
   const card = closestEl(e.target, '.book-card');
   if (!card) return;
+  if (card.dataset.pending === '1') return;
   e.preventDefault();
   openBook(card.dataset.id);
 });
