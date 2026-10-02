@@ -19,6 +19,22 @@
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* =========================================================
+   书页
+   ---------------------------------------------------------
+   把「学习页那张卡片」当一页书来排：订口、页眉、页码、衬线字头、
+   词典式释义分栏。配色沿用整体那套（深色外壳 + 纸白 + 蓝 #1e6f9f +
+   金 #ffd966），只加「书的结构」，不引入第二套配色。
+   ========================================================= */
+:root {
+  /* 书页用衬线：西文古典衬线，中日韩回落到宋体。纯系统字体，不引外部资源。 */
+  --book-serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua",
+                Georgia, "Songti SC", "Source Han Serif SC", "Noto Serif CJK SC",
+                "STSong", "SimSun", serif;
+  /* 纸张纤维：内联 SVG 噪声，离线可用，不依赖任何外部文件 */
+  --book-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)'/%3E%3C/svg%3E");
+}
+
 html {
   height: 100%;
   -webkit-text-size-adjust: 100%;
@@ -126,6 +142,7 @@ h1 .logo svg { width: 100%; height: 100%; display: block; }
 .counter-input:focus { outline: none; border-color: #8fd0ff; }
 
 .scene {
+  position: relative;
   width: 100%;
   max-width: 700px;
   margin: 12px auto 18px;
@@ -161,20 +178,29 @@ h1 .logo svg { width: 100%; height: 100%; display: block; }
   top: 0; right: 0; bottom: 0; left: 0;
   display: flex;
   flex-direction: column;
-  padding: clamp(18px, 3.4vw, 30px);
-  border-radius: clamp(20px, 3.4vw, 28px);
+  /* 订口窄、翻阅边宽：纸的左缘是装订边，右缘才是能捏起来翻的那一边 */
+  padding: clamp(16px, 3vw, 26px) clamp(20px, 3.6vw, 32px) clamp(12px, 2.2vw, 20px);
+  border-radius: 3px clamp(16px, 3vw, 24px) clamp(16px, 3vw, 24px) 3px;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  background: linear-gradient(150deg, #ffffff 0%, #f3f9ff 100%);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.65), inset 0 2px 10px rgba(255, 255, 255, 0.85);
+  /* 纸白与冷调浅蓝沿用原配色，只叠一层纤维噪声，让它像纸而不像面板 */
+  background-image: var(--book-grain), linear-gradient(150deg, #ffffff 0%, #f3f9ff 100%);
+  background-blend-mode: soft-light, normal;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.65),
+    inset 0 2px 10px rgba(255, 255, 255, 0.85),
+    /* 订口：左缘向内压出一道暗部 —— 「这页被装订着」最直接的信号 */
+    -16px 0 24px -18px rgba(18, 48, 76, 0.5) inset,
+    0 18px 34px rgba(0, 0, 0, 0.36);
 }
 
 .card-back {
   transform: rotateY(180deg);
-  background: linear-gradient(150deg, #f2f8ff 0%, #e3effa 100%);
+  background-image: var(--book-grain), linear-gradient(150deg, #f2f8ff 0%, #e3effa 100%);
+  background-blend-mode: soft-light, normal;
 }
 
 .card-face::-webkit-scrollbar { width: 5px; }
@@ -195,45 +221,53 @@ h1 .logo svg { width: 100%; height: 100%; display: block; }
 .word-title {
   flex: 1 1 auto;
   min-width: 0;
-  font-size: clamp(1.85rem, 8vw, 3rem);
-  font-weight: 700;
-  line-height: 1.15;
-  letter-spacing: -0.02em;
+  font-family: var(--book-serif);
+  font-size: clamp(1.9rem, 8.2vw, 3.05rem);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.015em;
   color: #112b44;
   word-break: break-word;
 }
 
+/* 词性：词典里的斜体缩略语。保留金色强调，但去掉胶囊，
+   换成一条贴字底的金线 —— 形状更像印刷体，颜色仍与全局一致。 */
 .pos-tag {
   flex: none;
-  margin-top: 6px;
-  padding: 5px 14px;
-  border-radius: 999px;
-  background: #ffcf6e;
-  border: 1px solid rgba(255, 255, 255, 0.65);
-  color: #1b2b3e;
-  font-size: 13px;
+  margin-top: 0.55em;
+  padding: 0 2px 3px;
+  border-radius: 0;
+  border-bottom: 2px solid rgba(255, 207, 110, 0.85);
+  background: none;
+  color: #8a6a1f;
+  font-family: var(--book-serif);
+  font-size: clamp(0.84rem, 3.2vw, 0.98rem);
+  font-style: italic;
   font-weight: 600;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.04em;
   white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(255, 180, 40, 0.35);
+  box-shadow: none;
 }
 
 .phonetic-row {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 18px;
+  margin: 10px 0 clamp(14px, 2.8vw, 22px);
 }
 
 .phonetic {
   display: inline-flex;
   align-items: center;
-  padding: 4px 14px;
-  border-radius: 999px;
-  background: rgba(47, 85, 119, 0.1);
+  padding: 0;
+  border-radius: 0;
+  background: none;
   color: #2f5577;
-  font-size: clamp(0.95rem, 3.6vw, 1.2rem);
-  font-weight: 500;
+  font-family: var(--book-serif);
+  font-size: clamp(0.98rem, 3.7vw, 1.22rem);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0.02em;
   word-break: break-word;
 }
 
@@ -268,44 +302,66 @@ h1 .logo svg { width: 100%; height: 100%; display: block; }
   50% { box-shadow: 0 0 0 8px rgba(30, 111, 159, 0.18); }
 }
 
-.meaning-block { margin-bottom: 16px; }
+.meaning-block {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(12px, 2.4vw, 18px);
+  margin-bottom: 16px;
+}
+
+.sense { min-width: 0; }
 
 .meaning-label {
-  margin-bottom: 4px;
+  margin-bottom: 5px;
   color: #5d7f9c;
-  font-size: 11px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+               "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 1.2px;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
 }
 
 .meaning-en {
-  margin-bottom: 12px;
   color: #0a1e2f;
-  font-size: clamp(1.02rem, 3.8vw, 1.28rem);
-  font-weight: 600;
-  line-height: 1.45;
+  font-family: var(--book-serif);
+  font-size: clamp(1rem, 3.7vw, 1.2rem);
+  font-weight: 400;
+  line-height: 1.5;
 }
 
 .meaning-cn {
-  display: inline-block;
-  padding: 8px 16px;
-  border-left: 5px solid #1e6f9f;
-  border-radius: 14px;
-  background: rgba(30, 111, 159, 0.08);
+  display: block;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
   color: #1a3a55;
-  font-size: clamp(1.02rem, 3.9vw, 1.3rem);
-  font-weight: 500;
-  line-height: 1.4;
+  font-size: clamp(1rem, 3.8vw, 1.22rem);
+  font-weight: 400;
+  line-height: 1.55;
+}
+
+/* 宽屏：英中并排，像双语词典的对开双栏，中间立一条细线 */
+@media (min-width: 700px) {
+  .meaning-block { grid-template-columns: 1fr 1fr; gap: 0; }
+  .sense-en { padding-right: clamp(16px, 2.6vw, 26px); }
+  .sense-cn {
+    padding-left: clamp(16px, 2.6vw, 26px);
+    border-left: 1px solid rgba(30, 111, 159, 0.16);
+  }
 }
 
 .example-box {
-  margin-top: auto;
-  padding: 14px 16px;
-  border-radius: 20px;
-  background: #e5f0fa;
-  border: 1px solid rgba(255, 255, 255, 0.85);
-  box-shadow: inset 0 1px 4px rgba(255, 255, 255, 0.9), 0 6px 14px rgba(0, 0, 0, 0.04);
+  /* 不再用 margin-top:auto 顶到底：页面下缘由 .page-foot 负责，
+     两处都抢自动外边距会把空白劈成两半 */
+  margin-top: 4px;
+  padding: 12px 0 0;
+  border-radius: 0;
+  background: none;
+  border: 0;
+  border-top: 1px solid rgba(30, 111, 159, 0.16);
+  box-shadow: none;
 }
 
 .example-label {
@@ -322,14 +378,76 @@ h1 .logo svg { width: 100%; height: 100%; display: block; }
 
 .example-text {
   color: #15364e;
+  font-family: var(--book-serif);
   font-size: clamp(0.93rem, 3.5vw, 1.05rem);
   font-style: italic;
-  line-height: 1.55;
+  line-height: 1.6;
   word-break: break-word;
 }
 
+/* ---------------------------------------------------------
+   页眉与页码
+   ---------------------------------------------------------
+   页眉：左栏书名、右栏词条，下压一条细线。
+   页码：居中落在页面下缘，两侧各一段短线 —— 这是「书」最省字、
+   也最不会跟功能抢戏的信号。
+   --------------------------------------------------------- */
+.page-runhead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: clamp(12px, 2.6vw, 20px);
+  padding-bottom: 7px;
+  border-bottom: 1px solid rgba(30, 111, 159, 0.16);
+  color: #8aa4b8;
+  font-family: var(--book-serif);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.runhead-book,
+.runhead-word {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.runhead-book { flex: 0 1 auto; }
+.runhead-word { flex: 0 1 auto; color: #1e6f9f; }
+
+.page-foot {
+  position: relative;
+  margin-top: auto;
+  padding-top: 14px;
+  display: flex;
+  justify-content: flex-end;
+  min-height: 22px;
+}
+.page-folio {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: #8aa4b8;
+  font-family: var(--book-serif);
+  font-size: 11.5px;
+  letter-spacing: 0.12em;
+  font-variant-numeric: tabular-nums;
+}
+.page-folio::before,
+.page-folio::after {
+  content: '';
+  width: 18px;
+  height: 1px;
+  background: rgba(30, 111, 159, 0.3);
+}
+
 .flip-hint {
-  margin-top: 14px;
+  margin: 0;
   text-align: right;
   color: #8aa4b8;
   font-size: 12px;
@@ -346,17 +464,22 @@ h1 .logo svg { width: 100%; height: 100%; display: block; }
 
 .back-word {
   color: #112b44;
-  font-size: clamp(1.4rem, 6vw, 2rem);
-  font-weight: 700;
-  line-height: 1.2;
+  font-family: var(--book-serif);
+  font-size: clamp(1.45rem, 6.1vw, 2.05rem);
+  font-weight: 600;
+  line-height: 1.15;
   word-break: break-word;
 }
 
 .back-phonetic {
-  margin: 4px 0 18px;
+  margin: 3px 0 clamp(14px, 2.8vw, 20px);
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(30, 111, 159, 0.16);
   color: #2f5577;
+  font-family: var(--book-serif);
   font-size: clamp(0.9rem, 3.4vw, 1.05rem);
-  font-weight: 500;
+  font-style: italic;
+  font-weight: 400;
 }
 
 .syn-ant-section {
@@ -367,20 +490,20 @@ h1 .logo svg { width: 100%; height: 100%; display: block; }
 }
 
 .syn-block, .ant-block {
-  padding: 12px 15px;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.85);
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  border: 0;
 }
 
 .syn-label, .ant-label {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-bottom: 9px;
-  font-size: 12px;
+  margin-bottom: 7px;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.9px;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
 }
 .syn-label { color: #2e7d32; }
@@ -390,31 +513,43 @@ h1 .logo svg { width: 100%; height: 100%; display: block; }
 .syn-list, .ant-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  align-items: baseline;
+  gap: 0;
 }
 
+/* 同义词排成一行连续的文字，像真的词库条目；分隔点用全局的金色 */
 .syn-item, .ant-item {
-  padding: 5px 14px;
-  border-radius: 999px;
-  background: #ffffff;
-  border: 1px solid #d7e5f0;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  border: 0;
   color: #1e3b4f;
-  font-size: clamp(0.88rem, 3.3vw, 1rem);
-  font-weight: 500;
-  line-height: 1.4;
+  font-family: var(--book-serif);
+  font-size: clamp(0.95rem, 3.6vw, 1.12rem);
+  font-weight: 400;
+  line-height: 1.8;
 }
-.syn-item.empty, .ant-item.empty { color: #9fb4c6; }
+.syn-item + .syn-item::before,
+.ant-item + .ant-item::before {
+  content: '·';
+  display: inline-block;
+  margin: 0 0.5em;
+  color: #c9a44c;
+}
+.syn-item.empty, .ant-item.empty { color: #9fb4c6; font-style: italic; }
 
 .back-example {
-  margin-top: auto;
-  padding: 14px 16px;
-  border-radius: 16px;
-  border-left: 5px solid #1e6f9f;
-  background: rgba(255, 255, 255, 0.72);
+  margin-top: 4px;
+  padding: 12px 0 0;
+  border-radius: 0;
+  border: 0;
+  border-top: 1px solid rgba(30, 111, 159, 0.16);
+  background: none;
   color: #1b364d;
+  font-family: var(--book-serif);
   font-size: clamp(0.9rem, 3.4vw, 1rem);
   font-style: italic;
-  line-height: 1.55;
+  line-height: 1.6;
   word-break: break-word;
 }
 
@@ -602,7 +737,10 @@ h1 .logo svg { width: 100%; height: 100%; display: block; }
   margin-top: 6px;
 }
 
+/* 一册书封：顶端垂下一条书签飘带。
+   配色走整体那套玻璃 + 烫金，不另起一套。 */
 .book-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   /* 行与行之间留够呼吸感 */
@@ -620,12 +758,31 @@ h1 .logo svg { width: 100%; height: 100%; display: block; }
 }
 .book-card:active { transform: scale(0.985); }
 
+/* 书签飘带：一条窄而长的丝带，从书口垂下来。
+   走扁平化：**单一实色、无渐变、无投影**，只靠形状和颜色说话。
+   上一版为了「缎面」叠了五段纵向渐变加一道顶部暗痕，还挂了 drop-shadow，
+   在小尺寸下全是噪点，反而显脏；扁平色块在卡片这么小的尺度上更干净。 */
+.book-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 16px;
+  width: 7px;
+  height: 38px;
+  background: #b0473c;
+  /* 末端只斜切一小口，不做深 V —— 深 V 是旗标，浅口才是丝带 */
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 84%, 0 100%);
+  pointer-events: none;
+}
+
 .book-title {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  /* 给书签飘带让位，标题不压到飘带上 */
+  padding-right: 24px;
   /* 不预留第二行高度：单行标题时下方不留空行 */
   color: #ffffff;
   font-size: 1rem;
@@ -870,8 +1027,10 @@ body.home-mode #homeView .book-grid::-webkit-scrollbar-thumb {
 @media (max-width: 640px) {
   /* 手机固定每行两张，等高 + 标题两行截断，第二行数量时间、第三行按钮，避免错乱 */
   .book-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  /* 窄屏保留书签，但按比例收窄，避免在两栏布局里显得过大 */
   .book-card { padding: 12px; border-radius: 14px; }
-  .book-title { font-size: 0.92rem; }
+  .book-card::before { right: 12px; width: 6px; height: 32px; }
+  .book-title { font-size: 0.92rem; padding-right: 20px; }
   .book-meta { gap: 6px; font-size: 11px; }
   .book-tag, .book-hit { padding: 2px 6px; }
   .tag-full { display: none; }
@@ -1115,7 +1274,10 @@ body.home-mode .fab-stack { display: flex; }
 @media (max-width: 640px) {
   .app-container { border-radius: 22px; }
   .card { height: clamp(390px, 66dvh, 520px); }
-  .card-face { border-radius: 20px; }
+  .card-face { border-radius: 3px 20px 20px 3px; }
+  /* 窄屏放不下「居中页码 + 右对齐提示」：页码落到左边，和提示分列两端 */
+  .page-folio { position: static; transform: none; }
+  .page-foot { justify-content: space-between; align-items: baseline; }
   .btn {
     flex: 1 1 130px;
     min-width: 0;
@@ -1140,9 +1302,9 @@ body.home-mode .fab-stack { display: flex; }
    深 / 浅色主题
    ---------------------------------------------------------
    默认（无 data-theme 或 data-theme="dark"）为深色外壳；
-   html[data-theme="light"] 只覆盖「外壳」颜色。
-   单词卡片本身是浅色纸张，两种主题下都保持浅色，
-   浅色主题里只加强描边与投影，让卡片仍从背景中浮出来。
+   html[data-theme="light"] 覆盖「外壳」颜色。
+   学习页那张书页**跟着主题走**：浅色下是纸白，深色下是暖调炭色
+   （见下方「深色主题：书页也换成灯下的纸」）。
    ========================================================= */
 html { color-scheme: dark; }
 html[data-theme="light"] { color-scheme: light; background: #eef4fb; }
@@ -1186,7 +1348,7 @@ html[data-theme="light"] .search-clear { background: rgba(20, 50, 80, 0.08); col
 
 /* 书架卡片 */
 html[data-theme="light"] .book-card {
-  border-color: rgba(20, 50, 80, 0.12);
+  border-color: rgba(20, 50, 80, 0.14);
   background: linear-gradient(150deg, #ffffff, #f2f7fc);
   box-shadow: 0 12px 26px rgba(30, 60, 90, 0.14), inset 0 1px 1px rgba(255, 255, 255, 0.9);
 }
@@ -1254,12 +1416,86 @@ html[data-theme="light"] .btn-io {
 }
 html[data-theme="light"] .btn-io:active { background: rgba(20, 50, 80, 0.12); }
 
-/* 卡片在浅色背景上补一层描边与投影 */
+/* 卡片在浅色背景上补一层描边与投影。
+   必须把订口阴影一起带上：只写 box-shadow 会整体覆盖深色那套，
+   订口会凭空消失（浅色下书页看着就又是一块面板）。 */
 html[data-theme="light"] .card-face {
-  box-shadow: 0 0 0 1px rgba(20, 50, 80, 0.1), 0 12px 26px rgba(30, 60, 90, 0.14), inset 0 2px 10px rgba(255, 255, 255, 0.85);
+  box-shadow:
+    0 0 0 1px rgba(20, 50, 80, 0.1),
+    inset 0 2px 10px rgba(255, 255, 255, 0.85),
+    -16px 0 24px -18px rgba(18, 48, 76, 0.34) inset,
+    0 12px 26px rgba(30, 60, 90, 0.14);
 }
-html[data-theme="light"] .syn-block,
-html[data-theme="light"] .ant-block { background: #f4f8fd; border-color: rgba(20, 50, 80, 0.08); }
+
+/* ---------------------------------------------------------
+   深色主题：书页也换成「灯下的纸」
+   ---------------------------------------------------------
+   深色外壳里留一张刺眼的白纸，等于在暗房里开一盏台灯 ——
+   外壳越暗，那张白纸越跳，看久了眼睛也累。所以深色下书页
+   改用暖调炭色，像旧书在灯下的颜色：仍然是纸（纤维纹理、
+   订口、页眉页码全都保留），只是不再反光。
+   浅色主题保持原来的纸白，完全不受影响。
+   --------------------------------------------------------- */
+html[data-theme="dark"] .card-face {
+  background-image: var(--book-grain), linear-gradient(150deg, #2c2a24 0%, #232119 55%, #1d1b16 100%);
+  background-blend-mode: soft-light, normal;
+  box-shadow:
+    0 0 0 1px rgba(201, 164, 76, 0.16),
+    inset 0 1px 1px rgba(255, 245, 220, 0.05),
+    /* 订口在深色下要更重，否则炭色纸上根本看不出装订边 */
+    -16px 0 24px -18px rgba(0, 0, 0, 0.8) inset,
+    0 18px 34px rgba(0, 0, 0, 0.5);
+}
+html[data-theme="dark"] .card-back {
+  background-image: var(--book-grain), linear-gradient(150deg, #26241e 0%, #1d1b16 100%);
+}
+html[data-theme="dark"] .card-face::-webkit-scrollbar-thumb { background: rgba(201, 164, 76, 0.3); }
+
+/* 墨色：暖白字压在炭色纸上 */
+html[data-theme="dark"] .word-title,
+html[data-theme="dark"] .back-word { color: #f4ead6; }
+
+html[data-theme="dark"] .phonetic,
+html[data-theme="dark"] .back-phonetic { color: #c4b393; }
+
+html[data-theme="dark"] .meaning-en { color: #e6dac2; }
+html[data-theme="dark"] .meaning-cn { color: #ded2b9; }
+html[data-theme="dark"] .example-text { color: #ded2b9; }
+html[data-theme="dark"] .back-example { color: #ded2b9; }
+
+html[data-theme="dark"] .meaning-label,
+html[data-theme="dark"] .example-label { color: #9c8f78; }
+
+/* 词性：浅色下用暗金，深色下必须提亮，否则压在炭纸上糊成一团 */
+html[data-theme="dark"] .pos-tag {
+  color: #d8b45f;
+  border-bottom-color: rgba(216, 180, 95, 0.7);
+}
+
+/* 页眉与页码 */
+html[data-theme="dark"] .page-runhead {
+  color: #9c8f78;
+  border-bottom-color: rgba(201, 164, 76, 0.2);
+}
+html[data-theme="dark"] .runhead-word { color: #d8b45f; }
+html[data-theme="dark"] .page-folio { color: #9c8f78; }
+html[data-theme="dark"] .page-folio::before,
+html[data-theme="dark"] .page-folio::after { background: rgba(201, 164, 76, 0.34); }
+html[data-theme="dark"] .flip-hint { color: #9c8f78; }
+
+/* 分隔线：冷蓝换成烫金，和深色外壳的强调色对齐 */
+html[data-theme="dark"] .sense-cn { border-left-color: rgba(201, 164, 76, 0.2); }
+html[data-theme="dark"] .back-phonetic { border-bottom-color: rgba(201, 164, 76, 0.2); }
+html[data-theme="dark"] .example-box { border-top-color: rgba(201, 164, 76, 0.2); }
+html[data-theme="dark"] .back-example { border-top-color: rgba(201, 164, 76, 0.2); }
+
+/* 近反义词 */
+html[data-theme="dark"] .syn-item,
+html[data-theme="dark"] .ant-item { color: #d5c9b0; }
+html[data-theme="dark"] .syn-label { color: #86a98c; }
+html[data-theme="dark"] .ant-label { color: #d08a76; }
+html[data-theme="dark"] .syn-item.empty,
+html[data-theme="dark"] .ant-item.empty { color: #857a64; }
 
 /* 弹窗 / 提示条 / 悬浮按钮 */
 html[data-theme="light"] .modal-backdrop { background: rgba(20, 35, 50, 0.42); }
@@ -1388,7 +1624,7 @@ html[data-theme="light"] .theme-toggle .icon-moon { display: block; }
 
     <div class="book-grid" id="bookGrid"></div>
 
-    <p class="home-tip" id="homeTip">点击词汇本开始学习 · 数据保存在本机浏览器，重新打开依然可见</p>
+    <p class="home-tip" id="homeTip">点击词汇本开始学习</p>
 
     <!-- 右下角悬浮区：进入首页 flex 流贴在卡片底部右侧，而不是视口角落。
          视口角落的位置在窄屏（约 <950px）会压住上面这行提示文案。 -->
@@ -1479,6 +1715,11 @@ html[data-theme="light"] .theme-toggle .icon-moon { display: block; }
     <div class="card" id="flashcard" role="button" tabindex="0" aria-label="单词卡片，点击翻转">
 
       <div class="card-face card-front">
+        <div class="page-runhead">
+          <span class="runhead-book" id="frontRunhead"></span>
+          <span class="runhead-word" id="frontRunheadWord"></span>
+        </div>
+
         <div class="word-header">
           <div class="word-title" id="frontWord"></div>
           <div class="pos-tag" id="frontPos">—</div>
@@ -1497,10 +1738,14 @@ html[data-theme="light"] .theme-toggle .icon-moon { display: block; }
         </div>
 
         <div class="meaning-block">
-          <div class="meaning-label">英文释义</div>
-          <div class="meaning-en" id="frontMeaningEn">—</div>
-          <div class="meaning-label" style="margin-top:12px;">中文释义</div>
-          <div class="meaning-cn" id="frontMeaningCn">—</div>
+          <div class="sense sense-en">
+            <div class="meaning-label">英文释义</div>
+            <div class="meaning-en" id="frontMeaningEn">—</div>
+          </div>
+          <div class="sense sense-cn">
+            <div class="meaning-label">中文释义</div>
+            <div class="meaning-cn" id="frontMeaningCn">—</div>
+          </div>
         </div>
 
         <div class="example-box" id="frontExampleBox">
@@ -1513,17 +1758,25 @@ html[data-theme="light"] .theme-toggle .icon-moon { display: block; }
           <div class="example-text" id="frontExample"></div>
         </div>
 
-        <div class="flip-hint">
-          点击卡片翻转
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M21 12a9 9 0 1 1-2.64-6.36"></path>
-            <polyline points="21 3 21 9 15 9"></polyline>
-          </svg>
+        <div class="page-foot">
+          <span class="page-folio" id="frontFolio">1</span>
+          <span class="flip-hint">
+            点击卡片翻转
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 12a9 9 0 1 1-2.64-6.36"></path>
+              <polyline points="21 3 21 9 15 9"></polyline>
+            </svg>
+          </span>
         </div>
       </div>
 
       <div class="card-face card-back">
+        <div class="page-runhead">
+          <span class="runhead-book" id="backRunhead"></span>
+          <span class="runhead-word">同义词 · 反义词</span>
+        </div>
+
         <div class="back-word" id="backWord"></div>
         <div class="back-phonetic" id="backPhonetic"></div>
 
@@ -1559,6 +1812,10 @@ html[data-theme="light"] .theme-toggle .icon-moon { display: block; }
         </div>
 
         <div class="back-example" id="backExample"></div>
+
+        <div class="page-foot">
+          <span class="page-folio" id="backFolio">1</span>
+        </div>
       </div>
 
     </div>
@@ -1649,6 +1906,12 @@ const backExample    = document.getElementById('backExample');
 const frontExampleBox = document.getElementById('frontExampleBox');
 const counter        = document.getElementById('counter');
 const audioBtn       = document.getElementById('audioBtnFront');
+/* 书页页眉与页码：书名在页眉左，词条在页眉右，页码落在页面下缘 */
+const frontRunhead     = document.getElementById('frontRunhead');
+const backRunhead      = document.getElementById('backRunhead');
+const frontRunheadWord = document.getElementById('frontRunheadWord');
+const frontFolio       = document.getElementById('frontFolio');
+const backFolio        = document.getElementById('backFolio');
 const toastEl        = document.getElementById('toast');
 const appTitle       = document.getElementById('appTitle');
 const importBtn      = document.getElementById('importBtn');
@@ -1723,6 +1986,8 @@ const APP_UPDATE_TIMEOUT = 8000;
 
 let books = [];
 let currentBookId = null;
+/* 当前词汇本标题：页眉左栏要用它，翻页时不必回头查 books */
+let currentBookTitle = '';
 let progressCache = {};
 
 const storage = {
@@ -2012,9 +2277,19 @@ function renderHome() {
   bookCountEl.textContent = filtering
     ? '匹配 ' + visible.length + ' / 共 ' + books.length + ' 个词汇本'
     : '共 ' + books.length + ' 个词汇本';
+  /* 常态只留一句「点哪里、会发生什么」。
+     「存在哪、重开还在不在」属于出问题才需要知道的细节：
+     只有真正降级到内存模式（刷新即丢）时才必须说明，那时才提示。
+     其余情况塞进 title，鼠标悬停仍可查到当前用的是哪种存储。 */
+  const volatile = storage.mode === 'memory';
+  const hasBooks = books.length > 0;
+  /* 空书架时不显示这句：「点击词汇本开始学习」此刻没有可点的东西，
+     要说的话下面的空状态卡片已经说清楚了。 */
+  homeTipEl.hidden = !hasBooks;
   homeTipEl.textContent = filtering
-    ? '按名称或单词内容实时过滤 · 点击卡片开始学习'
-    : '点击词汇本开始学习 · 数据保存在本机（' + storage.label() + '），重新打开依然可见';
+    ? '按名称或单词内容过滤'
+    : (volatile ? '数据仅存于本次会话，刷新会丢失' : '点击词汇本开始学习');
+  homeTipEl.title = '数据保存在本机（' + storage.label() + '）';
   if (searchClear) searchClear.hidden = !homeQuery;
 
   if (!books.length) {
@@ -2249,6 +2524,7 @@ function openBook(id) {
   }
 
   currentBookId = book.id;
+  currentBookTitle = book.title;
   wordsData = book.words;
   appTitle.textContent = book.title;
 
@@ -2441,6 +2717,7 @@ function buildShareScript(words) {
   return [
     '"use strict";',
     'var WORDS = ' + json + ';',
+    'var BOOK_TITLE = (document.getElementById("appTitle") || {}).textContent || "";',
     'var idx = 0, saying = false;',
     'var flashcard = document.getElementById("flashcard");',
     'var counter = document.getElementById("counter");',
@@ -2456,8 +2733,13 @@ function buildShareScript(words) {
     'var antList = document.getElementById("antList");',
     'var backExample = document.getElementById("backExample");',
     'var audioBtn = document.getElementById("audioBtnFront");',
+    'var runheadBook = document.getElementById("frontRunhead");',
+    'var runheadBackBook = document.getElementById("backRunhead");',
+    'var runheadWord = document.getElementById("frontRunheadWord");',
+    'var frontFolio = document.getElementById("frontFolio");',
+    'var backFolio = document.getElementById("backFolio");',
     'function chips(box, items, cls) { box.innerHTML = ""; if (!items || !items.length) { var e = document.createElement("span"); e.className = cls + " empty"; e.textContent = "—"; box.appendChild(e); return; } for (var i = 0; i < items.length; i++) { var s = document.createElement("span"); s.className = cls; s.textContent = items[i]; box.appendChild(s); } }',
-    'function render(i) { var w = WORDS[i]; if (!w) return; frontWord.textContent = w.word; frontPos.textContent = w.pos || "—"; frontPhonetic.textContent = w.phonetic || ""; frontMeaningEn.textContent = w.meaningEn || "—"; frontMeaningCn.textContent = w.meaningCn || "—"; frontExample.textContent = w.example || "—"; backWord.textContent = w.word; backPhonetic.textContent = [w.phonetic, w.pos].filter(Boolean).join(" · "); backExample.textContent = w.example || "—"; chips(synList, w.synonyms, "syn-item"); chips(antList, w.antonyms, "ant-item"); counter.textContent = (i + 1) + " / " + WORDS.length; if (flashcard.classList.contains("flipped")) flashcard.classList.remove("flipped"); var fx = document.getElementById("frontExampleBox"); if (fx) fx.hidden = !w.example; backExample.hidden = !w.example; }',
+    'function render(i) { var w = WORDS[i]; if (!w) return; var folio = String(i + 1); frontWord.textContent = w.word; frontPos.textContent = w.pos || "—"; frontPhonetic.textContent = w.phonetic || ""; frontMeaningEn.textContent = w.meaningEn || "—"; frontMeaningCn.textContent = w.meaningCn || "—"; frontExample.textContent = w.example || "—"; backWord.textContent = w.word; backPhonetic.textContent = [w.phonetic, w.pos].filter(Boolean).join(" · "); backExample.textContent = w.example || "—"; chips(synList, w.synonyms, "syn-item"); chips(antList, w.antonyms, "ant-item"); counter.textContent = folio; if (runheadBook) runheadBook.textContent = BOOK_TITLE; if (runheadBackBook) runheadBackBook.textContent = BOOK_TITLE; if (runheadWord) runheadWord.textContent = w.word || ""; if (frontFolio) frontFolio.textContent = folio; if (backFolio) backFolio.textContent = folio; if (flashcard.classList.contains("flipped")) flashcard.classList.remove("flipped"); var fx = document.getElementById("frontExampleBox"); if (fx) fx.hidden = !w.example; backExample.hidden = !w.example; }',
     'var SWITCH_OUT_MS = 130, SWITCH_IN_MS = 220, SWITCH_SHIFT = 8, DIR_NEXT = 1, DIR_PREV = -1;',
     'var switching = false, switchAnim = null;',
     'function reducedMotion() { return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches); }',
@@ -2496,8 +2778,10 @@ function buildShareHtml(book) {
   const t = view.querySelector('#appTitle');
   if (t) t.textContent = book.title;
 
+  /* 分享页外壳固定是深色（theme-color 与 body 渐变都写死深色），
+     所以书页也标成深色 —— 否则会重现「暗房里一张白纸」那种突兀。 */
   return '<!DOCTYPE html>\n' +
-    '<html lang="zh-CN">\n<head>\n' +
+    '<html lang="zh-CN" data-theme="dark">\n<head>\n' +
     '<meta charset="UTF-8">\n' +
     '<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">\n' +
     '<meta name="theme-color" content="#0f1724">\n' +
@@ -2521,7 +2805,7 @@ function closestEl(node, sel) {
   return null;
 }
 
-// 分享：优先系统分享；不支持文件分享时退回分享文本
+// 分享文本：系统分享不可用时的兜底内容（标题 + 全部词条）
 function buildShareText(book) {
   const lines = book.words.map(function (w, i) {
     const cn = (w.meaningCn && w.meaningCn !== '—') ? '  ' + w.meaningCn : '';
@@ -2530,18 +2814,71 @@ function buildShareText(book) {
   return book.title + '\n' + lines.join('\n');
 }
 
-// 系统分享必须在 click 的同一任务里同步调用，否则会丢失用户激活
-// （transient activation），导致分享框不弹出。
+/* ---------------------------------------------------------------
+   系统分享的三条通道
+   ---------------------------------------------------------------
+   分享是本项目**唯一的跨设备搬运通道**（词汇本按 origin 隔离存储，不云同步），
+   所以不能只有一条路，否则某个环境一断用户就没有任何搬运手段。
+
+     1. 原生壳（Android）：WebView **不实现** Web Share API —— 壳内 navigator.share
+        是 undefined。必须由 SharePlugin 落盘 + FileProvider 拉起系统分享面板。
+        旧版只判断 navigator.share，Android 用户点分享只会看到「当前浏览器不支持」。
+     2. Web / PWA / iOS 壳：走标准 navigator.share（可带文件，可发微信）。
+     3. 都没有（桌面浏览器、file:// 单文件）：退回复制词表文本到剪贴板。
+
+   通道选择必须**同步**完成：系统分享与剪贴板写入都要求用户激活
+   （transient activation），一旦 await 过就丢，分享框不会弹。
+   --------------------------------------------------------------- */
+function nativeShare() {
+  try {
+    const C = window.Capacitor;
+    if (!C || !C.Plugins || !C.Plugins.Share) return null;
+    return C.Plugins.Share;
+  } catch (e) { return null; }
+}
+
 function shareBook(id) {
   const book = books.find(function (b) { return b.id === id; });
   if (!book) { showToast('词汇本不存在'); return; }
   if (!book.words.length) { showToast('词汇本为空，无法分享'); return; }
 
-  if (!navigator.share) {
-    showToast('当前浏览器不支持系统分享', 5000);
+  const native = nativeShare();
+  if (native) { shareViaNative(native, book); return; }
+  if (navigator.share) { shareViaWeb(book); return; }
+  copyShareText(book);
+}
+
+/* 通道一：原生壳内交给 SharePlugin（落盘 → FileProvider → ACTION_SEND） */
+function shareViaNative(plugin, book) {
+  let html, fileName, text;
+  try {
+    html = buildShareHtml(book);
+    fileName = safeFileName(book.title) + '.html';
+    text = buildShareText(book);
+  } catch (e) {
+    console.warn('构造分享页失败:', e);
+    showToast('分享失败：' + ((e && e.message) ? e.message : '无法生成分享页'), 5000);
     return;
   }
 
+  showToast('正在准备分享…', 1600);
+  plugin.shareHtml({
+    html: html,
+    fileName: fileName,
+    title: book.title,
+    text: text
+  }).then(function (res) {
+    // 用户在分享面板上点了返回：这是取消，不是失败，不弹提示
+    if (res && res.dismissed) return;
+    showToast('已分享「' + book.title + '」');
+  }).catch(function (e) {
+    console.warn('系统分享失败:', e);
+    showToast('系统分享失败：' + ((e && e.message) ? e.message : '请稍后重试'), 6000);
+  });
+}
+
+/* 通道二：标准 Web Share API（Web / PWA / iOS 壳） */
+function shareViaWeb(book) {
   let data;
   try {
     const html = buildShareHtml(book);
@@ -2579,6 +2916,41 @@ function shareBook(id) {
     console.warn('系统分享异常:', e);
     showToast('系统分享失败：' + (e && e.message ? e.message : '当前浏览器不支持'), 6000);
   }
+}
+
+/* 通道三：复制词表文本。桌面浏览器与 file:// 单文件没有系统分享，
+   至少让用户能把词表粘到聊天窗口里发出去。
+   先走同步的 execCommand：剪贴板同样依赖用户激活，同步路径最稳；
+   失败再退到异步的 Clipboard API。 */
+function copyShareText(book) {
+  const text = buildShareText(book);
+
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.top = '-1000px';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    if (ok) { showToast('已复制词表文本，粘贴到聊天窗口即可发送'); return; }
+  } catch (e) { /* 落到异步剪贴板 API */ }
+
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () {
+        showToast('已复制词表文本，粘贴到聊天窗口即可发送');
+      }).catch(function () {
+        showToast('当前环境不支持系统分享，请用「下载」导出词汇本', 6000);
+      });
+      return;
+    }
+  } catch (e) { /* 落到下面的提示 */ }
+
+  showToast('当前环境不支持系统分享，请用「下载」导出词汇本', 6000);
 }
 
 /* =========================================================
@@ -3207,6 +3579,16 @@ function renderWord(index) {
   renderChips(antList, data.antonyms, 'ant');
 
   counter.textContent = (index + 1) + ' / ' + wordsData.length;
+
+  /* 页眉与页码。页眉右栏放词条，翻页时也能一眼看到当前是哪一页；
+     页码与顶部计数器同源，只是换了个「书」的说法。 */
+  if (frontRunhead) frontRunhead.textContent = currentBookTitle;
+  if (backRunhead) backRunhead.textContent = currentBookTitle;
+  if (frontRunheadWord) frontRunheadWord.textContent = data.word || '';
+  /* 页码只写数字：顶部那个「1 / 4」是可点击的跳转控件，
+     这里重复一遍既啰嗦又抢眼；书页上的 folio 本来就只印一个页码。 */
+  if (frontFolio) frontFolio.textContent = String(index + 1);
+  if (backFolio) backFolio.textContent = String(index + 1);
 
   if (isFlipped) {
     flashcard.classList.remove('flipped');

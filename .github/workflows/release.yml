@@ -85,10 +85,11 @@ jobs:
           for f in manifest.json sw.js icons/icon-192.png icons/icon-512.png icons/apple-touch-icon.png; do
             test -f "$f" || { echo "::error::缺少 PWA 资源 $f"; exit 1; }
           done
-      - name: 校验内联脚本语法与 Service Worker 行为
+      - name: 校验内联脚本语法、Service Worker 行为与分享通道
         run: |
           node scripts/check-inline-js.mjs
           node scripts/test-sw.mjs
+          node scripts/test-share.mjs
       - uses: actions/upload-artifact@v4
         with:
           name: web-pwa

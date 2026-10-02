@@ -9,9 +9,10 @@
     "sync:web": "node scripts/sync-web.mjs",
     "serve": "node scripts/serve.mjs",
     "version": "node scripts/set-version.mjs",
-    "test": "node scripts/check-inline-js.mjs && node scripts/test-sw.mjs",
+    "test": "node scripts/check-inline-js.mjs && node scripts/test-sw.mjs && node scripts/test-share.mjs",
     "check:js": "node scripts/check-inline-js.mjs",
     "test:sw": "node scripts/test-sw.mjs",
+    "test:share": "node scripts/test-share.mjs",
     "cap:sync": "node scripts/sync-web.mjs && cap sync",
     "android:build": "cd android && ./gradlew assembleDebug"
   },
