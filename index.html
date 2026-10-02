@@ -4163,6 +4163,8 @@ function lookupOnline(word) {
       ts: Date.now()
     };
     merged.miss = !merged.meaningCn && !merged.meaningEn;
+    // 至少一个来源在 HTTP 层正常应答（哪怕没查到该词）：用于判定「补全是否真的失败」
+    merged.answered = !!(r[0].ok || r[1].ok);
     // 只有至少一个来源正常应答才写缓存；两边都是网络失败时不缓存，下次仍可重试
     if (r[0].ok || r[1].ok) {
       onlineDict.cache[key] = merged;
@@ -4193,6 +4195,7 @@ async function enrichWords(words, limit, onProgress) {
   await loadDictCache();
   const targets = [];
   let filled = 0;
+  let answered = 0;
 
   for (let i = 0; i < words.length; i++) {
     if (!onlineDict.missing(words[i])) continue;
@@ -4204,6 +4207,8 @@ async function enrichWords(words, limit, onProgress) {
        不是省掉「把结果写进词条」这一步。 */
     const cached = onlineDict.cache[String(words[i].word).toLowerCase()];
     if (cached && Date.now() - (cached.ts || 0) < DICT_CACHE_TTL) {
+      // 新鲜缓存意味着上次确实有来源应答过（无论查没查到），算作 answered
+      answered++;
       if (!cached.miss && applyOnlineEntry(words[i], cached)) filled++;
       continue;
     }
@@ -4221,6 +4226,7 @@ async function enrichWords(words, limit, onProgress) {
         const idx = queue.shift();
         let r = null;
         try { r = await lookupOnline(words[idx].word); } catch (e) { r = null; }
+        if (r && r.answered) answered++;
         if (r && !r.miss && applyOnlineEntry(words[idx], r)) filled++;
         done++;
         if (onProgress) onProgress(done, targets.length);
@@ -4236,7 +4242,7 @@ async function enrichWords(words, limit, onProgress) {
   for (let i = 0; i < words.length; i++) {
     if (onlineDict.missing(words[i])) remaining++;
   }
-  return { total: targets.length, filled: filled, remaining: remaining };
+  return { total: targets.length, filled: filled, remaining: remaining, answered: answered };
 }
 
 // 导入后：后台补全新词汇本并落盘；不阻塞导入，失败保持空卡
