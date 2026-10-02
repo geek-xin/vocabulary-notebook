@@ -149,8 +149,8 @@ Android / iOS 任一端失败仍会发布，避免一个平台拖住其余平台
 | 项目 | 方式 | 结果 |
 | --- | --- | --- |
 | Web / PWA | 本地 http + 真实浏览器 | manifest 被解析、SW `activated`、8 个外壳资源入缓存、离线可开 |
-| Service Worker 行为 | `node scripts/test-sw.mjs` | 23 项断言全过 |
-| 分享通道选择 | `node scripts/test-share.mjs` | 26 项断言全过（Android 壳 / Web / 桌面三种环境） |
+| Service Worker 行为 | `node scripts/test-sw.mjs` | 24 项断言全过 |
+| 分享通道选择 | `node scripts/test-share.mjs` | 27 项断言全过（Android 壳 / Web / 桌面三种环境） |
 | Android APK | 本机 `./gradlew clean assembleDebug` / `assembleRelease` | BUILD SUCCESSFUL；`aapt2` 实测包名、版本、权限、label 正确；`classes.dex` 内含 `SharePlugin` |
 | **iOS 未签名 ipa** | **GitHub Actions macos runner 真实编译** | ✅ 产出约 465 KB ipa |
 | Release 流程 | 打 tag 真实触发 | ✅ 三端产物全部发布 |

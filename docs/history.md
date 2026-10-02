@@ -9,6 +9,59 @@
 
 ---
 
+## 2026.10.02.6 —— 清理脚手架残留与死代码，修正文档失真数字
+
+> 状态：**待发版**。
+
+### 清理（删除的文件）
+
+| 删除 | 为什么是冗余 |
+| --- | --- |
+| `android/app/src/test/…/ExampleUnitTest.java` | Capacitor 脚手架生成的模板测试，断言是 `assertEquals(4, 2 + 2)`，与本项目无关 |
+| `android/app/src/androidTest/…/ExampleInstrumentedTest.java` | 同上，且断言 `getPackageName() == "com.getcapacitor.app"` —— 本项目包名是 `com.geekxin.vocabularynotebook`，**这个测试真跑起来必然失败** |
+| `android/app/src/main/res/drawable/ic_launcher_background.xml` | 脚手架默认图标底图（青绿色网格），未被任何资源引用；应用图标用的是 `values/ic_launcher_background.xml` 里的深色 `#0F1724` |
+| `android/app/src/main/res/drawable-v24/ic_launcher_foreground.xml` | 同上，未被引用；adaptive icon 的前景走 `@mipmap/ic_launcher_foreground` |
+| `.DS_Store`、`docs/.DS_Store` | macOS 目录元数据，已在 `.gitignore` 里 |
+
+另清理了可再生的构建产物（`android/app/build`、`android/build`、`www`、iOS 同步产物），
+它们本就被 `.gitignore` 排除，只是占着磁盘。
+
+### 清理（删除的代码）
+
+- `index.html` 里两个**从未被引用**的 id：`homeSearch`（搜索框容器）、`themeFab`（首页主题按钮）。
+  两者都靠 class 定位（`.home-search` / `.theme-toggle`），id 是多余的。
+  注：同批检出的 `confirmTitle` / `reportTitle` **保留** —— 它们被 `aria-labelledby` 引用。
+
+### 修正的文档失真
+
+- `docs/design.md` §12 的测试脚本表**漏了 `test-share.mjs`**，只列了两个脚本；
+- `docs/multi-platform.md` §8.1 声称 SW 23 项 / 分享 26 项断言，实测为 **24 / 27**；
+- README 与 design.md 的 `index.html` 体积（186 KB / gzip 55 KB）已随本轮改动过期，实测 **190 KB / 56 KB**。
+
+### 保留的（看着像冗余但不是）
+
+| 文件 | 为什么保留 |
+| --- | --- |
+| `ios/App/CapApp-SPM/` | Capacitor 8 的 SPM 依赖宿主，`project.pbxproj` 里引用 9 处，删了 iOS 构建会挂 |
+| `ios/debug.xcconfig` | 被 `project.pbxproj` 当作 `baseConfigurationReference` 引用 |
+| `ios/ExportOptions.plist` | 供自签名导出使用，`ios/README.md` 与 troubleshooting 都有引用 |
+| `android/tools/gen-android-icons.py` | 与 `scripts/gen-icons.py` 职责不同：后者生成根 `icons/`，前者从它派生 Android mipmap 全套；`android/README.md` 有引用 |
+| `.nojekyll` | GitHub Pages 用它跳过 Jekyll 处理，Pages 构建实际需要 |
+| `android/app/src/main/res/values/ic_launcher_background.xml` | 与同名 drawable 不同，这个**被** adaptive icon 引用 |
+
+### 验证
+
+| 项目 | 结果 |
+| --- | --- |
+| 清理后干净重建 | ✅ `gradlew clean assembleDebug` BUILD SUCCESSFUL |
+| release 构建路径 | ✅ `gradlew assembleRelease` BUILD SUCCESSFUL |
+| APK 资源清单比对 | ✅ 与清理前逐条 diff，**唯一差异就是被删的 3 个文件**；图标与启动图 30 项完全一致 |
+| 功能回归 | ✅ 主题切换、搜索过滤、翻面动画、切换动画、骨架卡（无分享 / 保留删除）、分享页导出自包含，均正常 |
+| 控制台 | ✅ 除已知的 GitHub API 403 回退外无报错 |
+| `npm test` | ✅ 24 + 27 项断言全过 |
+
+---
+
 ## 2026.10.02.5 —— 翻面改用「转到侧面时换面」的翻转动画
 
 > 状态：**已发布** —— tag `v2026.10.02.5`（2026-10-02），CI 四端产物全部构建成功，

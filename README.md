@@ -28,7 +28,7 @@
 
 ## ✨ 为什么是「单文件」
 
-整个应用就是**一个 `index.html`**（约 186 KB，gzip 后 55 KB），内含全部 HTML / CSS / JavaScript：
+整个应用就是**一个 `index.html`**（约 190 KB，gzip 后 56 KB），内含全部 HTML / CSS / JavaScript：
 
 - **没有构建步骤** —— 没有打包器、没有转译、不用 `npm install`
 - **双击即用** —— `file://` 直接打开，不需要起本地服务器

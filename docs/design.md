@@ -9,7 +9,7 @@
 提取英文词条后由**在线词典**补全音标、词性、中英释义与近反义词，再以卡片形式学习。
 
 产品本体只有 `index.html` 一个文件，内含全部 HTML / CSS / JavaScript，无框架、无打包器、无依赖安装。
-当前文件约 186 KB（gzip 后约 55 KB）。
+当前文件约 190 KB（gzip 后约 56 KB）。
 
 > 界面可离线打开（PWA 外壳已缓存），但**释义全部来自在线词典**，断网时新词补不上释义。
 
@@ -538,6 +538,7 @@ Web 端才是下载 HTML。
 | --- | --- |
 | `check-inline-js.mjs` | 抽取 `index.html` 内联脚本做语法检查（用 `vm.Script`，能正确拒绝顶层 return/import） |
 | `test-sw.mjs` | 在 Node 里用假 ServiceWorker 作用域跑 `sw.js`，断言预缓存、清理与拦截策略 |
+| `test-share.mjs` | 用桩环境跑分享通道，断言三条通道的选择、入参与失败路径 |
 
 - **真机行为无法在本机验证**，各端验证边界见 [multi-platform.md](multi-platform.md) §8。
 - **子智能体的自检不能当验证**：自检只是「我以为对了」，必须用独立校验器或真实运行核对。
