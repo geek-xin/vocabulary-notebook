@@ -22,7 +22,7 @@
 /* =========================================================
    书页
    ---------------------------------------------------------
-   把「学习页那张卡片」当一页书来排：订口、页眉、页码、衬线字头、
+   把「学习页那张卡片」当一页书来排：页眉、页码、衬线字头、
    词典式释义分栏。配色沿用整体那套（深色外壳 + 纸白 + 蓝 #1e6f9f +
    金 #ffd966），只加「书的结构」，不引入第二套配色。
    ========================================================= */
@@ -178,7 +178,7 @@ h1 .logo svg { width: 100%; height: 100%; display: block; }
   top: 0; right: 0; bottom: 0; left: 0;
   display: flex;
   flex-direction: column;
-  /* 订口窄、翻阅边宽：纸的左缘是装订边，右缘才是能捏起来翻的那一边 */
+  /* 装订边窄、翻阅边宽：纸的左缘是装订边，右缘才是能捏起来翻的那一边 */
   padding: clamp(16px, 3vw, 26px) clamp(20px, 3.6vw, 32px) clamp(12px, 2.2vw, 20px);
   border-radius: 3px clamp(16px, 3vw, 24px) clamp(16px, 3vw, 24px) 3px;
   backface-visibility: hidden;
@@ -189,12 +189,11 @@ h1 .logo svg { width: 100%; height: 100%; display: block; }
   /* 纸白与冷调浅蓝沿用原配色，只叠一层纤维噪声，让它像纸而不像面板 */
   background-image: var(--book-grain), linear-gradient(150deg, #ffffff 0%, #f3f9ff 100%);
   background-blend-mode: soft-light, normal;
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.65),
-    inset 0 2px 10px rgba(255, 255, 255, 0.85),
-    /* 订口：左缘向内压出一道暗部 —— 「这页被装订着」最直接的信号 */
-    -16px 0 24px -18px rgba(18, 48, 76, 0.5) inset,
-    0 18px 34px rgba(0, 0, 0, 0.36);
+  /* 扁平：整张卡片不做任何投影、内高光与装订边暗部。
+     纸的层次交给纤维纹理与页眉 / 页码这些「印刷件」去表达，
+     不再靠阴影造深度 —— 一有投影，它立刻又变回一块浮起来的面板。
+     卡片与背景同为浅色，靠一圈发丝描边划出边界（深色主题下换成烫金）。 */
+  border: 1px solid rgba(20, 50, 80, 0.1);
 }
 
 .card-back {
@@ -1416,35 +1415,20 @@ html[data-theme="light"] .btn-io {
 }
 html[data-theme="light"] .btn-io:active { background: rgba(20, 50, 80, 0.12); }
 
-/* 卡片在浅色背景上补一层描边与投影。
-   必须把订口阴影一起带上：只写 box-shadow 会整体覆盖深色那套，
-   订口会凭空消失（浅色下书页看着就又是一块面板）。 */
-html[data-theme="light"] .card-face {
-  box-shadow:
-    0 0 0 1px rgba(20, 50, 80, 0.1),
-    inset 0 2px 10px rgba(255, 255, 255, 0.85),
-    -16px 0 24px -18px rgba(18, 48, 76, 0.34) inset,
-    0 12px 26px rgba(30, 60, 90, 0.14);
-}
-
 /* ---------------------------------------------------------
    深色主题：书页也换成「灯下的纸」
    ---------------------------------------------------------
    深色外壳里留一张刺眼的白纸，等于在暗房里开一盏台灯 ——
    外壳越暗，那张白纸越跳，看久了眼睛也累。所以深色下书页
    改用暖调炭色，像旧书在灯下的颜色：仍然是纸（纤维纹理、
-   订口、页眉页码全都保留），只是不再反光。
+   页眉页码全都保留），只是不再反光。
    浅色主题保持原来的纸白，完全不受影响。
    --------------------------------------------------------- */
 html[data-theme="dark"] .card-face {
   background-image: var(--book-grain), linear-gradient(150deg, #2c2a24 0%, #232119 55%, #1d1b16 100%);
   background-blend-mode: soft-light, normal;
-  box-shadow:
-    0 0 0 1px rgba(201, 164, 76, 0.16),
-    inset 0 1px 1px rgba(255, 245, 220, 0.05),
-    /* 订口在深色下要更重，否则炭色纸上根本看不出装订边 */
-    -16px 0 24px -18px rgba(0, 0, 0, 0.8) inset,
-    0 18px 34px rgba(0, 0, 0, 0.5);
+  /* 深色下描边换成烫金，与外壳的强调色对齐；同样不投影 */
+  border-color: rgba(201, 164, 76, 0.16);
 }
 html[data-theme="dark"] .card-back {
   background-image: var(--book-grain), linear-gradient(150deg, #26241e 0%, #1d1b16 100%);
@@ -1969,7 +1953,7 @@ const TRASH_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
      2. 提交：    git commit -am "chore(release): v2026.10.01.1"
      3. 打 tag：  git tag v2026.10.01.1 && git push origin main --tags
    即 APP_VERSION === git tag 去掉前导 'v'。Release 流程据此产出安装包与 Release 页。 */
-const APP_VERSION     = '2026.10.02.1';
+const APP_VERSION     = '2026.10.02.2';
 const APP_ORIGIN      = 'https://geek-xin.github.io';
 const APP_UPDATE_URL  = APP_ORIGIN + '/vocabulary-notebook/index.html';
 const APP_FILE_NAME   = 'vocabulary-notebook.html';
