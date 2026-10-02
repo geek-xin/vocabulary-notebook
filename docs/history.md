@@ -9,6 +9,60 @@
 
 ---
 
+## 2026.10.02.3 —— 卡片改为原地换内容，不再 3D 翻转
+
+> 状态：**待发版**。
+
+### 问题
+
+点卡片原本走的是 3D 翻转：`.card.flipped { transform: rotateY(180deg) }`，
+配合 `preserve-3d` 与 `backface-visibility: hidden`，让整张卡绕 Y 轴转 180°。
+
+用户反馈「卡片翻转显示词汇近义词等，不是把卡片转过来」—— 问题就出在**「转」这个动作本身**：
+
+1. 旋转过程中卡片侧过去，**文字会镜像**；
+2. WebView 的 3D 渲染差异还可能让背面整片空白；
+3. 结果用户看到的不是近反义词，而是一张翻过去的卡。
+
+这里要表达的只是「点一下看近反义词」，不需要动 `transform`。
+
+### 改动
+
+**正 / 背面原地交叉淡入淡出，卡片不旋转。**
+
+- 两个 `.card-face` 绝对定位叠在同一位置；`.card-back` 默认
+  `opacity: 0; visibility: hidden`，`.card.show-back` 把两者的透明度对调，过渡 0.18s；
+- 用 `visibility` 而不只是 `opacity`，是为了让隐藏面的内容不参与点击与 tab 焦点；
+- 删掉 `.scene` 的 `perspective`、`.card` 的 `transform-style: preserve-3d` 与
+  `transition: transform`、`.card-face` 的 `backface-visibility`、
+  `.card-back` 的 `transform: rotateY(180deg)`；
+- `switchTo` 的退出 / 进入两拍只做 `translateX` 位移，不再带 `rotateY`；
+- `renderWord` 内部把 `show-back` 归零，换词一定从正面出现；
+- 翻转逻辑抽成 `toggleFlip()`，点击与键盘（空格 / 回车）共用；
+- 提示文案：「点击卡片翻转」→「点击看近反义词」，背面补上「点击回到释义」，
+  `aria-label` 同步改为「单词卡片，点击查看近义词与反义词」；
+- 分享页（`buildShareScript`）同步了同一套逻辑。
+
+### 验证
+
+真实浏览器（Playwright 驱动 `scripts/serve.mjs`，1100×860）。
+
+| 项目 | 结果 |
+| --- | --- |
+| 卡片是否旋转 | ✅ 正 / 背面切换过程中 `transform` 恒为 `none` |
+| 内容切换 | ✅ 正面 `opacity 1 / 0`，背面 `0 / 1`，`visibility` 同步对调 |
+| 来回切换 | ✅ 两次点击后完全回到初始态 |
+| 背面时切换下一张 | ✅ 回到正面显示新词（`show-back` 归零） |
+| 切换动画 | ✅ 仍触发 2 次 `animate`，只做 `translateX` |
+| 键盘空格 / 回车 | ✅ 同样切换，再按一次切回 |
+| 音频按钮 | ✅ 不触发切换（`closest('.audio-btn')` 守卫生效） |
+| 分享页 | ✅ 导出 HTML 无 `rotateY` / `preserve-3d` / `.flipped`；在 iframe 内真实渲染并点击，内容正常切换 |
+| `npm test` | ✅ 内联脚本语法 + SW + 分享通道全部通过 |
+
+截图 `docs/images/card-front.png`、`card-back.png` 已按新交互重新渲染截取。
+
+---
+
 ## 2026.10.02.2 —— 学习页卡片扁平化：去掉全部阴影
 
 > 状态：**已发布** —— tag `v2026.10.02.2`（2026-10-02），CI 四端产物全部构建成功，
