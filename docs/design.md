@@ -9,6 +9,7 @@
 提取英文词条后由**在线词典**补全音标、词性、中英释义与近反义词，再以卡片形式学习。
 
 产品本体只有 `index.html` 一个文件，内含全部 HTML / CSS / JavaScript，无框架、无打包器、无依赖安装。
+当前文件约 186 KB（gzip 后约 55 KB）。
 
 > 界面可离线打开（PWA 外壳已缓存），但**释义全部来自在线词典**，断网时新词补不上释义。
 
@@ -29,15 +30,20 @@
 ### 版本号纪律
 
 `APP_VERSION`（`YYYY.MM.DD.N`）是判断版本新旧**唯一依据**，必须与 git tag 对应。
-发版用 `node scripts/set-version.mjs <版本>` 一处写入五处，不要手改。
+发版用 `node scripts/set-version.mjs <版本>` 一处写入四处
+（`index.html` / `package.json` / Android `build.gradle` / iOS `project.pbxproj`），不要手改。
 CI 会校验 `APP_VERSION` 与 tag 一致，不一致直接失败。
+
+> `package.json` 的 `version` 只是构建工具链元数据，**不是版本号事实来源**：
+> npm 的 semver 只允许三段，`2026.10.02.1` 写进去会变成 `2026.10.2`。
+> 事实来源始终是 `index.html` 的 `APP_VERSION`（CI 也读它）。
 
 ## 2. 数据模型与存储
 
 ### 数据模型
 
 ```js
-词汇本 Book = { id, title, words: Word[], createdAt, ... }
+词汇本 Book = { id, title, words: Word[], createdAt }
 Word = {
   word,        // 词条原文（保留源文件拼写）
   pos,         // 词性，如 "n./v."；短语为 "phrase"
@@ -49,6 +55,9 @@ Word = {
 }
 ```
 
+`normalizeWord()` / `normalizeBook()` 在读取时逐字段兜底（缺字段补空值、非法词条丢弃、
+无词的词汇本视为无效），因此旧数据、手改过的数据都不会让渲染崩掉。
+
 `meaningCn` 为 `'—'` 是「尚未补全 / 在线词典查不到」在 UI 上的表现，不是解析失败。
 
 ### 三级存储降级
@@ -57,41 +66,57 @@ Word = {
 
 | 优先级 | 实现 | 触发降级的条件 |
 | --- | --- | --- |
-| 1 | IndexedDB（`vocabulary_notebook` / `kv`） | — |
-| 2 | localStorage | 无 `indexedDB`、打开失败、被阻塞、超时 |
+| 1 | IndexedDB（`vocabulary_notebook` / `kv`，v1） | — |
+| 2 | localStorage | 无 `indexedDB`、打开失败、被阻塞、打开超时 2.5s |
 | 3 | 内存 | localStorage 探测写入失败 |
 
-内存模式下刷新即丢数据，应用会明确提示。
+内存模式下刷新即丢数据，应用会在首页提示当前存储方式（`storage.label()`）。
+
+### 存储键
+
+| 键 | 内容 |
+| --- | --- |
+| `vn_books_v1` | 全部词汇本 |
+| `vn_progress_v1` | 每个词汇本的阅读位置 |
+| `vn_dict_cache_v1` | 在线词典结果缓存（见 §5） |
+| `vn_theme_v1` | 主题偏好（localStorage，不经 `storage`） |
+| `vn_online_dict_v1` | 联网补全开关（`'0'` 关闭，localStorage） |
+| `vn_update_ignored_version` | 已忽略的更新版本（localStorage） |
 
 ### 旧数据迁移
 
-旧版本把词汇本存在 `localStorage`（键 `vn_books_v1`）。首次打开时若 IndexedDB 可用，
-会自动迁移并记录日志。
+旧版本把词汇本存在 `localStorage`（键 `vn_books_v1`）。首次打开时若 IndexedDB 可用且其中还没有数据，
+会自动迁移词汇本与进度并记录日志。
 
 ## 3. 导入与解码
 
 ### 类型识别
 
-按扩展名与 MIME 分流到三条路径：`.docx` → mammoth、`.pdf` → pdf.js、`.txt` → 纯文本解码。
+先按扩展名、再按 MIME 判断，都判断不出来时按文件头嗅探（`%PDF` / `PK`），
+分流到三条路径：`.docx` → mammoth、`.pdf` → pdf.js、`.txt` → 纯文本解码。
 
 ### 按需加载解析库
 
 解析库只在真正导入对应类型时才从 CDN 加载，并按序回退：
 
 ```
-mammoth:  jsDelivr → BootCDN → staticfile → cdnjs
-pdf.js:   jsDelivr → BootCDN → cdnjs（含 worker）
+mammoth:  jsDelivr → BootCDN → staticfile → cdnjs   (1.4.16)
+pdf.js:   jsDelivr → BootCDN → cdnjs                (3.11.174，含 worker)
 ```
 
-`loadScriptOnce` 缓存已成功的 URL，避免重复注入；全部失败才报错。
+`loadScriptOnce` 缓存已成功的 URL，避免重复注入；单次加载 20 秒超时；全部失败才报错。
+pdf.js 的 worker 跨域会被拦截，因此先把 worker 脚本取回并转成同源 Blob URL。
 
 ### 纯文本解码 `decodeTextBuffer`
 
 `.txt` 不依赖任何 CDN，因此**离线可用**。编码识别顺序：
 
-1. UTF-8 BOM → UTF-8
-2. UTF-16 LE/BE BOM → 对应编码
-3. 无 BOM：先按 UTF-8 解码，若出现替换字符 `\uFFFD` 则回退 **GBK**
+1. UTF-8 BOM → UTF-8；UTF-16 LE/BE BOM → 对应编码；
+2. 前 4096 字节内出现 NUL → 按 UTF-16LE 严格解码（NUL 本身是合法 UTF-8，
+   放着不管会「成功」解出一串夹 NUL 的垃圾，属于静默出错）；
+3. 严格 UTF-8（`fatal: true`）解通即采用；
+4. 严格 GBK；
+5. 兜底：非严格 UTF-8，用替换字符保证导入不直接失败。
 
 ### 导入行为
 
@@ -141,6 +166,7 @@ pdf.js:   jsDelivr → BootCDN → cdnjs（含 worker）
 - **成功判定**：`enrichWords` 返回的 `answered` 表示「至少一个来源在 HTTP 层正常应答」，
   与 `filled`（真的填进了内容）不同。**有任一来源应答即算成功**，部分生僻词查不到不阻塞呈现；
   离线（`navigator.onLine === false`）或联网开关关闭、或零应答，才算失败。
+  此外**落盘失败同样判失败** —— 否则用户看到「已就绪」，重开应用内容却不见了。
 - **失败态**：骨架卡显示「联网补全失败」，提供**重试**与**仍然查看**（接受空卡）；
   同时 toast 明确提示「联网补全失败，词汇本已保存」，不静默。
 
@@ -148,6 +174,9 @@ pdf.js:   jsDelivr → BootCDN → cdnjs（含 worker）
 | --- | --- | --- |
 | 中文释义、词性 | 有道 `suggest` | JSONP（接口无 CORS 头，但支持 `callback`） |
 | 英文释义、近反义词、音标 | Datamuse `api.datamuse.com` | `fetch`（CORS，含 `null` origin） |
+
+> 两个来源都**只认精确匹配**：有道 `suggest` 会返回 `prevention` 这类近似词，
+> 词头与查询词不一致时直接丢弃 —— 宁可不要，也不能张冠李戴。
 
 ### 为什么去掉内置词典
 
@@ -186,7 +215,7 @@ Datamuse 的 `tags` 里带 `pron:S EH0 R AH0 N D IH1 P IH0 T IY0`，是 **ARPAbe
 - **导入路径门控**：解析落盘后立即执行，成功才把骨架卡换成真实卡片（见 §5.1）；
   启动 3s 后对已有词汇本再做一次后台回填（每次上限 `DICT_BACKFILL_MAX = 400` 词）。
 - **并发 4**（`DICT_CONCURRENCY`），单请求 8 秒超时（`DICT_TIMEOUT`）。
-- **按词缓存** `vn_dict_cache_v1`：上限 4000 条、TTL 180 天。
+- **按词缓存** `vn_dict_cache_v1`：上限 4000 条、TTL 180 天，写入延迟 800ms 合并。
   命中缓存时**直接把缓存内容填进卡片**，而不是跳过 —— 见下。
 - **只缓存「有应答」的结果**：两个来源都是网络失败时不落缓存，下次仍会重试。
 - **失败降级**：`navigator.onLine === false` 或接口全挂时判为失败，骨架卡提供重试 / 仍然查看，
@@ -219,46 +248,169 @@ Datamuse 的 `tags` 里带 `pron:S EH0 R AH0 N D IH1 P IH0 T IY0`，是 **ARPAbe
 - 用户没手动选过时跟随系统，系统主题变化实时生效；选过就持久化。
 - 切换时同步更新 `<meta name="theme-color">`（深色 `#0f1724` / 浅色 `#eef4fb`）与按钮 `aria-label`。
 
-## 7. 学习页交互与发音
+## 7. 学习页
 
-### 卡片
+### 7.1 卡片：一页书
+
+学习页那张卡片按**书页**来排，而不是按面板。做书的方式是加「书的结构」，不是换一套配色：
+
+| 书的部件 | 实现 |
+| --- | --- |
+| 纸张 | 内联 SVG 噪声（`--book-grain`）叠在原纸白渐变上，`soft-light` 混合 |
+| 订口 | 左缘向内压出的暗部（`inset` 阴影），左缘圆角收窄（3px）、右缘放宽 |
+| 页眉 | 左栏书名、右栏当前词条，下压一条细线（`.page-runhead`） |
+| 页码 | 页面下缘居中的 folio（`.page-folio`），两侧各一段短线 |
+| 字头 | 衬线字（`--book-serif`），词性改成贴字底的斜体金线而非胶囊 |
+| 释义 | 宽屏（≥700px）下英中**对开双栏**，中间一条细线；窄屏堆叠 |
+| 近反义词 | 排成一行连续文字，用 `·` 分隔，而不是一堆胶囊 |
+
+配色沿用整体那套（深色外壳、蓝 `#1e6f9f`、金 `#ffd966`），
+书页里只新增一个金色 `#c9a44c` 作分隔点 —— 风格与首页书架保持一致。
+
+**书页跟着主题走**（原先两种主题下都是白纸，深色下等于暗房里开一盏台灯）：
+
+| 主题 | 书页 | 墨色 |
+| --- | --- | --- |
+| 浅色 | 纸白 `#ffffff → #f3f9ff`（原样保留） | 深蓝墨 `#112b44` / `#0a1e2f` |
+| 深色 | 暖调炭色 `#2c2a24 → #1d1b16`，像旧书在灯下的颜色 | 暖白 `#f4ead6` / `#e6dac2` |
+
+深色下纤维纹理、订口、页眉、页码全部保留 —— 仍然是「纸」，只是不再反光；
+分隔线由冷蓝换成烫金，与深色外壳的强调色对齐。深色墨色对比度全部 ≥ 4.5:1（正文）
+或 ≥ 3:1（标题与页眉这类大字号/辅助文字），已用 WCAG 公式逐项核过。
+
+分享页外壳固定深色（`theme-color` 与 body 渐变都写死深色），
+所以生成的 HTML 直接标 `<html data-theme="dark">`，否则会重现同一处白纸突兀。
+
+> 衬线字体**只用系统字体栈**，不引外部字体：单文件、离线可用、零构建是核心定位。
+> 中日韩回落到宋体（Songti SC / SimSun 等）。
+
+页眉与页码由 `renderWord` 写入（`currentBookTitle` 记录当前书名），
+随切换动画一起更新；分享页（`buildShareScript`）同步。
+
+**浅色主题必须把订口阴影一起写全**：`html[data-theme="light"] .card-face` 的 `box-shadow`
+是整体覆盖而非叠加，只写外描边与投影会让订口凭空消失，书页看着又变回一块面板。
+
+窄屏（≤640px）放不下「居中页码 + 右对齐提示」，页码改为 `position: static` 落到左端，
+与右端的翻转提示分列两侧。
+
+### 7.2 翻面与切换
 
 点击卡片翻转（正面：单词/词性/音标/中英释义；背面：音标·词性/近反义词/例句）。
 左右方向键切换上/下一张。空字段统一显示 `—`。
 
-切换卡片有方向感知的过渡动画：旧卡滑出淡出、新卡从反方向滑入淡入，合计约 350ms。
-顺序切换恒为向前（含最后一张绕回第 1 张），方向键按自身方向，随机与页码跳转按目标页与当前页的大小比较。
-在背面时切换会在退出拍顺带转回正面，与滑动合并为一次动画。
-动画由 Web Animations API 驱动（`switchTo`），切换期间用 `.card.switching` 关闭原有翻面过渡；
-`prefers-reduced-motion: reduce` 时退化为瞬间替换。
-进入学习页、联网补全后刷新、启动回填后刷新不走动画，保持瞬间替换。
-分享页（`buildShareScript`）同步了同一套切换逻辑。
+切换卡片有方向感知的过渡动画：旧卡滑出淡出、新卡从反方向滑入淡入。
+四个入口的方向语义：
 
-### 进度
+| 入口 | 方向 |
+| --- | --- |
+| 顺序切换 | 恒为向前（含最后一张绕回第 1 张） |
+| ← / → 方向键 | 按自身方向 |
+| 随机切换 | 按目标页与当前页的大小比较 |
+| 页码跳转 | 按目标页与当前页的大小比较 |
+
+> 最后一张绕回第 1 张若按大小比较会被误判成「向后」，所以顺序切换不参与比较。
+
+动画由 Web Animations API 驱动（`switchTo`），分两拍：**退出 130ms → 换内容 → 进入 220ms**，
+换内容发生在卡片不可见的那一瞬间，因此看不到文字跳变。位移量固定为卡片宽度的 8%。
+
+> 曾试过做成「拟人翻页」（绕订口 `rotateY` 90°、`translateZ` 抬起、明暗层随角度加深、
+> 落下过冲回弹），但实际观感偏生硬，已回退为这里的滑出淡入。若要重做，
+> 关键在明暗层必须**一侧深一侧透明**且全程不透明（整页一起变暗只是淡出），
+> 以及 `transform-origin` 要落在订口而不是中心。
+
+- **不动 `renderWord`**：它现有 5 处调用，其中 3 处（进入学习页、联网补全后刷新、启动回填后刷新）
+  **必须保持瞬间替换**，那些不是用户主动切换；另 2 处在 `switchTo` 内部。
+- **切换期间关闭原有翻面过渡**：CSS 里 animation 会整体接管该属性的过渡，
+  不处理的话 `.card` 原有的 0.6s `transition: transform` 会与动画抢 `transform` 而出现拖尾。
+  切换期间临时加 `.card.switching { transition: none }`，收尾时摘掉。
+- **在背面时切换**：退出拍把 `rotateY` 从 180° 收敛到 0°，与滑出合并为一次动画，新卡正面滑入。
+- **连按**：动画未播完又来新切换 → `cancel()` 当前动画、瞬间换内容、不播动画，
+  保证卡片始终可见、词条即时刷新。
+- **切换动画期间点击卡片**：忽略翻转（守卫生效），避免状态与视觉不一致。
+- **减弱动效**：`prefers-reduced-motion: reduce` 时退化为瞬间替换。
+  CSS 媒体查询管不到 Web Animations API，这一条必须在 JS 里用 `matchMedia` 判定。
+- **分享页同步**：`buildShareScript` 生成的是自包含脚本，补了同一套切换逻辑。
+
+### 7.3 进度
 
 每个词汇本独立记录上次阅读位置（`vn_progress_v1`），重新打开自动回到原位。
-点击计数器可直接输入页码跳转。
+点击顶部计数器（`1 / N`）可直接输入页码跳转。
 
-### 发音
+### 7.4 发音
 
 `https://dict.youdao.com/dictvoice?audio=<word>&type=1`（`type=1` 为**英式**）。
 **不要**给 `audio` 设 `crossOrigin`，否则会触发 CORS 检查导致加载失败。
+
+首次点击 / 触摸时解锁音频（`AudioContext.resume()` + 播放一段静音 WAV），
+否则夸克 / 微信这类环境会拦截自动播放。
 
 > 注意口音不一致：发音音频是英式，卡片上的 IPA 音标来自 Datamuse、是美式。
 
 ## 8. 首页与查询
 
 - 书架以卡片网格展示每个词汇本，支持删除与分享。
-- 搜索框按**词汇本名称**或**单词内容**过滤。
+- 每张卡片是一册**书封**：深色玻璃封面（浅色主题为白封面）+ 顶端垂下一条书签飘带。
+
+> 曾试过给卡片左缘加一道**书脊**（`::after` 压暗渐变 + 烫金细线，并把左缘圆角收窄到 3px），
+> 后来去掉了：卡片尺寸下那道暗边显得脏，且左窄右圆的圆角在网格里看着歪。
+> 现在卡片是**对称的**（`padding: 16px`、`border-radius: 16px`），只靠书签表达「书」。
+
+书签（`::before`）走**扁平化**：单一实色 `#b0473c`、无渐变、无阴影，只靠形状和颜色说话。
+曾经为做「缎面」叠过五段纵向渐变加顶部暗痕、再挂一层 `drop-shadow`，
+在 7×38px 这种小尺寸下全是噪点、反而显脏 —— 扁平色块在这个尺度上更干净。
+两种主题**共用同一个颜色**，因此不需要浅色主题的覆盖规则。
+
+另外两个细节也是刻意的：**窄长**（7×38px）而不是又宽又短；
+末端只斜切一小口（`50% 84%`）而不是深 V —— 深 V 是旗标，浅口才是丝带。
+标题右侧留出 24px 内边距给飘带让位。
+- 搜索框按**词汇本名称**或**单词内容**过滤，输入即实时过滤；搜索框在网格之外，重绘不丢焦点。
 - 右下角 fab 行常驻：主题切换、检查更新、下载。
 
 ## 9. 分享
 
 把单个词汇本打包成一个**独立 HTML**：复用本页样式与卡片结构，内嵌该词汇本的全部数据，
-生成的文件离线可打开。移动端优先走系统分享（可发微信），否则回退下载。
+生成的文件离线可打开。
 
 所有写入分享页的数据都经 `escapeHtmlText` 转义，JSON 里的 `<` 替换为 `\u003c`，
 避免词条内容破坏分享页结构。
+
+### 9.1 三条通道，必须按环境选
+
+分享是本项目**唯一的跨设备搬运通道**（词汇本按 origin 隔离存储，不云同步），
+所以不能只有一条路 —— 任何一端缺一条，那端的用户就没有任何搬运手段。
+
+| 环境 | 通道 | 说明 |
+| --- | --- | --- |
+| Android 壳 | 原生 `SharePlugin` | **WebView 不实现 Web Share API**，壳内 `navigator.share` 是 undefined |
+| Web / PWA / iOS 壳 | `navigator.share` | 标准 Web Share API，可带文件 |
+| 桌面浏览器 / `file://` 单文件 | 复制词表文本 | 两条系统分享都没有，至少让用户能粘到聊天窗口 |
+
+`shareBook` 里通道判定必须**同步**完成（`nativeShare()` → `navigator.share` → 复制），
+因为系统分享与剪贴板写入都要求用户激活（transient activation），一旦 `await` 过就丢，
+分享框不会弹出。
+
+### 9.2 Android 原生分享（SharePlugin）
+
+Android WebView **没有** `navigator.share`（它不是 Chromium 的完整实现，Web Share 由
+系统级集成提供，WebView 拿不到）。旧实现只判断 `navigator.share`，于是 Android 用户点分享
+只会看到「当前浏览器不支持系统分享」—— 见 [troubleshooting.md](troubleshooting.md)。
+
+`SharePlugin.shareHtml` 的链路：JS 传入分享页 HTML → 原生落盘到 `cache/share/` →
+`FileProvider` 取 uri → `ACTION_SEND` + `createChooser` 拉起系统分享面板。
+
+两个不能省的细节：
+
+- **必须 `setClipData` 且带 `FLAG_GRANT_READ_URI_PERMISSION`**。只加 flag 时部分接收方
+  （尤其国产 IM）拿不到读权限，分享会以「无法读取文件」失败 —— 这是 Android 上
+  FileProvider 分享最常见的坑。
+- **走 `startActivityForResult` + `@ActivityCallback`**：用户取消分享返回 `RESULT_CANCELED`，
+  据此上报 `dismissed`，JS 侧才不会把「取消」当成失败弹提示。
+
+文件名由 JS 的 `safeFileName` 清洗一次，原生侧 `safeName` 再兜底清洗一次（防的是
+「不经过 JS 清洗的调用」），避免任何形式的路径穿越写坏缓存目录。
+
+> 为什么传 HTML 字符串而不是让原生读文件：分享页是**动态生成**的（要内嵌当前词汇本数据
+> 与页面样式），没有现成的文件可读；而分享内容通常几十 KB，走一次 bridge 调用没有压力。
 
 ## 10. 下载应用本体与更新检查
 
@@ -298,6 +450,9 @@ function shouldAutoCheck() { return isNativeShell() || isLocalCopy(); }
 理由是壳内用户既不能刷新页面也不能替换文件，提示条是唯一的更新入口；
 持久化忽略会让用户随手一关就永久失联。
 
+壳内「下载」按钮语义改为「去 Release 页下载安装包」（应用在安装包里，覆盖不了自身），
+Web 端才是下载 HTML。
+
 ### 更新不会丢词汇本
 
 词汇本存在按来源划分的本地存储里，替换 HTML 文件本身动不到它。
@@ -317,6 +472,7 @@ function shouldAutoCheck() { return isNativeShell() || isLocalCopy(); }
 | 手工补全 UI | 卡片仍不可手工编辑；释义由在线词典自动补 |
 | 例句 | 当前没有可用的免费跨域来源，区块隐藏而非显示空 `—` |
 | 云同步 / 账号 | 数据只存本机，不上传任何服务器 |
+| 触摸拖拽切卡手势 | 现有 `touchstart` / `touchmove` 只用于区分点击与滚动，不扩展为手势识别 |
 
 ### 需要记住的取舍
 
@@ -325,7 +481,7 @@ function shouldAutoCheck() { return isNativeShell() || isLocalCopy(); }
 - **在线补全只补空字段**：离线或接口失败时不覆盖已有内容；导入时失败会明确提示并可重试，
   启动回填则下次联网自动补上。
 - **各端数据互相独立**：按 origin 隔离，升级安装包不丢数据，但换端不会自动同步。
-- **只做 Web / Android / iOS 三端**：鸿蒙端曾在 2026.09.30.1 加入、2026.10.01.8 移除，
+- **只做 Web / Android / iOS 三端**：鸿蒙端曾在 2026.09.30.1 加入、2026.10.01.5 移除，
   原因是它需要独立的 ArkTS 工程与另一套工具链（CI 依赖第三方 2.1 GB SDK），
   维护成本与收益不成比例。旧版鸿蒙仍可直接安装 Android APK。
 
@@ -337,7 +493,7 @@ function shouldAutoCheck() { return isNativeShell() || isLocalCopy(); }
 | 脚本 | 检查内容 |
 | --- | --- |
 | `check-inline-js.mjs` | 抽取 `index.html` 内联脚本做语法检查（用 `vm.Script`，能正确拒绝顶层 return/import） |
-| `test-sw.mjs` | 在 Node 里用假 ServiceWorker 作用域跑 `sw.js`，断言预缓存与拦截策略 |
+| `test-sw.mjs` | 在 Node 里用假 ServiceWorker 作用域跑 `sw.js`，断言预缓存、清理与拦截策略 |
 
 - **真机行为无法在本机验证**，各端验证边界见 [multi-platform.md](multi-platform.md) §8。
 - **子智能体的自检不能当验证**：自检只是「我以为对了」，必须用独立校验器或真实运行核对。

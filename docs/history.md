@@ -3,75 +3,30 @@
 版本号对应 `index.html` 里的 `APP_VERSION`，格式 `YYYY.MM.DD.N`，按发版时间倒序（最新在上）。
 每条写清：改了什么、为什么、如何验证。
 
-> 本文件在 2026.10.01 重写：此前记录里大量内容属于**内置词典时代**（731 词、联网兜底、精确匹配策略），
-> 与当前「全在线词典」的实现矛盾，故整体清除后从当前版本重新记录。
+> 本文件在 2026.10.02 重写：此前记录里混入了大量**内置词典时代**（731 词、联网兜底、精确匹配策略）
+> 与**已移除的鸿蒙端**的细节，与当前实现矛盾；同时把「切换卡片过渡动画」从「未发布」归位到
+> 它实际所属的版本。历史结论只保留仍然成立的取舍与仍然会复现的坑。
 
 ---
 
-## 未发布 —— 切换卡片词汇时的过渡动画
+## 2026.10.02.1 —— 补全成功才出卡片、学习页改排成「书页」、切换卡片加过渡动画、修 Android 分享
 
-> 本条尚未发版：`APP_VERSION` 仍是 `2026.10.02.1`。发版时用 `npm run version` 定版本号后再归位。
-
-### 问题
-
-学习页切换卡片时，`renderWord` 把新旧内容原地替换，卡片没有任何过渡，视觉上是「文字瞬间跳变」。
-四个切换入口（随机 / 顺序 / ← → 方向键 / 页码跳转）都是这个观感，且缺少方向感 ——
-用户分不清是翻到了下一张还是上一张。
-
-### 改动
-
-新增 `switchTo(index, direction)`，用 Web Animations API 播两拍动画：**退出 130ms → 换内容 → 进入 220ms**，
-合计约 350ms。换内容发生在卡片不可见的那一瞬间，所以看不到文字跳变。
-
-- **不动 `renderWord`**。它现有 8 处调用，其中 3 处（进入学习页、联网补全后刷新、启动回填后刷新）
-  **必须保持瞬间替换** —— 那些不是用户主动切换。这是本次改动的接缝。
-- **关掉原有翻面过渡**。CSS 里 animation 会整体接管该属性的过渡，若不处理，
-  `.card` 原有的 0.6s `transition: transform` 会与动画抢 `transform` 而出现拖尾。
-  切换期间临时加 `.card.switching { transition: none }`，收尾时摘掉。
-- **在背面时切换**：退出拍把 `rotateY` 从 180° 收敛到 0°，与滑出合并为一次动画，新卡正面滑入。
-- **方向语义**：顺序切换恒为向前（含最后一张绕回第 1 张 —— 若按目标页与当前页的大小比较会被误判成「向后」），
-  方向键按自身方向，随机与页码跳转按大小比较。
-- **连按**：动画未播完又来新切换 → `cancel()` 当前动画、瞬间换内容、不播动画。
-  保证卡片始终可见、词条即时刷新，不会卡顿或两张卡重叠。
-- **减弱动效**：`prefers-reduced-motion: reduce` 时退化为瞬间替换。
-  注意 CSS 媒体查询管不到 Web Animations API，这一条必须在 JS 里用 `matchMedia` 判定。
-- **分享页同步**：`buildShareScript` 生成的是自包含脚本，补了同一套切换逻辑。
-
-### 验证
-
-真实浏览器（Chrome DevTools 驱动 `scripts/serve.mjs`）+ `npm test`。
-
-| 项目 | 结果 |
-| --- | --- |
-| 顺序切换 / → 方向键 | ✅ 退出 `translateX(-8%)`、进入 `+8%`（向前） |
-| ← 方向键 | ✅ 退出 `+8%`、进入 `-8%`（向后） |
-| 最后一张绕回第 1 张 | ✅ 仍为向前（退出 `-8%`、进入 `+8%`） |
-| 随机切换 | ✅ 按目标页与当前页大小比较定方向 |
-| 页码跳转到更后 / 更前 | ✅ 分别向前 / 向后 |
-| 停在背面时切换 | ✅ 退出拍 `rotateY(180deg) → rotateY(0deg)`，切完不在背面 |
-| 连按 → 5 次 | ✅ 卡片始终可见、词条即时刷新、`opacity` 收敛到 1、无残留 `.switching` |
-| 单张卡 / 跳到当前页 | ✅ 不播动画（0 次 `animate` 调用） |
-| 切换动画期间点击卡片 | ✅ 不翻转（守卫生效），状态与视觉一致 |
-| 动画中途实测位移 | ✅ 左滑 0 → −14.7 → −36.3px（淡出），随后自 +46.8px 滑入并归零 |
-| 深色 / 浅色主题 | ✅ 动画观感正常 |
-| 减弱动效 | ✅ 0 次 `animate` 调用，词条正常更新 |
-| 分享页导出 | ✅ 含 `switchTo`、`.card.switching`、减弱动效分支，脚本语法校验通过 |
-| console 报错 | ✅ 0 errors / 0 warnings |
-| `npm test` | ✅ 通过 |
-
-**未验证边界**：真机 WebView（Android / iOS）中的表现未验证，本机无设备。
-
----
-
-## 2026.10.02.1 —— 联网补全成功后才呈现卡片
+> 状态：**代码已提交，尚未发版** —— 截至本次文档重写，最新的 git tag 仍是 `v2026.10.01.8`，
+> 但 `index.html` 的 `APP_VERSION` 已是 `2026.10.02.1`。
+> 待 `git tag v2026.10.02.1` 推送后，本条即成为已发布版本。
 
 ### 问题
 
-导入后立刻渲染真实卡片，而释义要等后台联网补全才填上。用户看到的是**一屏释义为 `—` 的空卡**，
-分不清「正在补全」「词典没收录」还是「解析坏了」——尤其导入几百词的词表时，
-空卡会持续几十秒。
+三件事在同一个版本里落地：
 
-### 改动
+1. 导入后立刻渲染真实卡片，而释义要等后台联网补全才填上 —— 用户看到的是**一屏释义为 `—` 的空卡**，
+   分不清「正在补全」「词典没收录」还是「解析坏了」，导入几百词时尤其难受；
+2. 学习页那张卡片是「深色玻璃面板里嵌一块白板」的观感，和首页书架不是一套语言；
+3. 切换卡片时 `renderWord` 把新旧内容原地替换，卡片没有任何过渡，视觉上是「文字瞬间跳变」，
+   且缺少方向感 —— 用户分不清翻到了下一张还是上一张；
+4. **Android 端点分享提示「当前浏览器不支持系统分享」**，词汇本根本发不出去。
+
+### 改动一：联网补全成功后才呈现卡片
 
 导入路径从「解析 → 落盘 → 立即出卡片 → 后台静默补全」改为
 **「解析 → 落盘 → 骨架卡 → 联网补全 → 成功才换成真实卡片」**：
@@ -89,31 +44,123 @@
   并 toast 明确提示「联网补全失败，词汇本已保存」，不静默。
 - 取消原先「延迟 800ms 启动补全」的 setTimeout —— 骨架卡本身就是进度反馈，不再需要错峰。
 
-### 顺带修掉的问题
+**改动一顺带修掉的问题**：
 
 - 离线分支原先只标记失败却不重绘，骨架卡会永远停在「联网补全中 0 / N」，看起来像卡死；
-- 落盘失败（如配额不足）原先仍算成功，用户会看到「已就绪」但重开应用内容不见；
+- 落盘失败（如配额不足）原先仍算成功，用户会看到「已就绪」但重开应用内容不见 ——
   现在落盘失败同样判失败并进入失败态；
 - 补全期间用户删掉词汇本，收尾时会给已删除的书重建 pending 条目，留下悬挂状态。
 
+### 改动二：卡片按书页来排
+
+做书的方式是加「书的结构」，不是换一套配色：
+
+| 书的部件 | 实现 |
+| --- | --- |
+| 纸张 | 内联 SVG 噪声（`--book-grain`）叠在原纸白渐变上，`soft-light` 混合 |
+| 订口 | 左缘向内压出的暗部（`inset` 阴影），左缘圆角收窄（3px）、右缘放宽 |
+| 页眉 | 左栏书名、右栏当前词条，下压一条细线（`.page-runhead`） |
+| 页码 | 页面下缘居中的 folio（`.page-folio`），两侧各一段短线 |
+| 字头 | 衬线字（`--book-serif`），词性改成贴字底的斜体金线而非胶囊 |
+| 释义 | 宽屏（≥700px）下英中**对开双栏**，中间一条细线；窄屏堆叠 |
+| 近反义词 | 排成一行连续文字，用 `·` 分隔，而不是一堆胶囊 |
+
+配色沿用整体那套（深色外壳、纸白、蓝 `#1e6f9f`、金 `#ffd966`），
+书页里只新增一个金色 `#c9a44c` 作分隔点。衬线字体只用系统字体栈，不引外部字体。
+
+### 改动三：切换卡片的两拍过渡动画
+
+新增 `switchTo(index, direction)`，用 Web Animations API 播两拍：
+**退出 130ms → 换内容 → 进入 220ms**，合计约 350ms。换内容发生在卡片不可见的那一瞬间，
+所以看不到文字跳变。位移量固定为卡片宽度的 8%。
+
+- **不动 `renderWord`**。它现有 5 处调用，其中 3 处（进入学习页、联网补全后刷新、启动回填后刷新）
+  **必须保持瞬间替换** —— 那些不是用户主动切换。这是本次改动的接缝。
+- **关掉原有翻面过渡**。CSS 里 animation 会整体接管该属性的过渡，若不处理，
+  `.card` 原有的 0.6s `transition: transform` 会与动画抢 `transform` 而出现拖尾。
+  切换期间临时加 `.card.switching { transition: none }`，收尾时摘掉。
+- **在背面时切换**：退出拍把 `rotateY` 从 180° 收敛到 0°，与滑出合并为一次动画，新卡正面滑入。
+- **方向语义**：顺序切换恒为向前（含最后一张绕回第 1 张 —— 若按目标页与当前页的大小比较会被误判成
+  「向后」），方向键按自身方向，随机与页码跳转按大小比较。
+- **连按**：动画未播完又来新切换 → `cancel()` 当前动画、瞬间换内容、不播动画。
+- **减弱动效**：`prefers-reduced-motion: reduce` 时退化为瞬间替换。
+  注意 CSS 媒体查询管不到 Web Animations API，这一条必须在 JS 里用 `matchMedia` 判定。
+- **分享页同步**：`buildShareScript` 生成的是自包含脚本，补了同一套切换逻辑。
+
+**改动二 / 三顺带修掉的问题**：
+
+- 浅色主题下 `html[data-theme="light"] .card-face` 的 `box-shadow` 是**整体覆盖**而非叠加，
+  只写外描边与投影会让订口凭空消失，书页看着又变回一块面板 —— 已把订口阴影一起写全。
+- 窄屏（≤640px）放不下「居中页码 + 右对齐提示」，页码改为 `position: static` 落到左端，
+  与右端的翻转提示分列两侧。
+
+### 改动四：修 Android 端点分享提示「浏览器不支持」
+
+**现象**：Android APK 内点词汇本卡片上的分享按钮，只弹「当前浏览器不支持系统分享」。
+
+**原因**：`shareBook` 只判断 `navigator.share`，而 **Android WebView 不实现 Web Share API**
+（它不是完整 Chromium，Web Share 由系统级集成提供，WebView 拿不到），
+所以壳内 `navigator.share` 恒为 undefined，函数在第一道判断就返回了。
+
+**这一条比看起来严重**：词汇本按 origin 隔离存储、不云同步，分享是**唯一**的跨设备搬运通道。
+Android 端这条路一断，用户既不能把词表发到别的设备，也不能在换机时保住数据 ——
+而 Android 恰恰是移动端的主要分发形态。
+
+**处理**：把分享拆成三条通道，按环境同步选择（`nativeShare()` → `navigator.share` → 复制文本）：
+
+- **新增原生插件 `SharePlugin`**（`android/.../SharePlugin.java`，在 `MainActivity` 注册）。
+  JS 传入分享页 HTML → 原生落盘 `cache/share/` → `FileProvider` → `ACTION_SEND` +
+  `createChooser` 拉起系统分享面板，效果与 Web 端的 `navigator.share({ files })` 对齐。
+- **桌面浏览器 / `file://` 单文件**原先直接放弃；现改为把词表文本复制到剪贴板，
+  至少能粘到聊天窗口发出去。优先同步的 `execCommand`（剪贴板同样要用户激活），
+  失败再退到异步 `navigator.clipboard.writeText`。
+- 通道判定保持**同步**：系统分享与剪贴板都要求 transient activation，一旦 `await` 过就丢。
+
+**踩到的两个坑**（都写进了 `SharePlugin` 的注释）：
+
+- **只加 `FLAG_GRANT_READ_URI_PERMISSION` 不够**，必须同时 `setClipData`，
+  否则部分接收方（尤其国产 IM）拿不到读权限，分享会以「无法读取文件」失败。
+- **必须用 `startActivityForResult` + `@ActivityCallback`**，用户取消分享时返回
+  `RESULT_CANCELED`；不上报的话 JS 侧会把「取消」当成失败弹提示。
+
 ### 验证
 
-真实浏览器（Playwright 驱动 `scripts/serve.mjs`，真实访问有道与 Datamuse）+ `npm test`。
+真实浏览器（Playwright 驱动 `scripts/serve.mjs`，1280×860 与 390×780 两种视口）+ `npm test`。
 
 | 项目 | 结果 |
 | --- | --- |
+| 顺序切换 / → 方向键 | ✅ 退出 `translateX(-8%)`、进入 `+8%`（向前） |
+| ← 方向键 | ✅ 退出 `+8%`、进入 `-8%`（向后） |
+| 最后一张绕回第 1 张 | ✅ 仍为向前（退出 `-8%`、进入 `+8%`） |
+| 随机切换 / 页码跳转 | ✅ 按目标页与当前页大小比较定方向 |
+| 单张卡 / 跳到当前页 | ✅ 不播动画（0 次 `animate` 调用） |
+| 减弱动效 | ✅ 0 次 `animate` 调用，词条正常更新 |
+| 书页部件 | ✅ 页眉（书名 + 词条）、页码、衬线字头、订口阴影均生效 |
+| 释义分栏 | ✅ 宽屏 `grid-template-columns: 318px 318px`；390px 视口下为单列 |
+| 窄屏页码 | ✅ `position: static`、`transform: none` |
+| 书页主题 | ✅ 订口阴影在深色与浅色下都生效（浅色下曾被 `box-shadow` 覆盖丢失） |
+| 分享页导出 | ✅ 约 55 KB、0 个外部 `script`/`link`，含 `switchTo` / `.page-runhead` / `.page-folio` / 减弱动效分支 |
 | 联网导入 3 词 | ✅ 先骨架卡（`联网补全中 0 / 3`），约 1.3s 后换成真实卡片，释义齐全 |
 | 断网导入 | ✅ 骨架卡显示「联网补全失败」，出现「重试」「仍然查看」；数据已落盘（1 本 2 词） |
 | 点「仍然查看」 | ✅ 换成真实卡片，可正常进入学习页 |
 | 部分词查不到（`zzqqxxtt`） | ✅ 判成功、呈现卡片；`apple=苹果`，生僻词保持 `—` |
-| 骨架卡点击 | ✅ 补全期间点击不进入学习页 |
+| 骨架卡 | ✅ 补全期间点击不进入学习页、不提供分享、保留删除 |
 | 断网后恢复网络点「重试」 | ✅ 回到进行中态，随后补全成功 |
 | 补全期间删除词汇本 | ✅ 无悬挂 pending 条目 |
 | 浅色 / 深色主题 | ✅ 骨架卡与失败态均正常（见 `docs/images/pending-loading-light.png`、`pending-failed-dark.png`） |
-| console 报错 | ✅ 0 errors / 0 warnings |
-| `npm test` | ✅ 通过 |
+| 分享通道（Android 壳） | ✅ 调 `SharePlugin`、不入 `navigator.share`、不再提示「不支持」 |
+| 分享通道（Web / PWA） | ✅ 走 `navigator.share`，`canShare` 为真时带 `text/html` File |
+| 分享通道（桌面 / `file://`） | ✅ 复制词表文本；`execCommand` 失败时退到剪贴板 API |
+| 原生分享取消 | ✅ `dismissed` 不弹失败提示 |
+| 原生分享抛错 | ✅ 明确提示原因并留控制台日志，不静默 |
+| 分享文件名清洗 | ✅ 路径分隔符 / 通配符 / 引号全部替换，仍以 `.html` 结尾 |
+| Android 构建 | ✅ `./gradlew clean assembleDebug` 通过，APK 内 `classes.dex` 含 `SharePlugin` |
+| 端到端资源链路 | ✅ `sync-web.mjs` → `cap sync android` → APK 内 `assets/public/index.html` 含新分享逻辑 |
+| `npm test` | ✅ 内联脚本语法 + SW 23 项 + 分享通道 26 项断言 |
 
 **未验证边界**：真机 WebView（Android / iOS）中的表现未验证，本机无设备。
+分享面板能否真的拉起、微信能否收到文件，需真机确认；本机只验证到「选对了通道、
+入参正确、构建产物包含该逻辑」。
 
 ---
 
@@ -132,9 +179,9 @@ README 从 197 行扩到 296 行，参考主流开源项目的组织方式重写
 
 文档侧：
 
-- 新增 [docs/troubleshooting.md](troubleshooting.md)：按「现象 → 原因 → 处理」组织，
+- 新增 [troubleshooting.md](troubleshooting.md)：按「现象 → 原因 → 处理」组织，
   覆盖应用使用、安装升级、构建发版、本地开发四类问题，每条都来自真实故障；
-- `docs/README.md` 重写为 wiki 式索引：按「我想做什么」导航，附项目结构图与维护约定。
+- [README.md](README.md) 重写为 wiki 式索引：按「我想做什么」导航，附项目结构图与维护约定。
 
 仓库设置：
 
@@ -289,7 +336,7 @@ Gradle 会报 `Given final block not properly padded`。已把两者设为同一
   产物收集与 Release 说明表格同步去掉 HAP；
 - `.gitignore` 清掉 harmony 与 `*.hap` 规则；
 - 文档同步：README、design.md、multi-platform.md、docs/README.md、android/README.md；
-  multi-platform.md 新增 §4.4 记录「为什么没有鸿蒙端」，避免以后被重新提出。
+  multi-platform.md 新增「为什么没有鸿蒙端」，避免以后被重新提出。
 
 ### 仍然成立的部分
 
@@ -311,6 +358,9 @@ Gradle 会报 `Given final block not properly padded`。已把两者设为同一
 ---
 
 ## 2026.10.01.4 —— 修复鸿蒙构建的第三方依赖脆弱性
+
+> 本节对应的鸿蒙端已在 2026.10.01.5 移除。保留原因：**「第三方 action 不固定版本 = 缓存永不命中
+> = 每次全量下载」这个坑与具体平台无关**，换成任何大体积依赖都会重演。
 
 ### 问题
 
@@ -371,6 +421,9 @@ HTTP 500 (https://api.github.com/repos/ErBWs/ohos-sdk/releases/assets/540521089)
 
 修复：给分享页的 `render` 补上同样的隐藏逻辑。已用 iframe 真实渲染分享页验证。
 
+> 教训：**分享页是一份复制出去的渲染逻辑**，主应用改渲染时必须同步改它。
+> 同类问题在 2026.10.02.1 的切换动画里也出现过一次 —— 已一并同步。
+
 ### 2. CI 版本号兜底会构建出对不上的版本
 
 手动触发 `workflow_dispatch` 且不填版本号时，兜底逻辑读的是 `package.json` 的 `version`。
@@ -400,7 +453,6 @@ HTTP 500 (https://api.github.com/repos/ErBWs/ohos-sdk/releases/assets/540521089)
 真要整体处理，也必须先确认读到的行数与文件实际行数一致。
 
 ---
-
 
 ## 2026.10.01.1 —— 移除内置词典，释义全部改为在线
 
@@ -469,6 +521,8 @@ reduce / career / furniture / competition / countryside / instruction / describe
 
 ## 2026.09.30.1 —— 多端交付：PWA + iOS / Android / HarmonyOS + Release 自动更新
 
+> 本节涉及的鸿蒙端已在 2026.10.01.5 移除；其余三端形态与更新通道沿用至今。
+
 ### 背景
 
 应用此前只有一种分发形态：浏览器访问线上页面，或把 `index.html` 下载成单文件离线用。
@@ -478,7 +532,7 @@ reduce / career / furniture / competition / countryside / instruction / describe
 关键约束：**产品本体的单文件、零构建形态不能破坏**。因此所有原生端都做成「壳」——
 原生工程只承载同一个 `index.html`，不复制业务逻辑。
 
-### 方案：一份本体，四种壳
+### 方案：一份本体，多种壳
 
 | 形态 | 承载方式 | 产物 |
 | --- | --- | --- |
@@ -511,9 +565,9 @@ reduce / career / furniture / competition / countryside / instruction / describe
 
 ### 发版：打 tag 即发布
 
-`node scripts/set-version.mjs <版本>` 一处写入五处（`index.html` / `package.json` /
-Android `build.gradle` / iOS `pbxproj` / 鸿蒙 `app.json5`），随后打 tag 触发
-`.github/workflows/release.yml`：并行构建三端 + 汇总 Web 产物 → 发布同一个 Release。
+`node scripts/set-version.mjs <版本>` 一处写入多处（`index.html` / `package.json` /
+Android `build.gradle` / iOS `pbxproj` / 当时的鸿蒙 `app.json5`），随后打 tag 触发
+`.github/workflows/release.yml`：并行构建各端 + 汇总 Web 产物 → 发布同一个 Release。
 CI 会校验 `APP_VERSION` 与 tag 一致，不一致直接失败。
 
 ### 踩过的坑
@@ -541,12 +595,12 @@ CI 会校验 `APP_VERSION` 与 tag 一致，不一致直接失败。
 | 项目 | 方式 | 结果 |
 | --- | --- | --- |
 | 内联 JS 语法 | `node scripts/check-inline-js.mjs` | 2 个内联脚本通过 |
-| Service Worker 行为 | `node scripts/test-sw.mjs` | 22 项断言全过 |
+| Service Worker 行为 | `node scripts/test-sw.mjs` | 22 项断言全过（当时） |
 | PWA 装配 | 本地 http + 真实浏览器 | manifest 被解析、SW `activated`、8 个外壳资源入缓存、离线可开 |
 | Android APK | 本机 `./gradlew assembleDebug` / `assembleRelease` | BUILD SUCCESSFUL；`aapt2` 实测包名/版本/权限/label 正确 |
 | iOS 未签名 ipa | CI macos runner 真实编译 | 463 KB |
 | HarmonyOS HAP | CI + 华为命令行工具真实编译 | 215 KB |
-| Release 流程 | 打 tag 真实触发 | 四端产物全部发布 |
+| Release 流程 | 打 tag 真实触发 | 各端产物全部发布 |
 | 应用内自动检查更新 | 真实旧副本 + 线上 Release | 弹提示条并下载到新版本 |
 
 ### 已知边界
@@ -619,6 +673,7 @@ CI 会校验 `APP_VERSION` 与 tag 一致，不一致直接失败。
 其余 **83 个词头没有词条**，于是渲染成「只有单词、没有释义和近反义词」的空卡。
 
 > 这个结论直接引出了后来的两条演进：先补词典（2026.09.19.2），再彻底改为在线查询（2026.10.01.1）。
+> 也是「**先确认是解析问题还是数据问题，再动手**」这条排查纪律的来源。
 
 ### 改动
 

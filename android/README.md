@@ -123,6 +123,27 @@ apksigner verify --print-certs app/build/outputs/apk/release/app-release.apk
 插件只在 Android 壳内存在；Web 与 iOS 上 `nativeUpdater()` 返回 null，自动走原有逻辑。
 
 相关权限：`REQUEST_INSTALL_PACKAGES`。
+
+## 系统分享
+
+原生插件 `SharePlugin` 负责「把词汇本分享出去」，让用户不必先导出文件再找入口。
+
+**为什么必须自己做**：**Android WebView 不实现 Web Share API** —— 壳内 `navigator.share`
+恒为 undefined。而分享是本项目唯一的跨设备搬运通道（词汇本按 origin 隔离存储、不云同步），
+这条路一断，Android 用户既发不出去、换机也保不住数据。
+
+链路：JS 传入分享页 HTML → 原生落盘 `cache/share/` → `FileProvider` → `ACTION_SEND` +
+`createChooser` 拉起系统分享面板。
+
+两个容易踩的点：
+
+- **只加 `FLAG_GRANT_READ_URI_PERMISSION` 不够**，必须同时 `setClipData`，
+  否则部分接收方（尤其国产 IM）拿不到读权限，分享会以「无法读取文件」失败；
+- **用 `startActivityForResult` + `@ActivityCallback`** 拿到 `RESULT_CANCELED`，
+  据此上报 `dismissed`，JS 侧才不会把「用户取消」当成失败弹提示。
+
+Web / iOS 壳没有这个插件，走标准 `navigator.share`；桌面浏览器与 `file://` 单文件
+退回复制词表文本。通道选择见 [../docs/design.md](../docs/design.md) §9。
 ## 图标
 
 mipmap 各密度图标由根 `icons/` 派生：
@@ -140,6 +161,9 @@ python3 android/tools/gen-android-icons.py
 | `assembleDebug` / `assembleRelease` | ✅ 本机真实构建通过 |
 | `aapt2 dump badging` 核对包名/版本/权限/label | ✅ 已核对 |
 | APK 内含 `assets/public/index.html`、`manifest.json`、`sw.js` | ✅ 已核对 |
+| `SharePlugin` 编译进包 | ✅ `clean assembleDebug` 后 `classes.dex` 内含该类 |
+| 分享通道选择（JS 侧） | ✅ `node scripts/test-share.mjs` 26 项断言（含 Android 壳场景） |
 | `adb install` 真机安装 | ❌ 无设备，未验证 |
 | 真机 WebView 运行时行为（导入、发音、联网补全） | ❌ 无设备，未验证 |
+| **真机分享面板**（能否拉起、微信能否收到文件） | ❌ 无设备，未验证 |
 | 旧版鸿蒙实机安装 | ❌ 无设备，未验证（APK 兼容旧鸿蒙，但未在真机验证） |
