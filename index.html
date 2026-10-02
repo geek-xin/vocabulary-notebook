@@ -4504,6 +4504,7 @@ flashcard.addEventListener('touchmove', function (e) {
 flashcard.addEventListener('click', function (e) {
   if (touchMoved) { touchMoved = false; return; }
   if (e.target.closest('.audio-btn')) return;
+  if (switching) return;   // 切换动画播放中：忽略翻转，避免状态与视觉不一致
 
   flashcard.classList.toggle('flipped');
   isFlipped = flashcard.classList.contains('flipped');
@@ -4529,13 +4530,13 @@ document.getElementById('randomBtn').addEventListener('click', function () {
   do {
     newIndex = Math.floor(Math.random() * wordsData.length);
   } while (newIndex === currentIndex);
-  currentIndex = newIndex;
-  renderWord(currentIndex);
+  // 随机没有前后概念，按目标页与当前页的大小比较定方向
+  switchTo(newIndex, newIndex > currentIndex ? DIR_NEXT : DIR_PREV);
 });
 
 document.getElementById('nextBtn').addEventListener('click', function () {
-  currentIndex = (currentIndex + 1) % wordsData.length;
-  renderWord(currentIndex);
+  // 恒为向前：最后一张绕回第 1 张时目标页序号更小，但按钮语义仍是「下一张」
+  switchTo((currentIndex + 1) % wordsData.length, DIR_NEXT);
 });
 
 /* 页码跳转：点击「1 / N」，输入页码回车即可跳到该页 */
@@ -4571,8 +4572,9 @@ function startCounterEdit() {
     if (!cancel) {
       const n = parseInt(input.value, 10);
       if (isFinite(n)) {
-        currentIndex = Math.min(wordsData.length, Math.max(1, n)) - 1;
-        renderWord(currentIndex);
+        const target = Math.min(wordsData.length, Math.max(1, n)) - 1;
+        // 跳到后面的页码 → 向前；跳到前面 → 向后；跳到当前页 → 不播
+        switchTo(target, target === currentIndex ? 0 : (target > currentIndex ? DIR_NEXT : DIR_PREV));
         return;
       }
     }
@@ -4601,11 +4603,9 @@ document.addEventListener('keydown', function (e) {
   if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
   if (e.target && e.target.closest && e.target.closest('.card')) return;
   if (e.key === 'ArrowRight') {
-    currentIndex = (currentIndex + 1) % wordsData.length;
-    renderWord(currentIndex);
+    switchTo((currentIndex + 1) % wordsData.length, DIR_NEXT);
   } else if (e.key === 'ArrowLeft') {
-    currentIndex = (currentIndex - 1 + wordsData.length) % wordsData.length;
-    renderWord(currentIndex);
+    switchTo((currentIndex - 1 + wordsData.length) % wordsData.length, DIR_PREV);
   }
 });
 
