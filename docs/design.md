@@ -310,20 +310,33 @@ Datamuse 的 `tags` 里带 `pron:S EH0 R AH0 N D IH1 P IH0 T IY0`，是 **ARPAbe
 
 ### 7.2 正面 / 背面与切换
 
-点击卡片**原地换内容**：正面是单词 / 词性 / 音标 / 中英释义，再点一下换成音标·词性 / 近反义词，
-两页叠在同一位置做 0.18s 的交叉淡入淡出。**卡片本身不旋转。**
+点击卡片**翻面**：正面是单词 / 词性 / 音标 / 中英释义，再点一下换成音标·词性 / 近反义词。
 左右方向键切换上/下一张。空字段统一显示 `—`。
 
-> **不再用 3D 翻转。** 早先的实现是 `.card.flipped { transform: rotateY(180deg) }`
+**翻转动画：转到侧面时换面。**
+
+两拍（`toggleFlip`）：`rotateY(0deg) → 90deg`（170ms）→ **换面** → `rotateY(-90deg) → 0deg`（210ms）。
+换面发生在卡片侧到 90°、**宽度为 0、完全看不见**的那一瞬间，
+所以观感是「翻过去」，但全程不会出现镜像文字或空白。
+
+> **为什么不直接转 180°。** 早先的实现是 `.card.flipped { transform: rotateY(180deg) }`
 > 配 `preserve-3d` + `backface-visibility: hidden`，让整张卡绕 Y 轴转 180°。
-> 问题出在「转过去」这件事本身：旋转过程中卡片侧过去，**文字会镜像**，
-> 而 WebView 的 3D 渲染差异还可能让背面整片空白 —— 用户看到的就不是近反义词，
-> 而是一张翻过去的卡。这里要表达的只是「点一下看近反义词」，
-> 用透明度切换内容即可，不需要动 transform。
+> 问题出在「两面在旋转过程中一直可见」：文字会镜像，
+> 而 WebView 的 3D 渲染差异还可能让背面整片空白 —— 用户看到的不是近反义词，
+> 而是一张翻过去的卡。
 >
-> 落地方式：两个 `.card-face` 绝对定位叠在同一位置，`.card-back` 默认
-> `opacity: 0; visibility: hidden`；`.card.show-back` 把两者的透明度对调。
-> 用 `visibility` 而不是只靠 `opacity`，是为了让隐藏面的内容不参与点击与 tab 焦点。
+> 现在把换面藏进 90° 这个不可见点：旋转只走 0°→90°→0°（两个四分之一拍），
+> 任何时刻要么看不见，要么看到的是**正对镜头、没有镜像**的一面。
+> 这个做法对 WebView 的 3D 实现差异也不敏感 —— 90° 时卡片宽度算出来就是 0。
+
+落地方式：两个 `.card-face` 绝对定位叠在同一位置，`.card-back` 默认
+`opacity: 0; visibility: hidden`；`.card.show-back` 把两者的透明度对调。
+用 `visibility` 而不是只靠 `opacity`，是为了让隐藏面的内容不参与点击与 tab 焦点。
+`.scene` 提供 `perspective: 1800px`，否则 `rotateY` 看着是「压扁」而不是「转过去」。
+
+**与切换动画的互斥**：`flipping` 与 `switching` 互为守卫 ——
+翻转动画播放中忽略新的翻转；切换动画开始时先 `cancelFlip()` 收尾，
+`renderWord` 换词时也会收尾，避免卡片停在转到一半的角度上。
 
 切换卡片有方向感知的过渡动画：旧卡滑出淡出、新卡从反方向滑入淡入。
 四个入口的方向语义：
@@ -347,6 +360,8 @@ Datamuse 的 `tags` 里带 `pron:S EH0 R AH0 N D IH1 P IH0 T IY0`，是 **ARPAbe
 
 - **不动 `renderWord`**：它现有 5 处调用，其中 3 处（进入学习页、联网补全后刷新、启动回填后刷新）
   **必须保持瞬间替换**，那些不是用户主动切换；另 2 处在 `switchTo` 内部。
+- **与翻转动画互斥**：`switchTo` 一开始先 `cancelFlip()`，避免两个动画抢 `transform`；
+  `renderWord` 内部也会收尾，防止卡片停在转到一半的角度。
 - **切换期间关掉正背面的交叉淡入**：切换动画由 Web Animations API 驱动，会在卡片不可见的
   那一刻换内容；淡入若还在跑，就会与动画抢 `opacity`。切换期间临时加
   `.card.switching .card-face { transition: none }`，收尾时摘掉。
@@ -354,9 +369,10 @@ Datamuse 的 `tags` 里带 `pron:S EH0 R AH0 N D IH1 P IH0 T IY0`，是 **ARPAbe
   `renderWord` 内部把 `show-back` 归零，所以新词一定从正面出现。
 - **连按**：动画未播完又来新切换 → `cancel()` 当前动画、瞬间换内容、不播动画，
   保证卡片始终可见、词条即时刷新。
-- **切换动画期间点击卡片**：忽略正背面切换（守卫生效），避免状态与视觉不一致。
-- **减弱动效**：`prefers-reduced-motion: reduce` 时退化为瞬间替换。
-  CSS 媒体查询管不到 Web Animations API，这一条必须在 JS 里用 `matchMedia` 判定。
+- **切换动画期间点击卡片**：忽略翻转（`switching` 守卫生效），避免状态与视觉不一致。
+- **减弱动效**：`prefers-reduced-motion: reduce` 时，切换与翻转都退化为瞬间替换
+  （翻转直接换面，不播动画）。CSS 媒体查询管不到 Web Animations API，
+  这一条必须在 JS 里用 `matchMedia` 判定。
 - **分享页同步**：`buildShareScript` 生成的是自包含脚本，补了同一套切换逻辑。
 
 ### 7.3 进度

@@ -146,6 +146,9 @@ h1 .logo svg { width: 100%; height: 100%; display: block; }
   width: 100%;
   max-width: 700px;
   margin: 12px auto 18px;
+  /* 正 / 背面翻转需要透视，否则 rotateY 看着是「压扁」而不是「转过去」 */
+  perspective: 1800px;
+  -webkit-perspective: 1800px;
 }
 
 .card {
@@ -172,6 +175,10 @@ h1 .logo svg { width: 100%; height: 100%; display: block; }
    并把背面态归零；淡入若还在跑，就会与动画抢 opacity。
    动画结束后由 JS 摘掉这个 class。 */
 .card.switching .card-face { transition: none; }
+
+/* 翻转动画期间同样关掉交叉淡入：换面发生在卡片侧到 90°、
+   正好看不见的那一瞬间，靠动画换即可，不需要再叠一层透明度过渡。 */
+.card.flipping .card-face { transition: none; }
 
 .card-face {
   position: absolute;
@@ -1965,7 +1972,7 @@ const TRASH_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
      2. 提交：    git commit -am "chore(release): v2026.10.01.1"
      3. 打 tag：  git tag v2026.10.01.1 && git push origin main --tags
    即 APP_VERSION === git tag 去掉前导 'v'。Release 流程据此产出安装包与 Release 页。 */
-const APP_VERSION     = '2026.10.02.4';
+const APP_VERSION     = '2026.10.02.5';
 const APP_ORIGIN      = 'https://geek-xin.github.io';
 const APP_UPDATE_URL  = APP_ORIGIN + '/vocabulary-notebook/index.html';
 const APP_FILE_NAME   = 'vocabulary-notebook.html';
@@ -2735,13 +2742,15 @@ function buildShareScript(words) {
     'var frontFolio = document.getElementById("frontFolio");',
     'var backFolio = document.getElementById("backFolio");',
     'function chips(box, items, cls) { box.innerHTML = ""; if (!items || !items.length) { var e = document.createElement("span"); e.className = cls + " empty"; e.textContent = "—"; box.appendChild(e); return; } for (var i = 0; i < items.length; i++) { var s = document.createElement("span"); s.className = cls; s.textContent = items[i]; box.appendChild(s); } }',
-    'function render(i) { var w = WORDS[i]; if (!w) return; var folio = String(i + 1); frontWord.textContent = w.word; frontPos.textContent = w.pos || "—"; frontPhonetic.textContent = w.phonetic || ""; frontMeaningEn.textContent = w.meaningEn || "—"; frontMeaningCn.textContent = w.meaningCn || "—"; frontExample.textContent = w.example || "—"; backWord.textContent = w.word; backPhonetic.textContent = [w.phonetic, w.pos].filter(Boolean).join(" · "); backExample.textContent = w.example || "—"; chips(synList, w.synonyms, "syn-item"); chips(antList, w.antonyms, "ant-item"); counter.textContent = folio; if (runheadBook) runheadBook.textContent = BOOK_TITLE; if (runheadBackBook) runheadBackBook.textContent = BOOK_TITLE; if (runheadWord) runheadWord.textContent = w.word || ""; if (frontFolio) frontFolio.textContent = folio; if (backFolio) backFolio.textContent = folio; if (flashcard.classList.contains("show-back")) flashcard.classList.remove("show-back"); var fx = document.getElementById("frontExampleBox"); if (fx) fx.hidden = !w.example; backExample.hidden = !w.example; }',
+    'function render(i) { var w = WORDS[i]; if (!w) return; var folio = String(i + 1); frontWord.textContent = w.word; frontPos.textContent = w.pos || "—"; frontPhonetic.textContent = w.phonetic || ""; frontMeaningEn.textContent = w.meaningEn || "—"; frontMeaningCn.textContent = w.meaningCn || "—"; frontExample.textContent = w.example || "—"; backWord.textContent = w.word; backPhonetic.textContent = [w.phonetic, w.pos].filter(Boolean).join(" · "); backExample.textContent = w.example || "—"; chips(synList, w.synonyms, "syn-item"); chips(antList, w.antonyms, "ant-item"); counter.textContent = folio; if (runheadBook) runheadBook.textContent = BOOK_TITLE; if (runheadBackBook) runheadBackBook.textContent = BOOK_TITLE; if (runheadWord) runheadWord.textContent = w.word || ""; if (frontFolio) frontFolio.textContent = folio; if (backFolio) backFolio.textContent = folio; if (flipping) cancelFlip(); if (flashcard.classList.contains("show-back")) flashcard.classList.remove("show-back"); var fx = document.getElementById("frontExampleBox"); if (fx) fx.hidden = !w.example; backExample.hidden = !w.example; }',
     'var SWITCH_OUT_MS = 130, SWITCH_IN_MS = 220, SWITCH_SHIFT = 8, DIR_NEXT = 1, DIR_PREV = -1;',
-    'var switching = false, switchAnim = null;',
+    'var switching = false, switchAnim = null, flipping = false, flipAnim = null;',
+    'var FLIP_OUT_MS = 170, FLIP_IN_MS = 210;',
     'function reducedMotion() { return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches); }',
     'function cancelSwitch() { if (switchAnim) { var a = switchAnim; switchAnim = null; a.onfinish = null; try { a.cancel(); } catch (e) {} } flashcard.classList.remove("switching"); switching = false; }',
-    'function switchTo(i, dir) { if (!WORDS[i]) return; var animated = i !== idx && !!dir && !reducedMotion(); var was = switching; if (was) cancelSwitch(); idx = i; if (!animated || was) { render(idx); return; } switching = true; flashcard.classList.add("switching"); var out = dir === DIR_NEXT ? -1 : 1; var outAnim = flashcard.animate([{ transform: "translateX(0%)", opacity: 1 }, { transform: "translateX(" + (out * SWITCH_SHIFT) + "%)", opacity: 0 }], { duration: SWITCH_OUT_MS, easing: "ease-in", fill: "forwards" }); switchAnim = outAnim; outAnim.onfinish = function () { if (switchAnim !== outAnim) return; render(idx); var inAnim = flashcard.animate([{ transform: "translateX(" + (-out * SWITCH_SHIFT) + "%)", opacity: 0 }, { transform: "translateX(0%)", opacity: 1 }], { duration: SWITCH_IN_MS, easing: "cubic-bezier(0.22, 1, 0.36, 1)", fill: "forwards" }); switchAnim = inAnim; inAnim.onfinish = function () { if (switchAnim !== inAnim) return; cancelSwitch(); }; }; }',
-    'function toggle() { var on = !flashcard.classList.contains("show-back"); flashcard.classList.toggle("show-back", on); }',
+    'function cancelFlip() { if (flipAnim) { var a = flipAnim; flipAnim = null; a.onfinish = null; try { a.cancel(); } catch (e) {} } flashcard.classList.remove("flipping"); flipping = false; }',
+    'function switchTo(i, dir) { if (!WORDS[i]) return; var animated = i !== idx && !!dir && !reducedMotion(); if (flipping) cancelFlip(); var was = switching; if (was) cancelSwitch(); idx = i; if (!animated || was) { render(idx); return; } switching = true; flashcard.classList.add("switching"); var out = dir === DIR_NEXT ? -1 : 1; var outAnim = flashcard.animate([{ transform: "translateX(0%)", opacity: 1 }, { transform: "translateX(" + (out * SWITCH_SHIFT) + "%)", opacity: 0 }], { duration: SWITCH_OUT_MS, easing: "ease-in", fill: "forwards" }); switchAnim = outAnim; outAnim.onfinish = function () { if (switchAnim !== outAnim) return; render(idx); var inAnim = flashcard.animate([{ transform: "translateX(" + (-out * SWITCH_SHIFT) + "%)", opacity: 0 }, { transform: "translateX(0%)", opacity: 1 }], { duration: SWITCH_IN_MS, easing: "cubic-bezier(0.22, 1, 0.36, 1)", fill: "forwards" }); switchAnim = inAnim; inAnim.onfinish = function () { if (switchAnim !== inAnim) return; cancelSwitch(); }; }; }',
+    'function toggle() { if (switching || flipping) return; var toBack = !flashcard.classList.contains("show-back"); if (reducedMotion()) { flashcard.classList.toggle("show-back", toBack); return; } var out = toBack ? 1 : -1; flipping = true; flashcard.classList.add("flipping"); var a1 = flashcard.animate([{ transform: "rotateY(0deg)" }, { transform: "rotateY(" + (out * 90) + "deg)" }], { duration: FLIP_OUT_MS, easing: "ease-in", fill: "forwards" }); flipAnim = a1; a1.onfinish = function () { if (flipAnim !== a1) return; flashcard.classList.toggle("show-back", toBack); var a2 = flashcard.animate([{ transform: "rotateY(" + (-out * 90) + "deg)" }, { transform: "rotateY(0deg)" }], { duration: FLIP_IN_MS, easing: "cubic-bezier(0.22, 1, 0.36, 1)", fill: "forwards" }); flipAnim = a2; a2.onfinish = function () { if (flipAnim !== a2) return; cancelFlip(); }; }; }',
     'flashcard.addEventListener("click", function (e) { if (e.target.closest(".audio-btn")) return; toggle(); });',
     'flashcard.addEventListener("keydown", function (e) { if (e.key === " " || e.key === "Enter") { e.preventDefault(); toggle(); } });',
     'function speak(word) { if (!word || saying) return; saying = true; var a = new Audio("https://dict.youdao.com/dictvoice?audio=" + encodeURIComponent(word) + "&type=1"); function done() { saying = false; } a.onended = done; a.onerror = done; setTimeout(done, 10000); try { var p = a.play(); if (p && p.catch) p.catch(done); } catch (err) { done(); } }',
@@ -3586,7 +3595,9 @@ function renderWord(index) {
   if (frontFolio) frontFolio.textContent = String(index + 1);
   if (backFolio) backFolio.textContent = String(index + 1);
 
-  /* 换词一律回到正面：新词还没看过，直接停在近反义词上会让人以为是空卡 */
+  /* 换词一律回到正面：新词还没看过，直接停在近反义词上会让人以为是空卡。
+     若翻转动画还在播，一并收尾 —— 否则卡片会停在转到一半的角度上。 */
+  if (flipping) cancelFlip();
   if (isFlipped) {
     flashcard.classList.remove('show-back');
     isFlipped = false;
@@ -3612,8 +3623,15 @@ const SWITCH_SHIFT  = 8;     // 位移量：卡片宽度的 8%
 const DIR_NEXT = 1;    // 向前：旧卡向左滑出，新卡从右侧滑入
 const DIR_PREV = -1;   // 向后：旧卡向右滑出，新卡从左侧滑入
 
+/* 翻转动画（正 / 背面）。放在这里而不是 toggleFlip 旁边，
+   是因为 renderWord 也要用到 flipping —— 提前声明避免 TDZ。 */
+const FLIP_OUT_MS = 170;   // 转到侧面
+const FLIP_IN_MS  = 210;   // 从另一侧转回
+
 let switching = false;       // 是否正在播切换动画
 let switchAnim = null;       // 当前动画对象，用于连按时取消
+let flipping = false;        // 是否正在播翻转动画
+let flipAnim = null;         // 当前翻转动画对象，用于取消
 
 /* Web Animations API 不受 CSS 的 prefers-reduced-motion 媒体查询管辖，
    必须在 JS 里自行判定（文件别处已用 matchMedia，用法一致）。 */
@@ -3636,6 +3654,19 @@ function cancelSwitch() {
   switching = false;
 }
 
+/* 翻转动画收尾。与 cancelSwitch 同样的顺序：先 cancel 再摘 class。
+   cancel 会同时去掉 forwards 填充，卡片转回原位。 */
+function cancelFlip() {
+  if (flipAnim) {
+    const anim = flipAnim;
+    flipAnim = null;
+    anim.onfinish = null;
+    try { anim.cancel(); } catch (e) {}
+  }
+  flashcard.classList.remove('flipping');
+  flipping = false;
+}
+
 /* 切换到 index。
    direction 取 DIR_NEXT / DIR_PREV；传 0 表示不播动画。 */
 function switchTo(index, direction) {
@@ -3644,6 +3675,9 @@ function switchTo(index, direction) {
 
   // 先算「要不要播动画」：目标页即当前页（如单张卡上绕回自身）、无方向、减弱动效 → 不播
   const animated = index !== currentIndex && !!direction && !prefersReducedMotion();
+
+  // 翻转动画还在播：先收尾，避免与切换动画抢 transform
+  if (flipping) cancelFlip();
 
   // 上一次还没播完：直接作废它，本次瞬间替换（连按不卡顿、不重叠）
   const wasSwitching = switching;
@@ -4880,12 +4914,64 @@ flashcard.addEventListener('touchmove', function (e) {
   }
 }, { passive: true });
 
-/* 正面 / 背面原地切换内容（不旋转卡片）。
-   切换动画播放中忽略，避免状态与视觉不一致。 */
+/* =========================================================
+   3.6 正面 / 背面的翻转动画
+   ---------------------------------------------------------
+   卡片绕竖轴转过去，在**侧到 90°、完全看不见**的那一刻换面，
+   再从另一侧转回来 —— 观感就是「翻过去」。
+
+   为什么不是整张卡转 180°：那样两面在旋转过程中是可见的，
+   文字会镜像，WebView 上还可能整片空白。这里换面发生在看不见的
+   瞬间，所以从头到尾都不会出现镜像或空白。
+   ========================================================= */
+/* 翻转一次（正 → 背，或背 → 正）。
+   切换动画或翻转动画播放中忽略，避免状态与视觉不一致。 */
 function toggleFlip() {
-  if (switching) return;
-  isFlipped = !isFlipped;
-  flashcard.classList.toggle('show-back', isFlipped);
+  if (switching || flipping) return;
+
+  // 减弱动效：直接换面，不播动画
+  if (prefersReducedMotion()) {
+    isFlipped = !isFlipped;
+    flashcard.classList.toggle('show-back', isFlipped);
+    return;
+  }
+
+  const toBack = !isFlipped;
+  const out = toBack ? 1 : -1;    // 转到哪一侧：去背面往右转，回正面往左转
+
+  flipping = true;
+  flashcard.classList.add('flipping');
+
+  const outAnim = flashcard.animate(
+    [
+      { transform: 'rotateY(0deg)' },
+      { transform: 'rotateY(' + (out * 90) + 'deg)' }
+    ],
+    { duration: FLIP_OUT_MS, easing: 'ease-in', fill: 'forwards' }
+  );
+  flipAnim = outAnim;
+
+  outAnim.onfinish = function () {
+    if (flipAnim !== outAnim) return;   // 已被取消
+
+    // 卡片此刻侧到 90°、宽为 0：换面，看不到任何跳变
+    isFlipped = toBack;
+    flashcard.classList.toggle('show-back', isFlipped);
+
+    const inAnim = flashcard.animate(
+      [
+        { transform: 'rotateY(' + (-out * 90) + 'deg)' },
+        { transform: 'rotateY(0deg)' }
+      ],
+      { duration: FLIP_IN_MS, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'forwards' }
+    );
+    flipAnim = inAnim;
+
+    inAnim.onfinish = function () {
+      if (flipAnim !== inAnim) return;
+      cancelFlip();
+    };
+  };
 }
 
 flashcard.addEventListener('click', function (e) {
