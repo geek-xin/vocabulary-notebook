@@ -88,18 +88,23 @@ CSS 中**动画（animation）会整体接管该属性的过渡**，动画播放
 ### 4.6 减弱动效
 
 `prefers-reduced-motion: reduce` 时直接瞬间替换、不播动画。
-沿用文件既有的 `@media (prefers-reduced-motion: reduce)` 块（第 1128 行）的组织方式。
+
+注意：既有的 `@media (prefers-reduced-motion: reduce)` 块（第 1128 行）只能压缩 CSS 过渡，
+**管不到 Web Animations API**。因此这一条必须在 JS 里用
+`window.matchMedia('(prefers-reduced-motion: reduce)').matches` 判定（文件已在第 3147 行等处用过 `matchMedia`，
+用法一致），命中则 `switchTo` 退化为直接调用 `renderWord`。
 
 ### 4.7 分享页
 
 `buildShareScript`（第 2433 行）生成的是一套自包含的独立脚本，有自己的 `render` 与切换逻辑，
-需要补同一段切换逻辑。`buildShareHtml` 复制的是整块 `<style>`，因此新增的 `@keyframes` 自动带上，无需额外处理。
+需要补同一段切换逻辑。`buildShareHtml` 复制的是整块 `<style>`，因此新增的 `.card.switching` 规则自动带上；
+动画本身由 JS 驱动，不依赖额外 CSS，所以分享页只需同步 JS 部分。
 
 ## 5. 涉及文件
 
 | 文件 | 改动 |
 | --- | --- |
-| `index.html` | 主实现：`.card.switching` 与两段 `@keyframes`、`prefers-reduced-motion` 补充、`switchTo` 与方向常量、四个入口改调用、分享页脚本同步 |
+| `index.html` | 主实现：`.card.switching { transition: none }` 样式、`switchTo` 与方向常量、`prefers-reduced-motion` 分支、四个入口改调用、分享页脚本同步 |
 | `docs/design.md` | 更新「7. 学习页交互与发音 → 卡片」一节，补切换动画描述 |
 | `docs/history.md` | 追加本次变更记录 |
 
