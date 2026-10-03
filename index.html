@@ -1972,7 +1972,7 @@ const TRASH_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
      2. 提交：    git commit -am "chore(release): v2026.10.01.1"
      3. 打 tag：  git tag v2026.10.01.1 && git push origin main --tags
    即 APP_VERSION === git tag 去掉前导 'v'。Release 流程据此产出安装包与 Release 页。 */
-const APP_VERSION     = '2026.10.02.6';
+const APP_VERSION     = '2026.10.02.7';
 const APP_ORIGIN      = 'https://geek-xin.github.io';
 const APP_UPDATE_URL  = APP_ORIGIN + '/vocabulary-notebook/index.html';
 const APP_FILE_NAME   = 'vocabulary-notebook.html';
@@ -1984,8 +1984,45 @@ const APP_RELEASES_API = 'https://api.github.com/repos/' + APP_REPO + '/releases
 const APP_RELEASE_PAGE = 'https://github.com/' + APP_REPO + '/releases/latest';
 /* Release 里附带的「应用本体」文件名；Release 流程会把根目录 index.html 一并附上 */
 const APP_RELEASE_ASSET = APP_FILE_NAME;
-/* 更新检查的超时（毫秒）。Release API 与回退方案共用同一个上限。 */
-const APP_UPDATE_TIMEOUT = 8000;
+
+/* ---------------------------------------------------------------
+   更新检查：GitHub 不通时的兜底
+   ---------------------------------------------------------------
+   本项目所有产物都托管在 GitHub（Releases + Pages），而 GitHub 在部分网络下
+   时通时不通 —— 表现为连不上、被重置，或握手慢到超时。原来的实现在这种情况下
+   会「8 秒超时 → 直接失败」，自动检查又是静默的，用户只看到一句「检查失败」。
+
+   两条改进：
+
+   1. **超时区分开**：连接与读取分开计。原来一个 8 秒上限同时管两者，
+      弱网下常常还没读出内容就被掐掉。
+   2. **多镜像按序兜底**：版本号这件事只需要读到 index.html 里的 APP_VERSION，
+      不必非走 GitHub。jsDelivr 可直接取 GitHub 仓库文件，且有多个入口可用，
+      在国内网络通常比 GitHub 原生域名稳。
+
+   检查顺序（逐个尝试，任一成功即停止）：
+     1. GitHub Releases API   —— 信息最全（带 Release 附件与 APK 直链）
+     2. GitHub Pages 线上页   —— 官方兜底
+     3. jsDelivr 三个入口     —— 第三方 CDN，跨网络可用性最好
+   --------------------------------------------------------------- */
+
+/* 版本检查的候选源。kind 只用于日志与诊断，不影响流程。 */
+const APP_VERSION_SOURCES = [
+  { url: APP_UPDATE_URL, kind: 'github-pages' },
+  { url: 'https://cdn.jsdelivr.net/gh/' + APP_REPO + '@main/index.html', kind: 'jsdelivr' },
+  { url: 'https://gcore.jsdelivr.net/gh/' + APP_REPO + '@main/index.html', kind: 'jsdelivr-gcore' },
+  { url: 'https://testingcf.jsdelivr.net/gh/' + APP_REPO + '@main/index.html', kind: 'jsdelivr-cf' }
+];
+
+/* 更新检查的超时（毫秒）。比原来宽松：弱网下 8 秒常常不够一次完整往返。 */
+const APP_UPDATE_TIMEOUT = 12000;
+/* 单个源失败后的重试次数与退避基数（弱网下抖动很常见，重试一次往往就成了） */
+const APP_UPDATE_RETRIES = 1;
+const APP_UPDATE_BACKOFF = 600;
+
+/* 上次检查结果，用于「自动检查失败」时也能让用户查到原因。
+   只存内存：它是诊断信息，不是用户数据。 */
+let lastUpdateProbe = null;   // { at, ok, source, error }
 
 let books = [];
 let currentBookId = null;
@@ -3294,11 +3331,15 @@ function updateToLatest() {
 }
 
 /* 统一的带超时取文本。失败一律 reject，由调用方决定是回退还是提示。
-   ctrl 为 null（老浏览器没有 AbortController）时退化为「无超时」。 */
+   ctrl 为 null（老浏览器没有 AbortController）时退化为「无超时」。
+
+   超时是「整个请求」的上限（含连接与读取）而不是单独一段 —— fetch 不暴露
+   分阶段的钩子，所以这里只保证总时长可控。弱网下连接握手本身就可能吃掉好几秒，
+   因此上限给得比原来宽松，靠外层重试与多源兜底来保证成功率。 */
 function fetchText(url, timeoutMs, opts) {
   const ctrl = (typeof AbortController === 'function') ? new AbortController() : null;
   const timer = ctrl ? setTimeout(function () { ctrl.abort(); }, timeoutMs || APP_UPDATE_TIMEOUT) : null;
-  const init = { signal: ctrl ? ctrl.signal : undefined };
+  const init = { signal: ctrl ? ctrl.signal : undefined, cache: 'no-store' };
   if (opts && opts.headers) init.headers = opts.headers;
   return fetch(url, init).then(function (res) {
     if (timer) clearTimeout(timer);
@@ -3310,8 +3351,27 @@ function fetchText(url, timeoutMs, opts) {
   });
 }
 
+/* 失败重试一次（带退避）。弱网下的失败多为瞬时抖动，重试比直接放弃划算。
+   只对「网络类」错误重试：HTTP 4xx（如 403 限流）重试没有意义，直接交给下一源。 */
+function fetchTextWithRetry(url, timeoutMs, opts) {
+  const attempt = function (left) {
+    return fetchText(url, timeoutMs, opts).catch(function (err) {
+      const http = /^HTTP \d{3}$/.test(String(err && err.message));
+      if (left <= 0 || http) throw err;
+      console.warn('取 ' + url + ' 失败，退避后重试:', err && err.message ? err.message : err);
+      return new Promise(function (resolve) {
+        setTimeout(resolve, APP_UPDATE_BACKOFF);
+      }).then(function () { return attempt(left - 1); });
+    });
+  };
+  return attempt(APP_UPDATE_RETRIES);
+}
+
 /* 首选通道：GitHub Releases API。
-   成功 → { version, assetUrl, text }；任何异常都 reject，由 checkUpdate 静默回退。 */
+   成功 → { version, assetUrl, text }；任何异常都 reject，由 checkUpdate 静默回退。
+
+   这一源**不重试**：403 限流是最常见的失败，重试只会白等。
+   弱网下的重试交给下面的多镜像兜底。 */
 function fetchReleaseInfo() {
   return fetchText(APP_RELEASES_API, APP_UPDATE_TIMEOUT, {
     // GitHub API 不接受 text/html，显式声明；未认证请求受 60 次/小时/IP 限流，超限返回 403
@@ -3328,13 +3388,52 @@ function fetchReleaseInfo() {
   });
 }
 
-/* 回退通道：抓线上 index.html，正则取 APP_VERSION（GitHub API 限流 / 离线 / 接口异常时用） */
+/* 从一段 HTML 里取版本号 */
+function versionFromHtml(text) {
+  const m = String(text || '').match(REMOTE_VERSION_RE);
+  if (!m) throw new Error('读不到版本号');
+  return m[1];
+}
+
+/* 回退通道：按 APP_VERSION_SOURCES 的顺序逐个试，任一成功即用。
+
+   GitHub API 限流 / 离线 / 接口异常，以及「GitHub 域名整个不通」都会走到这里。
+   每个源失败后换下一个，全部失败才 reject —— 调用方据此决定是否提示。
+   成功时把命中的源记录下来（lastUpdateProbe），方便排查「为什么这台机器检查不了」。 */
 function fetchOnlineVersion() {
-  return fetchText(APP_UPDATE_URL, APP_UPDATE_TIMEOUT).then(function (text) {
-    const m = text.match(REMOTE_VERSION_RE);
-    if (!m) throw new Error('读不到版本号');
-    return { version: m[1], assetUrl: '', apkUrl: '', text: text };
-  });
+  const sources = APP_VERSION_SOURCES;
+  let lastErr = null;
+
+  const tryAt = function (i) {
+    if (i >= sources.length) {
+      return Promise.reject(lastErr || new Error('所有镜像都不可用'));
+    }
+    const src = sources[i];
+    return fetchTextWithRetry(src.url, APP_UPDATE_TIMEOUT).then(function (text) {
+      const version = versionFromHtml(text);
+      lastUpdateProbe = { at: Date.now(), ok: true, source: src.kind, error: '' };
+      return { version: version, assetUrl: '', apkUrl: '', text: text, source: src.kind };
+    }).catch(function (e) {
+      lastErr = e;
+      lastUpdateProbe = { at: Date.now(), ok: false, source: src.kind, error: (e && e.message) || String(e) };
+      console.warn('版本源 ' + src.kind + ' 不可用:', (e && e.message) || e);
+      return tryAt(i + 1);
+    });
+  };
+
+  return tryAt(0);
+}
+
+/* 手动检查失败时，把「为什么失败」说清楚，而不是笼统一句「检查失败」。
+   用户遇到的多半是「GitHub 连不上」，这时该告诉他等会儿再试或走手动下载，
+   而不是让他反复点。 */
+function updateFailureHint() {
+  const err = (lastUpdateProbe && lastUpdateProbe.error) || '';
+  if (navigator.onLine === false) return '当前处于离线状态，联网后再试';
+  if (/HTTP 403/.test(err)) return 'GitHub 接口限流了（每个 IP 每小时 60 次），请过一会儿再试';
+  if (/HTTP 4\d\d/.test(err)) return '更新服务器返回异常（' + err + '），请稍后再试';
+  return '连不上更新服务器（GitHub 及其镜像都不通），请检查网络或稍后重试；' +
+         '也可以直接到 Release 页手动下载新版本';
 }
 
 /* 按已确认的更新信息落地：记状态 → 提示条 → 手动时再给一条 toast */
@@ -3350,17 +3449,24 @@ function applyUpdate(info, manual) {
 }
 
 /* manual=true 是用户主动点「检查更新」：任何打开方式下都执行，且结果必须明确反馈；
-   manual=false 是打开本地副本时的自动检查：只在本地副本跑，全程静默。
-   顺序：GitHub Release（首选） → 线上 index.html（回退）；两条都失败才在手动时提示失败。 */
+   manual=false 是打开本地副本时的自动检查：不打扰用户，但失败也要留下可查的痕迹。
+
+   顺序：GitHub Release API → 线上 index.html → jsDelivr 各镜像；全失败才算失败。 */
 function checkUpdate(manual) {
   if (!manual) {
     if (!shouldAutoCheck()) return Promise.resolve();
     if (navigator.onLine === false) return Promise.resolve();  // 离线时省掉必然失败的请求
   }
 
-  return fetchReleaseInfo().catch(function (e) {
-    // 网络错误 / HTTP 非 2xx（403 限流最常见）/ tag_name 解析不出 / 8 秒超时，全部走这里
-    console.warn('Release 通道不可用，回退到线上页面版本:', e && e.message ? e.message : e);
+  lastUpdateProbe = { at: Date.now(), ok: false, source: '', error: '尚未完成' };
+
+  return fetchReleaseInfo().then(function (info) {
+    // 首选通道成功：记下来源，便于排查「这台机器走的是哪条路」
+    lastUpdateProbe = { at: Date.now(), ok: true, source: 'release-api', error: '' };
+    return info;
+  }).catch(function (e) {
+    // 网络错误 / HTTP 非 2xx（403 限流最常见）/ tag_name 解析不出 / 超时，全部走这里
+    console.warn('Release 通道不可用，改用线上页面版本:', e && e.message ? e.message : e);
     return fetchOnlineVersion();
   }).then(function (info) {
     if (compareVersion(info.version, APP_VERSION) <= 0) {
@@ -3373,9 +3479,13 @@ function checkUpdate(manual) {
     }
     applyUpdate(info, manual);
   }).catch(function (e) {
-    // 两条通道都失败：自动检查完全静默，手动检查必须给明确反馈
+    // 所有通道都失败：手动检查必须给明确反馈；自动检查不弹提示（不打扰），
+    // 但把原因留在 lastUpdateProbe 与控制台，用户手动再点时能给出具体原因。
     console.warn('检查更新失败:', e);
-    if (manual) showToast('检查失败，请检查网络后重试', 5000);
+    if (!lastUpdateProbe || lastUpdateProbe.ok) {
+      lastUpdateProbe = { at: Date.now(), ok: false, source: '', error: (e && e.message) || String(e) };
+    }
+    if (manual) showToast(updateFailureHint(), 6000);
   });
 }
 

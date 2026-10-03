@@ -9,6 +9,71 @@
 
 ---
 
+## 2026.10.02.7 —— 更新检查：多镜像兜底、重试退避、失败可查
+
+> 状态：**待发版**。
+
+### 问题
+
+本项目所有产物都托管在 GitHub（Releases + Pages），而 **GitHub 在部分网络下时通时不通**。
+原来的更新检查对此毫无办法：
+
+1. **四条路全依赖 GitHub** —— Release API → Release 附件 → 线上 `index.html` 都指向
+   `api.github.com` / `github.com` / `*.github.io`，一个域名不通就全军覆没；
+2. **一次就放弃** —— 弱网下瞬时抖动很常见，但失败后直接换下一条，没有重试；
+3. **超时偏紧** —— 8 秒上限要覆盖连接与读取两段，慢网络下常常还没读出内容就被掐掉；
+4. **失败了也不知道为什么** —— 自动检查全程静默；手动检查只有一句「检查失败，
+   请检查网络后重试」，用户无从判断是限流、断网还是域名不通。
+
+### 改动
+
+**一、多镜像链式兜底**
+
+| 顺序 | 源 | 拿到的信息 |
+| --- | --- | --- |
+| 1 | GitHub Releases API | 版本 + Release 附件 + APK 直链 |
+| 2 | GitHub Pages 线上 `index.html` | 只有版本号 |
+| 3 | jsDelivr × 3 入口（`cdn` / `gcore` / `testingcf`） | 只有版本号 |
+
+版本检查只需要读 `index.html` 里一个常量，不必非走 GitHub。jsDelivr 托管 GitHub
+仓库文件且有多个入口，国内网络通常比 GitHub 原生域名稳 —— 这一条正是针对
+「GitHub 连不上」。
+
+**二、重试与超时**
+
+- 超时 8s → **12s**；
+- 每个源失败后**退避 600ms 重试一次**；
+- **HTTP 错误不重试**（403 限流重试没有意义，直接换源，避免白等）。
+- 顺带给 `fetchText` 加了 `cache: 'no-store'`，避免中间缓存返回陈旧版本号。
+
+**三、失败可查但不打扰**
+
+- 手动失败时给**具体原因**：403 说「接口限流了，过一会儿再试」，
+  全不通说「连不上 GitHub 及其镜像，也可以直接到 Release 页手动下载」；
+- 自动检查仍**不弹提示**，但把结果记进内存 `lastUpdateProbe`
+  （`{ at, ok, source, error }`）并打控制台；用户随后手动点一次即可看到上次卡在哪；
+- `lastUpdateProbe` **不落盘** —— 诊断信息，不是用户数据。
+
+### 验证
+
+真实浏览器（Playwright 驱动 `scripts/serve.mjs`），逐场景注入 fetch 故障。
+
+| 场景 | 请求序列 | 结果 |
+| --- | --- | --- |
+| API 正常 | api | ✅ `source=release-api` |
+| API 403 + Pages 通 | api → pages | ✅ `source=github-pages` |
+| API 403 + Pages 不通 + jsDelivr 通 | api → pages ×2 → cdn | ✅ `source=jsdelivr` |
+| 只有 gcore 通 | api → pages ×2 → cdn ×2 → gcore | ✅ `source=jsdelivr-gcore` |
+| 全不通 | 4 个源各试到 | ✅ 不抛异常，`ok=false` 且 `error` 为最后原因 |
+| 全不通（手动） | — | ✅ toast 给出「连不上 GitHub 及其镜像…」 |
+| 全不通（自动） | — | ✅ 0 条 toast（不打扰），但 probe 已记录 |
+| HTTP 403 / 404 | 每源只请求 1 次 | ✅ 不重试，总耗时约 1.8s |
+| 真实网络 | api | ✅ 459ms，正确报「已是最新版本」 |
+
+控制台 0 error；`npm test` 24 + 27 项断言全过。
+
+---
+
 ## 2026.10.02.6 —— 清理脚手架残留与死代码，修正文档失真数字
 
 > 状态：**已发布** —— tag `v2026.10.02.6`（2026-10-03），CI 四端产物全部构建成功，

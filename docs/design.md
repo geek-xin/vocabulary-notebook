@@ -472,13 +472,37 @@ Android WebView **没有** `navigator.share`（它不是 Chromium 的完整实�
 
 ### 更新检查
 
-两条通道，Release 优先：
+本项目所有产物都在 GitHub（Releases + Pages），而 **GitHub 在部分网络下时通时不通**。
+更新检查因此做成「一个首选 + 一组兜底源」的链式结构，任一成功即停：
 
-1. **首选** `GET /repos/geek-xin/vocabulary-notebook/releases/latest` —— 读 `tag_name` 与 `assets`；
-2. **回退** 抓线上 `index.html` 正则取 `APP_VERSION`。
+| 顺序 | 源 | 拿到的信息 | 失败后 |
+| --- | --- | --- | --- |
+| 1 | GitHub Releases API | 版本 + Release 附件 + APK 直链（信息最全） | 换下一源 |
+| 2 | GitHub Pages 线上 `index.html` | 只有版本号（正则取 `APP_VERSION`） | 换下一源 |
+| 3 | jsDelivr × 3 个入口（`cdn` / `gcore` / `testingcf`） | 只有版本号 | 全失败才判失败 |
 
-必须回退的场景：GitHub API 未认证限流（60 次/小时/IP，返回 403）、仓库尚无 Release（404）、
-离线、8 秒超时。回退再失败时，只有**手动**检查才提示失败，自动检查全程静默。
+**为什么加第三方 CDN**：版本检查只需要读到 `index.html` 里的一个常量，
+不必非走 GitHub。jsDelivr 直接托管 GitHub 仓库文件且有多个入口，
+在国内网络通常比 GitHub 原生域名稳 —— 这一条专门针对「GitHub 连不上」。
+
+**重试与超时**：
+
+- 超时从 8 秒放宽到 **12 秒**（弱网下握手本身就可能吃掉好几秒）；
+- 每个源失败后**退避 600ms 重试一次**（瞬时抖动很常见）；
+- 但 **HTTP 错误不重试** —— 403 限流重试没有意义，直接换源，避免白等。
+
+**失败要可查，但不打扰**：
+
+- 手动检查失败时给**具体原因**而不是笼统一句「检查失败」——
+  403 说「接口限流了，过一会儿再试」，全不通说「连不上 GitHub 及其镜像，
+  也可以直接到 Release 页手动下载」；
+- 自动检查仍然**不弹提示**（会打扰用户），但把结果记进内存里的
+  `lastUpdateProbe`（`{ at, ok, source, error }`）并打到控制台 ——
+  用户随后手动点一次，就能看到上一次到底卡在哪一步；
+- `lastUpdateProbe` **不落盘**：它是诊断信息，不是用户数据。
+
+**走不到 Release API 的其它场景**（同样会落到兜底源）：未认证限流（60 次/小时/IP，返回 403）、
+仓库尚无 Release（404）、离线、超时。
 
 **自动检查的覆盖面**（`shouldAutoCheck()`）：
 
