@@ -88,7 +88,7 @@ open index.html        # macOS；Windows 直接双击 index.html
 | | 特性 | 说明 |
 | --- | --- | --- |
 | 📚 | **多词库书架** | 每个导入的文件生成独立词汇本，卡片网格展示，支持删除与分享 |
-| 🃏 | **卡片式学习** | 点击看近反义词；方向键切换；点页码直接跳转 |
+| 🃏 | **卡片式学习** | 点卡片翻到近反义词（转到侧面时换面）；方向键切换；点页码直接跳转 |
 | 🌐 | **全在线释义** | 不内置词库，联网补全音标、词性、中英释义与近反义词 |
 | 🔊 | **英式发音** | 点击喇叭播放 |
 | 🌗 | **深浅色主题** | 跟随系统，也可手动切换并记住 |
@@ -189,9 +189,10 @@ open index.html        # macOS；Windows 直接双击 index.html
 index.html                 应用本体（唯一事实来源，含全部逻辑与样式）
 ├── manifest.json          PWA 清单
 ├── sw.js                  Service Worker（离线外壳 + 更新通道）
-├── icons/                 图标
+├── icons/                 图标（根目录是唯一事实来源）
 └── 分发层（不改变本体形态）
     ├── android/           Capacitor 壳 → APK
+    │   └── tools/         从 icons/ 派生 Android mipmap 全套
     ├── ios/               Capacitor 壳 → 未签名 ipa
     ├── scripts/           图标生成 / 资源同步 / 版本写入 / 测试
     └── .github/workflows/ 打 tag 自动构建并发布
@@ -229,7 +230,7 @@ Web 端无需构建，其余各端：
 ```bash
 npm install
 
-# 测试（内联脚本语法 + Service Worker 行为）
+# 测试（内联脚本语法 + Service Worker 行为 + 分享通道，共 51 项断言）
 npm test
 
 # 本地起服务，验证 PWA（Service Worker 需要 http/https）
@@ -246,9 +247,9 @@ npx cap sync ios && ./ios/build-unsigned-ipa.sh
 ### 发版
 
 ```bash
-node scripts/set-version.mjs 2026.10.02.1   # 一处写入 index.html / package.json / Android / iOS
-git commit -am "chore(release): v2026.10.02.1"
-git tag v2026.10.02.1 && git push origin main --tags   # 触发构建与发布
+node scripts/set-version.mjs 2026.10.02.7   # 一处写入 index.html / package.json / Android / iOS
+git commit -am "chore(release): v2026.10.02.7"
+git tag v2026.10.02.7 && git push origin main --tags   # 触发构建与发布
 ```
 
 CI 会校验 `APP_VERSION` 与 tag 一致，不一致直接失败，避免发出对不上的版本。
@@ -270,11 +271,16 @@ CI 会校验 `APP_VERSION` 与 tag 一致，不一致直接失败，避免发出
 
 | 文档 | 内容 |
 | --- | --- |
+| [docs/README.md](docs/README.md) | 维护者文档索引（从这里开始） |
 | [docs/design.md](docs/design.md) | 当前架构与关键设计取舍、边界与不做的事 |
 | [docs/multi-platform.md](docs/multi-platform.md) | 多端交付方式、发版流程、各端验证边界 |
 | [docs/history.md](docs/history.md) | 版本历史，含踩过的坑与诊断结论 |
+| [docs/troubleshooting.md](docs/troubleshooting.md) | 常见故障的「现象 → 原因 → 处理」 |
 | [android/README.md](android/README.md) | Android 构建、签名（**固定密钥，勿更换**）、应用内升级 |
 | [ios/README.md](ios/README.md) | iOS 构建与三种安装方式 |
+
+> 界面截图是**真实浏览器渲染后截取**的，不是设计稿；界面改动后应重新截取
+> （方法见 [docs/README.md](docs/README.md)）。
 
 ## 🤝 贡献
 
