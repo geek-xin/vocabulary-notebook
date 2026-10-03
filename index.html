@@ -2006,12 +2006,32 @@ const APP_RELEASE_ASSET = APP_FILE_NAME;
      3. jsDelivr 三个入口     —— 第三方 CDN，跨网络可用性最好
    --------------------------------------------------------------- */
 
+/* ---------------------------------------------------------------
+   第三方 CDN 镜像：只能用「明确的 tag」，不能用 @main
+   ---------------------------------------------------------------
+   jsDelivr 对同一个 URL 会缓存（实测 cache-control: max-age=604800、
+   s-maxage=43200），而 GitHub 仓库的 @main / @latest 这类**浮动引用
+   缓存键不变** —— 发新版后 CDN 可能仍在返回上一个版本的 index.html。
+
+   这对「检查更新」是致命的：读到旧版本号 → 判定为「已是最新」→
+   **用户永远收不到更新提示**。比连不上还糟，因为连不上至少会走别的源。
+
+   所以这里不写死 URL，而是按当前 tag（v + APP_VERSION）拼 ——
+   tag 是**不可变引用**，每个版本一个独立 URL，不存在陈旧缓存问题。
+   检查更新时本地版本就是已知的最新基线，读到的只会是「当前或更新」。
+
+   代价：如果 APP_VERSION 尚未发 tag（本地改完还没打 tag 的情况），
+   这几个镜像会 404，自动落到下一个源 —— 这是可接受且安全的失败方向。 */
+function jsdelivrUrl(host) {
+  return 'https://' + host + '/gh/' + APP_REPO + '@v' + APP_VERSION + '/index.html';
+}
+
 /* 版本检查的候选源。kind 只用于日志与诊断，不影响流程。 */
 const APP_VERSION_SOURCES = [
   { url: APP_UPDATE_URL, kind: 'github-pages' },
-  { url: 'https://cdn.jsdelivr.net/gh/' + APP_REPO + '@main/index.html', kind: 'jsdelivr' },
-  { url: 'https://gcore.jsdelivr.net/gh/' + APP_REPO + '@main/index.html', kind: 'jsdelivr-gcore' },
-  { url: 'https://testingcf.jsdelivr.net/gh/' + APP_REPO + '@main/index.html', kind: 'jsdelivr-cf' }
+  { url: jsdelivrUrl('cdn.jsdelivr.net'), kind: 'jsdelivr' },
+  { url: jsdelivrUrl('gcore.jsdelivr.net'), kind: 'jsdelivr-gcore' },
+  { url: jsdelivrUrl('testingcf.jsdelivr.net'), kind: 'jsdelivr-cf' }
 ];
 
 /* 更新检查的超时（毫秒）。比原来宽松：弱网下 8 秒常常不够一次完整往返。 */
